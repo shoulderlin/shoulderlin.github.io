@@ -1,10 +1,367 @@
-<!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
-    <title>你好，GitHub</title>
-  </head>
-  <body>
-    <h1>覺得厲害</h1>
-  </body>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@0.1.1/dist/index.min.js"></script>
+    
+    
+<script>
+    function Pad0(num,length){
+        myStr = '' + num;
+        while(myStr.length < length){
+            myStr = '0'+myStr;
+        };
+        return myStr;
+    };
+    function createTimeStamp(){
+        var d = new Date();
+        var MM = Pad0(d.getMonth()+1,2);
+        var DD = Pad0(d.getDate(),2);
+        var HH = Pad0(d.getHours(),2);
+        var Min = Pad0(d.getMinutes()-d.getMinutes()%5,2);
+        var stamp = MM+DD+'\n'+HH+Min;
+        document.getElementById('Timestamp').innerText = stamp;
+        console.log(5-d.getMinutes()%5);
+        return (5-d.getMinutes()%5)*60*1000;
+    };
+    var codec = {
+            '000':'05',// 衛署醫器製字第
+            '100':'55',// 衛部醫器製字第
+            '001':'43',// 衛署醫器製壹字第
+            '101':'93',// 衛部醫器製壹字第
+            '010':'',// 衛署醫器外製字第
+            '110':'',// 衛部醫器外製字第
+
+            '020':'06',// 衛署醫器輸字第
+            '120':'56',// 衛部醫器輸字第
+            '021':'44',// 衛署醫器輸壹字第
+            '121':'94',// 衛部醫器輸壹字第
+
+            '030':'42',// 衛署醫器陸輸字第
+            '130':'92',// 衛部醫器陸輸字第
+            '031':'46',// 衛署醫器陸輸壹字第
+            '131':'96',// 衛部醫器陸輸壹字第
+        };
+    function openLicPage(){
+        var ddlLicOrg = (document.getElementById('ddlLicOrg').value);
+        var ddlLicType = (document.getElementById('ddlLicType').value);
+        var ddlLicClass = (document.getElementById('ddlLicClass').value);
+        var ddlLicNum = (document.getElementById('ddlLicNum').value);
+        while (ddlLicNum.length<6){
+            ddlLicNum = 0 + ddlLicNum
+        }
+        window.open("http://info.fda.gov.tw/MLMS/H0001D.aspx?Type=Lic&LicId="+ codec[ddlLicOrg+ddlLicType+ddlLicClass]+ddlLicNum,'_blank');
+    }
+    function renewkey(){
+        var key = document.getElementById('key').value;
+        key = key.split('/MDDB/')[1].split('/Classification/')[0]
+        var url = 'https://mdlicense.itri.org.tw/MDDB/'+key+'/Classification/MDClassificationContent.aspx';
+        document.getElementById('form1').setAttribute('action',url);
+        document.getElementById('form1').setAttribute('target','_blank');
+        document.getElementById('key').value='已更新';
+        
+    }
+    function resetAction(){
+        alert('請重新更新!');
+        document.getElementById('key').value='';
+        document.getElementById('form1').setAttribute('action',"javascript:window.open('https://mdlicense.itri.org.tw/MDDB/Classification.aspx','_blank');alert('請先更新網址');");
+        document.getElementById('form1').setAttribute('target','_top');
+    }
+    function phoneBookSearch(classes=''){
+        if (classes == ''){
+        var classes = document.getElementById('ContentPlaceHolder1_ddlSearchList').value;
+        var kw = document.getElementById('ContentPlaceHolder1_txtSearch').value;}
+        else{var kw = ''}
+        window.open("http://apwebad.fda.gov.tw/pop_SearchPhoneBook.aspx?KeyWord="+ kw +"&Unit="+ classes,'_blank');
+    }
+    function lawsearch(){
+        var lawkw = document.getElementById('lawkw').value
+        window.open("https://law.moj.gov.tw/Law/LawSearchResult.aspx?ty=ONEBAR&kw="+ lawkw +"&sSearch=","_blank");
+    }
+</script>
+<style>
+h1,h2{
+    font-weight:bold;
+}
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+select,input{
+    font-size: 16px;
+
+}
+
+a{
+    font-size: 20px;
+}
+div#float{
+    position: absolute;
+    /* height:150mm; */
+    width: 30%;
+    margin: 1% 0% 0% 60%;
+    background-color: white;
+    border-color: tomato;
+    border-width: 1px;
+    border-style:solid;
+    font-family: Arial, Helvetica, sans-serif;
+    }
+table#weather{
+    text-align: center;
+    width: 700px;
+    border-width: 1px;
+    border-style:solid;
+}
+#Timestamp{
+    text-align: left;
+    font-size: 20pt;
+    font-family: Arial, Helvetica, sans-serif;
+    position:absolute;
+    margin-left: 320px;
+
+}
+#WeatherBlock{
+    position:absolute;
+    margin-left: 500px;
+    height: 30px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.functionBlock{
+    width: 100px;
+    height:100px;
+    display: inline-block;
+    background-color: bisque;
+}
+td{
+    border-bottom-style:solid;
+    border-bottom-width: 0.3px;
+    /* border: 0px; */
+}
+</style>
+</head>
+<body>
+<div id='top'>
+    <div id='Timestamp'></div>
+    <!-- 天氣 -->
+    <div id='WeatherBlock'>
+
+<table id='weather'>
+    <tr>
+        <td style="width:20%">更新時間</td>
+        <td>體感溫度(C)</td>
+        <td>溫度(C)</td>
+        <td>相對溼度(%)</td>
+        <td>時雨量(mm)</td>
+        <td>日出時間</td>
+        <td>日落時間</td>
+    </tr>
+    <tr>
+        <td id='RefreshTime'></td>
+        <td id='C_AT'></td>
+        <td id='C_T'></td>
+        <td id='RH'></td>
+        <td id='Rain'></td>
+        <td id='Sunrise'></td>
+        <td id='Sunset'></td>
+    </tr>
+</table></div>
+<!-- 即時天氣 -->
+<h1>工作常用網站及工具</h1></div>
+<div id="float">
+    <ul>
+        <li><a target="_blank" href="https://sslvpn.fda.gov.tw:1955">遠端連線</a></li>
+        <li><a target="_blank" href="http://10.2.24.243">印表機（門口）</a></li>
+        <li><a target="_blank" href="http://10.2.24.242">印表機（裡面）</a></li>
+        <li><a target="_blank" href="https://cloud2.fda.gov.tw/">署內對外雲端</a></li>
+        <li><a target="_blank" href="http://apodlb.fda.gov.tw/MS/SSO.HTML">公文系統</a></li>
+        <li><a target="_blank" href="http://www.fda.gov.tw" >署網</a></li>
+        <li><a target="_blank" href="http://info.fda.gov.tw/MLMS/H0001.aspx" >許可證資料庫</a></li>
+        <li><a target="_blank" href="https://ma.mohw.gov.tw/Default.aspx">醫事管理系統</a></li>
+        <li><a target="_blank" href="https://fadenbook.fda.gov.tw/admin/login.aspx">非登不可後台</a></li>
+        <span>=========法規=========</span>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030001" target="_blank">藥事法</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030002" target="_blank">藥事法施行細則</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030005" target="_blank">藥物樣品贈品管理辦法</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=A0030055" target="_blank">行政程序法</a></li>
+        <span>=========專法=========</span>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030106" target="_blank">醫療器材管理法</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030121" target="_blank">醫療器材管理法施行細則</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030113" target="_blank">醫療器材技術人員管理辦法</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030128" target="_blank">醫療器材許可證核發與登錄及年度申報準則</a></li>
+        <span>=========監管組=========</span>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030112" target="_blank">醫療器材品質管理系統檢查及製造許可核發辦法</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030110" target="_blank">醫療器材製造業者設置標準</a></li>
+        <li><a href="https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=L0030111" target="_blank">醫療器材優良運銷檢查及運銷許可核發辦法</a></li>
+
+    </ul>
+<h3>常用連結</h3>
+<div class='functionBlock'><a href='https://www.notion.so/5182553f15b74e41af03b32d08079953' target="_blank"><img class='functionBlock' src='data:image/png;base64,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'></a></div>
+<div class='functionBlock'><a href='https://drive.google.com/drive/my-drive' target="_blank"><img class='functionBlock' src='https://kstatic.googleusercontent.com/files/f4b4fbcc6119576da7ab3f68270196009fc1b16f1927910842d793c385115593b6dd5fbe9a1e21fe64f3cbbc509c3a02c95ebc9635f76c355282482986f1fe7d'></a></div>
+<div class='functionBlock'></div>
+</div>
+<hr/>
+<h2>電話簿查詢</h2>
+<div class="searchBlock">
+    <label for="SearchList">搜尋範圍：</label>
+    <select name="ctl00$ContentPlaceHolder1$ddlSearchList" id="ContentPlaceHolder1_ddlSearchList">
+<option value="">全部</option>
+<option value="主任秘書室">主任秘書室</option>
+<option value="企劃及科技管理組">企劃及科技管理組</option>
+<option value="食品組">食品組</option>
+<option value="藥品組">藥品組</option>
+<option value="醫療器材及化粧品組">醫療器材及化粧品組</option>
+<option value="管制藥品組">管制藥品組</option>
+<option value="研究檢驗組">研究檢驗組</option>
+<option value="品質監督管理組">品質監督管理組</option>
+<option value="秘書室">秘書室</option>
+<option value="人事室">人事室</option>
+<option value="政風室">政風室</option>
+<option value="主計室">主計室</option>
+<option value="資訊室">資訊室</option>
+<option value="北區管理中心">北區管理中心</option>
+<option value="中區管理中心">中區管理中心</option>
+<option value="南區管理中心">南區管理中心</option>
+<option value="製藥工廠">製藥工廠</option>
+<option value="食藥戰情中心">食藥戰情中心</option>
+
+</select>
+    <label for="Search">關鍵字：</label>            
+    <input name="ctl00$ContentPlaceHolder1$txtSearch" id="ContentPlaceHolder1_txtSearch" style="width: 120px;" onkeypress="return EnterSearchClick()" type="text" placeholder="請輸入關鍵字">            
+    <input title="搜尋" class="btnStyle1" id="btnSearch" onclick="phoneBookSearch();" type="button" value="搜尋">
+</div>
+
+<input title="主秘室" onclick="phoneBookSearch('主任秘書室');" type="button" value="主秘室">
+<input title="企科組" onclick="phoneBookSearch('企劃及科技管理組');" type="button" value="企科組">
+<input title="醫粧組" onclick="phoneBookSearch('醫療器材及化粧品組');" type="button" value="醫粧組">
+<input title="藥品組" onclick="phoneBookSearch('藥品組');" type="button" value="藥品組">
+<hr/>
+
+<h2>醫療器材許可證查詢</h2>
+    <label>衛</label>
+    <select id="ddlLicOrg">
+        <option value="0">署</option>
+        <option value="1">部</option>
+    </select>
+    <label>醫器</label>
+    <select id="ddlLicType">
+        <option value="0">製</option>
+        <option value="1">外製</option>
+        <option value="2">輸</option>
+        <option value="3">陸輸</option>
+    </select>
+    <select id="ddlLicClass">
+        <option value="0"></option>
+        <option value="1">壹</option>
+    </select>
+    <label>字第</label>
+    <input type="text" id="ddlLicNum">
+    <label>號</label>
+    
+    <input type="submit" onclick="openLicPage();" value="搜尋">
+<hr/>
+<h2>醫療器材分類分級查詢</h2>
+<div><span>請貼入最近一次的網址：</span><input type="text" id='key'><button onclick="renewkey();">更新網址</button></div>
+    <form target="_top" method="post" id='form1' action="javascript:window.open('https://mdlicense.itri.org.tw/MDDB/Classification.aspx','_blank');alert('請先更新網址');">
+        <label>請輸入分類分級代碼：</label><input type="text" name="ClassNo" id="ClassNo">
+        <input type="hidden" name="showImageY" value="N">
+        <input type="hidden" name="print_me" value="Y">
+        <input type="submit" value="搜尋">
+    </form>
+<hr/>
+<!-- <h2>全國法規資料庫</h2> -->
+<div style="background-color: #057B7B;width: 40%;vertical-align: center;">
+<img src="https://law.moj.gov.tw/images/logo.png" style="width:50%;margin-left: 10mm;"><br/>
+<input type="text" id="lawkw" style="height:50px;width: 70%;font-size: 20pt;margin-left: 10mm;margin-bottom: 5mm;" >
+<button onclick="lawsearch();" style="font-size:150%;">搜尋</button>
+</div>
+<br/>
+<table>
+    <tr>
+        <td>國家</td><td>網址</td>
+    </tr>
+    <tr>
+        <td>我國指引</td>
+        <td><a href="http://www.fda.gov.tw/TC/siteContent.aspx?sid=11671" target="blank">EUA</a>
+            、<a href="http://www.fda.gov.tw/tc/includes/GetFile.ashx?id=f637553875246335786&type=4" target="blank">核酸</a>
+            、<a href="http://www.fda.gov.tw/tc/includes/GetFile.ashx?id=f637553875246485879&type=4" target="blank">抗原</a>
+            、<a href="http://www.fda.gov.tw/tc/includes/GetFile.ashx?id=f637553875246596134&type=4" target="blank">抗體</a>
+            、<a href="http://www.fda.gov.tw/tc/includes/GetFile.ashx?id=f637553882269801630&type=4" target="blank">多標的</a>
+            、<a href="http://www.fda.gov.tw/tc/includes/GetFile.ashx?id=f637587517763001848&type=4" target="blank">家用</a>
+        </td>
+    </tr>
+    <tr>
+        <td>US FDA</td>
+        <td><a href="https://www.fda.gov/medical-devices/coronavirus-disease-2019-covid-19-emergency-use-authorizations-medical-devices/in-vitro-diagnostics-euas" target="blank">EUA</a>
+            、<a href="https://www.fda.gov/medical-devices/coronavirus-disease-2019-covid-19-emergency-use-authorizations-medical-devices/in-vitro-diagnostics-euas-molecular-diagnostic-tests-sars-cov-2" target="blank">核酸</a>
+            、<a href="https://www.fda.gov/medical-devices/coronavirus-disease-2019-covid-19-emergency-use-authorizations-medical-devices/in-vitro-diagnostics-euas-antigen-diagnostic-tests-sars-cov-2" target="blank">抗原</a>
+            、<a href="https://www.fda.gov/medical-devices/coronavirus-disease-2019-covid-19-emergency-use-authorizations-medical-devices/in-vitro-diagnostics-euas-serology-and-other-adaptive-immune-response-tests-sars-cov-2" target="blank">抗體</a>
+        </td>
+    </tr>
+    <tr>
+        <td>韓國</td>
+        <td><a href="https://www.mfds.go.kr/eng/brd/m_65/list.do" target="blank">EUA</a></td>
+    </tr>
+    <tr>
+        <td>新加坡</td>
+        <td><a href="https://www.hsa.gov.sg/announcements/regulatory-updates/hsa-expedites-approval-of-covid-19-diagnostic-tests-in-singapore-via-provisional-authorisation" target="blank">EUA</a></td>
+    </tr>
+    <tr>
+        <td>加拿大</td>
+        <td><a href="https://www.canada.ca/en/health-canada/services/drugs-health-products/covid19-industry/medical-devices/authorized/list.html" target="blank">EUA</a></td>
+    </tr>
+    <tr>
+        <td>日本</td>
+        <td><a href="https://www.pmda.go.jp/english/about-pmda/0002.html" target="blank">EUA</a></td>
+    </tr>
+    <tr>
+        <td>澳洲</td>
+        <td><a href="https://www.tga.gov.au/covid-19-test-kits-included-artg-legal-supply-australia" target="blank">EUA</a></td>
+    </tr>
+    <tr>
+        <td>WHO</td>
+        <td><a href="" target="blank">EUA</a></td>
+    </tr>
+</table>
+
+
+<!-- <script src="https://www.cwb.gov.tw/Data/js/GT/TableData_GT_T_65.js"></script> -->
+<script src="https://www.cwb.gov.tw/Data/js/GT/TableData_GT_T_63.js"></script>
+<script>
+    document.getElementById("lawkw").addEventListener('keyup',function(event){
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            lawsearch();
+        };
+    })
+    document.getElementById("ddlLicNum").addEventListener('keyup',function(event){
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            openLicPage();
+        };
+    })
+    document.getElementById("ContentPlaceHolder1_txtSearch").addEventListener('keyup',function(event){
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            phoneBookSearch();
+        };
+    })
+    var intervalTime = createTimeStamp();
+    var area = 6300900 //南港區
+    //var area = 6501100 //汐止區
+    document.getElementById('RefreshTime').innerHTML=GT_Time["C"].replaceAll('<br>','\t');
+    document.getElementById('C_AT').innerHTML=GT[area]['C_AT'];
+    document.getElementById('C_T').innerHTML=GT[area]['C_T'];
+    document.getElementById('RH').innerHTML=GT[area]['RH'];
+    document.getElementById('Rain').innerHTML=GT[area]['Rain'];
+    document.getElementById('Sunrise').innerHTML=GT[area]['Sunrise'];
+    document.getElementById('Sunset').innerHTML=GT[area]['Sunset'];
+    setInterval(function(){ window.location.reload(); }, intervalTime);
+    
+</script>
+
+
+
+</body>
+
+
 </html>
+
+
