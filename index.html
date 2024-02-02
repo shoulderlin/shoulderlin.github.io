@@ -2,8 +2,36 @@
 
 <head>
     <style>
+        .button {
+            position: absolute;
+            /* padding: 15px 25px; */
+            height:50% ;
+            /* width: 50%; */
+            /* font-size: 24px; */
+            text-align: center;
+            cursor: pointer;
+            outline: none;
+            color: #fff;
+            background-color: #aa0404;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 9px #fff;
+            margin-left: 35%;
+            margin-top: 13.5%;
+        }
+
+        .button:hover {
+            background-color: #8e3e3e
+        }
+
+        .button:active {
+            background-color: #8e3e3e;
+            box-shadow: 0 5px #666;
+            transform: translateY(4px);
+        }
+
         .center {
-            position:absolute;
+            position: absolute;
             /* display:flex; */
             margin-left: 35%;
             margin-top: 13.5%;
@@ -11,25 +39,36 @@
             height: 50%;
             z-index: 1;
         }
-        .BBox{
+
+        .BBox {
             width: 100%;
             height: 100%;
             display: inline;
 
-            background-image: url('/pngtree-gradient-festive-new-year-background-picture-image_979792.png');
+            /* background-image: url(''); */
         }
-        body{
-            margin:0;
-            overflow:hidden;
-            
-            background-size:contain;
-            width:100%;
-            height:100%;
-        }
-        .backpng{
-            display: flex;
-            z-index: -1;
 
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: rgb(184, 9, 9);
+            background-size: contain;
+            width: 100%;
+            height: 100%;
+        }
+
+        .backpng {
+            display: flex;
+            position: absolute;
+            z-index: -1;
+            width: 100%;
+
+        }
+
+        div#St {
+            position: absolute;
+            font-size: xx-large;
+            background-color: white;
         }
     </style>
     <script>
@@ -38,13 +77,13 @@
             // document.getElementById('pb').style.display = "none";
             // document.getElementById('vv').style.visibility = "visible";
             document.getElementById('workAudio').play();
-            document.getElementById('workAudio').volume=1;
+            document.getElementById('workAudio').volume = 1;
             setTimeout(30);
-            document.getElementById('workAudio').volume=0.1;
+            document.getElementById('workAudio').volume = 0.1;
         };
-        function backaudio(){
+        function backaudio() {
             document.getElementById('backAudio').play();
-            document.getElementById('backAudio').volume=0.2;
+            document.getElementById('backAudio').volume = 0.2;
             document.getElementById('St').style.display = "none";
         }
     </script>
@@ -54,11 +93,11 @@
 <body>
     <div id="St" onclick="backaudio();">Start</div>
     <div class="BBox">
-        <img class="backpng" src=""/>
+        <img class="backpng" src="/pngtree-gradient-festive-new-year-background-picture-image_979792.png" />
         <audio id="backAudio" src="/onload.mp3"></audio>
         <audio id="workAudio" src="/Active.mp3"></audio>
         <!-- <button class="center" id="" -->
-        <img class="center" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
+        <img class="button" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
 
         <!-- <video style="visibility: hidden;width: 100%;height:100%;display: block;" id="vv" src="IMG_4747.MOV" controls></video> -->
     </div>
