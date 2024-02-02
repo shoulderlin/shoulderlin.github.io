@@ -41,15 +41,16 @@
             document.getElementById('workAudio').volume=0.1;
         };
         function backaudio(){
-            setTimeout(5);
             document.getElementById('backAudio').play();
             document.getElementById('backAudio').volume=0.2;
+            document.getElementById('St').style.display = "none";
         }
     </script>
 
 </head>
 
-<body onload="backaudio();">
+<body>
+    <div id="St" onclick="backaudio();">Start</div>
     <div class="BBox">
         <img class="backpng" src=""/>
         <audio id="backAudio" src="/onload.mp3"></audio>
