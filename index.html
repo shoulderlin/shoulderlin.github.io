@@ -32,11 +32,13 @@
     </style>
     <script>
         function TriggerAudio() {
-            navigator.vibrate(100);
             document.getElementById('backAudio').pause();
             // document.getElementById('pb').style.display = "none";
             // document.getElementById('vv').style.visibility = "visible";
             document.getElementById('workAudio').play();
+            document.getElementById('workAudio').volume=1;
+            setTimeout(30);
+            document.getElementById('workAudio').volume=0.1;
         };
         function backaudio(){
             setTimeout(5);
