@@ -15,7 +15,7 @@
             background-color: #aa0404;
             border: none;
             border-radius: 50%;
-            box-shadow: 0 9px #fff;
+            box-shadow: 0 20px #fff;
             margin-left: 35%;
             margin-top: 13.5%;
         }
@@ -43,7 +43,7 @@
         .BBox {
             width: 100%;
             height: 100%;
-            display: inline;
+            display: none;
 
             /* background-image: url(''); */
         }
@@ -67,8 +67,34 @@
 
         div#St {
             position: absolute;
-            font-size: xx-large;
-            background-color: white;
+            font-size: 200px;
+            color: gold;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+        }
+        div#NB{
+            color:gold;
+            width: 30%;
+            font-size: 100px;
+            text-align: center;
+            vertical-align: middle;
+            aspect-ratio: 1/1;
+            margin-top: 15%;
+            background-color: #d57777;
+            border-radius: 50%;
+            position:absolute;
+
+        }
+        div#borderLine{
+            background-color: #ffffffa9;
+            width:35%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            position:absolute;
+            margin-left: 33%;
+            margin-top: 12.5%;
+
         }
     </style>
     <script>
@@ -85,6 +111,7 @@
             document.getElementById('backAudio').play();
             document.getElementById('backAudio').volume = 0.2;
             document.getElementById('St').style.display = "none";
+            document.getElementsByClassName('BBox')[0].style.display='inline';
         }
     </script>
 
@@ -96,9 +123,10 @@
         <img class="backpng" src="/pngtree-gradient-festive-new-year-background-picture-image_979792.png" />
         <audio id="backAudio" src="/onload.mp3"></audio>
         <audio id="workAudio" src="/Active.mp3"></audio>
-        <!-- <button class="center" id="" -->
+        <!-- <div id="NB" onclick="TriggerAudio();">▶</div> -->
+        <div id="borderLine"></div>
         <img class="button" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
-
+    
         <!-- <video style="visibility: hidden;width: 100%;height:100%;display: block;" id="vv" src="IMG_4747.MOV" controls></video> -->
     </div>
     <!-- <img src="" onclick="document.getElementById('pp').play();"/> -->
