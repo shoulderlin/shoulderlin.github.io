@@ -1,7 +1,62 @@
-<html><head></head><body>
-<audio id="pp" src="/Schnappi.mp3"></audio>
-<img src="/red-play-button-icon.webp" onclick="document.getElementById('pp').play();">
-<!-- <button onclick="document.getElementById('pp').play();">播放</button> -->
-<button onclick="document.getElementById('pp').pause();">暫停</button>
-<!-- <img src="" onclick="document.getElementById('pp').play();"/> -->
-</body></html>
+<html>
+
+<head>
+    <style>
+        .center {
+            position:absolute;
+            /* display:flex; */
+            margin-left: 35%;
+            margin-top: 13.5%;
+            /* width: 100%; */
+            height: 50%;
+            z-index: 1;
+        }
+        .BBox{
+            width: 100%;
+            height: 100%;
+            display: inline;
+        }
+        body{
+            margin:0;
+            overflow:hidden;
+            background-image: url('/pngtree-gradient-festive-new-year-background-picture-image_979792.png');
+            background-size:contain;
+            width:100%;
+            height:100%;
+        }
+        .backpng{
+            display: flex;
+            z-index: -1;
+
+        }
+    </style>
+    <script>
+        function TriggerAudio() {
+            document.getElementById('backAudio').pause();
+            // document.getElementById('pb').style.display = "none";
+            // document.getElementById('vv').style.visibility = "visible";
+            document.getElementById('workAudio').play();
+        };
+        function backaudio(){
+            setTimeout(5);
+            document.getElementById('backAudio').play();
+            document.getElementById('backAudio').volume=0.2;
+        }
+    </script>
+
+</head>
+
+<body onload="backaudio();">
+    <div class="BBox">
+        <img class="backpng" src=""/>
+        <audio id="backAudio" src="/onload.mp3"></audio>
+        <audio id="workAudio" src="/Active.mp3"></audio>
+        <!-- <button class="center" id="" -->
+        <img class="center" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
+
+        <!-- <video style="visibility: hidden;width: 100%;height:100%;display: block;" id="vv" src="IMG_4747.MOV" controls></video> -->
+    </div>
+    <!-- <img src="" onclick="document.getElementById('pp').play();"/> -->
+</body>
+
+</html>
