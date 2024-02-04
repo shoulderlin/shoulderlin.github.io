@@ -99,6 +99,7 @@
             position:absolute;
             margin-left: 33%;
             margin-top: 11%;
+            
 
         }
     </style>
@@ -106,6 +107,8 @@
         function TriggerAudio() {
             
             document.getElementById('backAudio').pause();
+            document.getElementById('borderLine').style.visibility='hidden';
+            document.getElementById('pb').style.visibility='hidden';
             // setTimeout(function d(){console.log('');},3000)
             // document.getElementById('pb').style.display = "none";
             // document.getElementById('vv').style.visibility = "visible";
