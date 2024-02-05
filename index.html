@@ -70,7 +70,7 @@
 
         }
 
-        div#St {
+        div#St,#BK {
             position: absolute;
             font-size: 200px;
             color: gold;
@@ -121,7 +121,16 @@
             document.getElementById('backAudio').play();
             document.getElementById('backAudio').volume = 0.1;
             document.getElementById('St').style.display = "none";
+            document.getElementById('BK').style.display = "none";
             document.getElementsByClassName('BBox')[0].style.display='inline';
+        }
+        function Replay(){
+            document.getElementById('St').style.display = "none";
+            document.getElementById('BK').style.display = "none";
+            document.getElementById('repeatAudio').play();
+            document.getElementsByTagName('body')[0].style.backgroundColor= 'rgb(184, 9, 9)';
+            document.getElementById('backpng').style.display='flex';
+            document.getElementById('repeatAudio').volume = 1;
         }
     </script>
 
@@ -129,10 +138,12 @@
 
 <body>
     <div id="St" onclick="backaudio();">Start</div>
+    <div id="BK" onclick="Replay();">Replay</div>
     <div class="BBox">
         <img id="backpng" src="/pngtree-gradient-festive-new-year-background-picture-image_979792.png" />
         <audio id="backAudio" src="/onload.mp3" loop></audio>
-        <audio id="workAudio" src="/Active.mp3"></audio>
+        <audio id="workAudio" src="/Active-20.mp3"></audio>
+        <audio id="repeatAudio" src="/Active-02.mp3" loop></audio>
         <!-- <div id="NB" onclick="TriggerAudio();">▶</div> -->
         <div id="borderLine"></div>
         <img class="button" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
