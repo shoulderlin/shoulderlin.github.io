@@ -71,22 +71,19 @@
         }
 
         div#St {
-            position: absolute;
+            position:absolute;
             font-size: 200px;
             color: gold;
             text-align: center;
             width: 100%;
             height: 100%;
         }
-        div#BK {
+        div#Replay{
             position: absolute;
-            padding-top:500px;
-            font-size: 200px;
+            padding-top: 300px;
             color: gold;
-            text-align: center;
-            width: 100%;
-            height: 100%;
         }
+
         div#NB{
             color:gold;
             width: 30%;
@@ -114,13 +111,9 @@
     </style>
     <script>
         function TriggerAudio() {
-            
             document.getElementById('backAudio').pause();
             document.getElementById('borderLine').style.visibility='hidden';
             document.getElementById('pb').style.visibility='hidden';
-            // setTimeout(function d(){console.log('');},3000)
-            // document.getElementById('pb').style.display = "none";
-            // document.getElementById('vv').style.visibility = "visible";
             document.getElementById('workAudio').play();
             document.getElementsByTagName('body')[0].style.backgroundColor= 'rgb(184, 9, 9)';
             document.getElementById('backpng').style.display='flex';
@@ -130,16 +123,19 @@
             document.getElementById('backAudio').play();
             document.getElementById('backAudio').volume = 0.1;
             document.getElementById('St').style.display = "none";
-            document.getElementById('BK').style.display = "none";
+            document.getElementById('Replay').style.display = "none";
             document.getElementsByClassName('BBox')[0].style.display='inline';
         }
-        function Replay(){
+        function replay() {
             document.getElementById('St').style.display = "none";
-            document.getElementById('BK').style.display = "none";
-            document.getElementById('repeatAudio').play();
+            document.getElementById('Replay').style.display = "none";
+            document.getElementById('borderLine').style.visibility='hidden';
+            document.getElementById('pb').style.visibility='hidden';
+            document.getElementById('ReplayAudio').play();
+            document.getElementsByClassName('BBox')[0].style.display='inline';
             document.getElementsByTagName('body')[0].style.backgroundColor= 'rgb(184, 9, 9)';
             document.getElementById('backpng').style.display='flex';
-            document.getElementById('repeatAudio').volume = 1;
+            document.getElementById('ReplayAudio').volume = 1;
         }
     </script>
 
@@ -147,19 +143,17 @@
 
 <body>
     <div id="St" onclick="backaudio();">Start</div>
-    <div></div>
-    <div id="BK" onclick="Replay();">Replay</div>
     <div class="BBox">
         <img id="backpng" src="/pngtree-gradient-festive-new-year-background-picture-image_979792.png" />
         <audio id="backAudio" src="/onload.mp3" loop></audio>
         <audio id="workAudio" src="/Active-20.mp3"></audio>
-        <audio id="repeatAudio" src="/Active-02.mp3" loop></audio>
-        <!-- <div id="NB" onclick="TriggerAudio();">▶</div> -->
+        <audio id="ReplayAudio" src="/Active-02.mp3" loop></audio>
         <div id="borderLine"></div>
         <img class="button" id="pb" src="/red-play-button-icon.webp" onclick="TriggerAudio();">
     
         <!-- <video style="visibility: hidden;width: 100%;height:100%;display: block;" id="vv" src="IMG_4747.MOV" controls></video> -->
     </div>
+    <div id="Replay" onclick="replay();">Replay</div>
     <!-- <img src="" onclick="document.getElementById('pp').play();"/> -->
 </body>
 
