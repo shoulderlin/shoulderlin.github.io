@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>倒數計時器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #timer {
+            font-size: 200px;
+            margin: 20px;
+            transition: font-size 0.3s;
+            width: 100%;
+            height: 100%;
+            vertical-align: center;
+        }
+
+        .buttons{
+            font-size: 16pt;
+            margin: 5px;
+        }
+
+        input {
+            width: 50px;
+        }
+
+
+        .section {
+            padding: 20px;
+            margin: 10px;
+            border-radius: 5px;
+        }
+
+        .countdown-section {
+            background-color: #f0f8ff;
+            width: 50%;
+        }
+        .preset-section {
+            background-color: #eeeeee;
+            width: 15%;
+        }
+        .reminder-section {
+            background-color: #ffe4e1;
+            width: 35%;
+        }
+
+        .reminder-list {
+            margin-top: 20px;
+        }
+
+        .reminder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #showController {
+            text-align: left;
+            font-size: 20pt;
+        }
+    </style>
+</head>
+
+<body>
+
+    
+    <div id="timer">00:00:00</div>
+    <div id="showController" style=''>×</div>
+    <div id="hideController" style="display: flex;">
+        
+        
+        <div class="preset-section">
+            <h2>預設模組</h2>
+            <button id="slide" class="buttons">簡報</button><br/>
+            <button id="QA" class="buttons">回答</button>
+        </div>
+
+        <div class="countdown-section">
+            <h2>設定倒數時間</h2>
+            <div>
+                <input type="number" id="hoursInput" placeholder="時" min="0"> :
+                <input type="number" id="minutesInput" placeholder="分" min="0"> :
+                <input type="number" id="secondsInput" placeholder="秒" min="0">
+            </div>
+            <button id="startButton" class="buttons">開始倒數</button>
+            <button id="pauseButton" class="buttons">暫停</button>
+            <button id="resetButton" class="buttons">重置</button>
+        </div>
+        <div class="reminder-section">
+            <h2>設定提醒時間</h2>
+            <div>
+                <input type="number" id="reminderHoursInput" placeholder="時" min="0"> :
+                <input type="number" id="reminderMinutesInput" placeholder="分" min="0"> :
+                <input type="number" id="reminderSecondsInput" placeholder="秒" min="0">
+                <button id="addReminderButton" class="buttons">添加提醒</button>
+            </div>
+
+            <div class="reminder-list" id="reminderList">
+                <h3>已設定的提醒時間：</h3>
+                <!-- 提醒項目將在這裡生成 -->
+            </div>
+        </div>
+    </div>
+    <audio id="salarm" src="short.mp3" preload="auto"></audio>
+    <audio id="lalarm" src="long.mp3" preload="auto"></audio>
+
+    <script>
+        let countdown;
+        let remainingTime = 0;
+        const timerDisplay = document.getElementById('timer');
+        const salarm = document.getElementById('salarm');
+        const lalarm = document.getElementById('lalarm');
+        let isPaused = false;
+        let reminders = [];
+
+        document.getElementById('slide').addEventListener('click', () => {
+            remainingTime = 0;
+            timerDisplay.textContent = "00:00:00";
+            isPaused = false;
+            reminders = [];
+            document.getElementById('hoursInput').value = 0;
+            document.getElementById('minutesInput').value = 20;
+            document.getElementById('secondsInput').value = 0;
+            reminders.push(3 * 60);
+            updateReminderList();
+        });
+
+        document.getElementById('QA').addEventListener('click', () => {
+            remainingTime = 0;
+            timerDisplay.textContent = "00:00:00";
+            isPaused = false;
+            reminders = [];
+            document.getElementById('hoursInput').value = 0;
+            document.getElementById('minutesInput').value = 10;
+            document.getElementById('secondsInput').value = 0;
+            reminders.push(1 * 60);
+            updateReminderList();
+        });
+
+        document.getElementById('showController').addEventListener('click',() =>{
+            if (document.getElementById('showController').textContent === '×'){
+                document.getElementById('hideController').style = 'display:none';
+                document.getElementById('showController').textContent = '=';
+            }else if (document.getElementById('showController').textContent === '=') {
+                document.getElementById('hideController').style = 'display:flex;font-size:16pt';
+                document.getElementsByClassName('buttons').style = 'font-size:16pt';
+                document.getElementById('showController').textContent = '×';
+            }
+           
+           
+        });
+
+
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            const hours = parseInt(document.getElementById('hoursInput').value) || 0;
+            const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+            const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+
+            remainingTime = hours * 3600 + minutes * 60 + seconds;
+            clearInterval(countdown);
+            startCountdown();
+
+            // 放大計時器到全螢幕
+            timerDisplay.style = 'font-size:200px';
+            document.getElementById('hideController').style.display = 'none';
+            document.getElementById('showController').textContent = '=';
+
+            // 縮小按鈕
+            
+        });
+
+        document.getElementById('pauseButton').addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(countdown);
+                document.getElementById('pauseButton').textContent = "繼續";
+            } else {
+                startCountdown();
+                document.getElementById('pauseButton').textContent = "暫停";
+            }
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            clearInterval(countdown);
+            remainingTime = 0;
+            timerDisplay.textContent = "00:00:00";
+            isPaused = false;
+            reminders = [];
+            document.getElementById('pauseButton').textContent = "暫停";
+            document.getElementById('hoursInput').value = '';
+            document.getElementById('minutesInput').value = '';
+            document.getElementById('secondsInput').value = '';
+            updateReminderList(); // 更新提醒列表
+        });
+
+        document.getElementById('addReminderButton').addEventListener('click', () => {
+            const reminderHours = parseInt(document.getElementById('reminderHoursInput').value) || 0;
+            const reminderMinutes = parseInt(document.getElementById('reminderMinutesInput').value) || 0;
+            const reminderSeconds = parseInt(document.getElementById('reminderSecondsInput').value) || 0;
+
+            const reminderTime = reminderHours * 3600 + reminderMinutes * 60 + reminderSeconds;
+
+            if (reminderTime > 0) {
+                reminders.push(reminderTime);
+                //alert(`已添加提醒：${reminderHours} 時 ${reminderMinutes} 分 ${reminderSeconds} 秒`);
+                updateReminderList(); // 更新提醒列表
+                clearReminderInputs(); // 清空輸入框
+            }
+        });
+
+        function clearReminderInputs() {
+            document.getElementById('reminderHoursInput').value = "";
+            document.getElementById('reminderMinutesInput').value = "";
+            document.getElementById('reminderSecondsInput').value = "";
+        }
+
+        function updateReminderList() {
+            const reminderListDiv = document.getElementById('reminderList');
+            reminderListDiv.innerHTML = '<h3>已設定的提醒時間：</h3>'; // 清空並重新生成標題
+
+            reminders.forEach((time, index) => {
+                const hours = Math.floor(time / 3600);
+                const minutes = Math.floor((time % 3600) / 60);
+                const seconds = time % 60;
+
+                const reminderItemDiv = document.createElement('div');
+                reminderItemDiv.className = 'reminder-item';
+                reminderItemDiv.innerHTML = `${String(hours).padStart(2, '0')} 時 ${String(minutes).padStart(2, '0')} 分 ${String(seconds).padStart(2, '0')} 秒`;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = "刪除";
+                deleteButton.addEventListener('click', () => {
+                    reminders.splice(index, 1); // 刪除該提醒
+                    updateReminderList(); // 更新顯示
+                });
+
+                reminderItemDiv.appendChild(deleteButton);
+                reminderListDiv.appendChild(reminderItemDiv);
+            });
+        }
+
+        function startCountdown() {
+            countdown = setInterval(() => {
+                if (remainingTime <= 0) {
+                    clearInterval(countdown);
+                    lalarm.play();
+                    //alert("時間到了！");
+                    document.getElementById('hideController').style = 'display:flex;';
+                    document.getElementById('showController').textContent = '×';
+                    return;
+                }
+
+                if (!isPaused) {
+                    remainingTime--;
+
+                    const hours = Math.floor(remainingTime / 3600);
+                    const mins = Math.floor((remainingTime % 3600) / 60);
+                    const secs = remainingTime % 60;
+
+                    timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                    // 檢查是否需要提醒
+                    reminders.forEach((reminder, index) => {
+                        if (remainingTime === reminder) {
+                            //alert(`剩下 ${Math.floor(reminder / 3600)} 時 ${Math.floor((reminder % 3600) / 60)} 分 ${reminder % 60} 秒！`);
+                            salarm.play();
+                            reminders.splice(index, 1); // 移除已經提醒的時間
+                            updateReminderList(); // 更新顯示
+                        }
+                    });
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
