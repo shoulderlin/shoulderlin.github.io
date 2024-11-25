@@ -118,6 +118,16 @@
         const lalarm = document.getElementById('lalarm');
         let isPaused = false;
         let reminders = [];
+        function shortalarm(){
+          salarm.currentTime = 1;
+          salarm.play();};
+        function longalarm(){
+          lalarm.currentTime = 0;
+          lalarm.play();
+        };
+
+
+
 
         document.getElementById('slide').addEventListener('click', () => {
             remainingTime = 0;
@@ -250,7 +260,7 @@
             countdown = setInterval(() => {
                 if (remainingTime <= 0) {
                     clearInterval(countdown);
-                    lalarm.play();
+                    longalarm();
                     //alert("時間到了！");
                     document.getElementById('hideController').style = 'display:flex;';
                     document.getElementById('showController').textContent = '×';
@@ -270,7 +280,7 @@
                     reminders.forEach((reminder, index) => {
                         if (remainingTime === reminder) {
                             //alert(`剩下 ${Math.floor(reminder / 3600)} 時 ${Math.floor((reminder % 3600) / 60)} 分 ${reminder % 60} 秒！`);
-                            salarm.play();
+                            shortalarm();
                             reminders.splice(index, 1); // 移除已經提醒的時間
                             updateReminderList(); // 更新顯示
                         }
@@ -278,13 +288,7 @@
                 }
             }, 1000);
         };
-        function shortalarm(){
-          salarm.currentTime = 0;
-          salarm.play();};
-        function longalarm(){
-          lalarm.currentTime = 0;
-          lalarm.play();
-        };
+        
     </script>
 </body>
 
