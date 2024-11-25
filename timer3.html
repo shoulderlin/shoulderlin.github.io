@@ -11,7 +11,7 @@
         }
 
         #timer {
-            font-size: 210px;
+            font-size: 230px;
             margin: 20px;
             transition: font-size 0.3s;
             width: 100%;
@@ -77,8 +77,8 @@
             <button id="slide" class="buttons">簡報</button><br/>
             <button id="QA" class="buttons">回答</button><br/>
             <h2>響鈴測試</h2>
-            <button onclick="document.getElementById('salarm').play();" class="buttons">短音</button><br/>
-            <button onclick="document.getElementById('lalarm').play();" class="buttons">長音</button><br/>
+            <button onclick="shortalarm();" class="buttons">短音</button><br/>
+            <button onclick="longalarm();" class="buttons">長音</button><br/>
         </div>
 
         <div class="countdown-section">
@@ -277,7 +277,14 @@
                     });
                 }
             }, 1000);
-        }
+        };
+        function shortalarm(){
+          salarm.currentTime = 0;
+          salarm.play();};
+        function longalarm(){
+          lalarm.currentTime = 0;
+          lalarm.play();
+        };
     </script>
 </body>
 
