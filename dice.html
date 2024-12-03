@@ -42,14 +42,14 @@
     <div id="result">00</div>
     <button onclick="drawNumber()">抽數字</button>
     <script>
-        
+        var recordDict = {}
         function onload(BN,UN){    
-            var recordDict = {};
+            var RD = {};
             for (i=BN;i<=UN;i++){
-                recordDict[String(i)]=0;
+                RD[String(i)]=0;
             };
-            console.log(recordDict);
-            return recordDict;
+            console.log(RD);
+            return RD;
             }
         function drawNumber() {
             const uppernumber = document.getElementById('up').value;
@@ -58,7 +58,7 @@
             let count = 0;
             // 每100毫秒更新一次數字，持續1秒鐘
             if (resultDiv.innerText == '00'){
-                var recordDict = onload(bottomnumber,uppernumber);
+                recordDict = onload(bottomnumber,uppernumber);
                 document.getElementById('settings').style.display = 'none';
             };
             
