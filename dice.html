@@ -42,10 +42,11 @@
     <div id="result">00</div>
     <button onclick="drawNumber()">抽取數字</button>
     <script>
+        const uppernumber = document.getElementById('up').value;
+        const bottomnumber = Math.floor(document.getElementById('bottom').value);
+            
         function onload(){
             var recordDict = {};
-            const uppernumber = document.getElementById('up').value;
-            const bottomnumber = Math.floor(document.getElementById('bottom').value);
             for (i=bottomnumber;i<=uppernumber;i++){
                 recordDict[i]=0;
             };
