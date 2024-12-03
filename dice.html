@@ -57,7 +57,7 @@
             const resultDiv = document.getElementById('result');
             let count = 0;
             // 每100毫秒更新一次數字，持續1秒鐘
-            if (resultDiv == '00'){
+            if (resultDiv.innerText == '00'){
                 var recordDict = onload(bottomnumber,uppernumber);
                 document.getElementById('settings').style.display = 'none';
             };
