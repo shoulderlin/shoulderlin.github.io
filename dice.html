@@ -46,7 +46,7 @@
         function onload(BN,UN){    
             var recordDict = {};
             for (i=BN;i<=UN;i++){
-                recordDict[i]=0;
+                recordDict[String(i)]=0;
             };
             console.log(recordDict);
             return recordDict;
