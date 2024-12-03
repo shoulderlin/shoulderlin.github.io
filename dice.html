@@ -34,7 +34,7 @@
         }}
     </style>
 </head>
-<body onload='onload();'>
+<body>
 
     <!-- <h1>隨機抽取數字</h1> -->
     <div id="settings">設定最小值：<input type="text" id="bottom" value="1"></input>
@@ -42,19 +42,26 @@
     <div id="result">00</div>
     <button onclick="drawNumber()">抽取數字</button>
     <script>
-        const uppernumber = document.getElementById('up').value;
-        const bottomnumber = Math.floor(document.getElementById('bottom').value);
-        var recordDict = {};
-        function onload(){    
-            for (i=bottomnumber;i<=uppernumber;i++){
+        
+        function onload(BN,UN){    
+            var recordDict = {};
+            for (i=BN;i<=UN;i++){
                 recordDict[i]=0;
             };
-            console.log(recordDict);}
+            console.log(recordDict);
+            return recordDict;
+            }
         function drawNumber() {
-            document.getElementById('settings').style.display = 'none';
+            const uppernumber = document.getElementById('up').value;
+            const bottomnumber = Math.floor(document.getElementById('bottom').value);
             const resultDiv = document.getElementById('result');
             let count = 0;
             // 每100毫秒更新一次數字，持續1秒鐘
+            if (resultDiv == '00'){
+                var recordDict = onload(bottomnumber,uppernumber);
+                document.getElementById('settings').style.display = 'none';
+            };
+            
             const interval = setInterval(() => {
                 const randomNumber = Math.floor(Math.random() * uppernumber) + 1;
                 resultDiv.innerText = randomNumber;
