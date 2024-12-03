@@ -10,6 +10,9 @@
             text-align: center;
             margin-top: 50px;
         }
+        div#main{
+            height:3000px;           
+        }
         button {
             padding: 10px 20px;
             font-size: 30px;
@@ -39,8 +42,10 @@
     <!-- <h1>隨機抽取數字</h1> -->
     <div id="settings">設定最小值：<input type="text" id="bottom" value="1"></input>
     <br>設定最大值：<input type="text" id="up" value="12"></input></div>
-    <div id="result" onclick="drawNumber()">00</div>
-    <button onclick="drawNumber()">抽數字</button>
+    
+    <div id="main" onclick="drawNumber()">
+    <div id="result">00</div>
+    <button onclick="drawNumber()">抽數字</button></div>
     <script>
         var recordDict = {}
         function onload(BN,UN){    
