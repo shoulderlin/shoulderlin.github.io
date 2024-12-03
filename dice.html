@@ -44,9 +44,8 @@
     <script>
         const uppernumber = document.getElementById('up').value;
         const bottomnumber = Math.floor(document.getElementById('bottom').value);
-            
-        function onload(){
-            var recordDict = {};
+        var recordDict = {};
+        function onload(){    
             for (i=bottomnumber;i<=uppernumber;i++){
                 recordDict[i]=0;
             };
