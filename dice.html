@@ -37,7 +37,7 @@
         }}
     </style>
 </head>
-<body>
+<body onload="onload2();">
 
     <!-- <h1>隨機抽取數字</h1> -->
     <div id="settings">設定最小值：<input type="text" id="bottom" value="1"></input>
@@ -47,6 +47,10 @@
     <div id="result">00</div>
     <button onclick="drawNumber()">抽數字</button></div>
     <script>
+        function onload2(){
+            var M = document.getElementById('main');
+            M.setAttribute('style','width:'+window.screen.width+'px;height:'+window.screen.height+'px');
+        }
         var recordDict = {}
         function onload(BN,UN){    
             var RD = {};
