@@ -11,12 +11,13 @@
             margin-top: 50px;
         }
         div#main{
-            height:1100px;           
+            text-align: center;      
         }
         button {
             padding: 10px 20px;
             font-size: 30px;
             cursor: pointer;
+            
         }
 
         #result {
@@ -24,6 +25,8 @@
             font-size: 500pt;
             color: #333;
             position: relative; /* 為了使用絕對定位 */
+            text-align: center;
+            width:1080px;
         }
         
 
@@ -34,6 +37,8 @@
                     font-size: 200pt;
                     color: #333;
                     position: relative; /* 為了使用絕對定位 */
+                    text-align: center;
+                    width:920px;
         }}
     </style>
 </head>
@@ -49,7 +54,8 @@
     <script>
         function onload2(){
             var M = document.getElementById('main');
-            M.setAttribute('style','width:'+window.screen.width+'px;height:'+window.screen.height+'px');
+            M.setAttribute('style','width:'+window.screen.width*0.8+'px;height:'+window.screen.height*0.8+'px');
+            
         }
         var recordDict = {}
         function onload(BN,UN){    
