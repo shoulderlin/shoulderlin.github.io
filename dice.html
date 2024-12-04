@@ -10,14 +10,15 @@
             text-align: center;
             margin-top: 50px;
         }
-        div#main{
-            text-align: center;      
-        }
+        
         button {
             padding: 10px 20px;
             font-size: 30px;
             cursor: pointer;
-            
+        }
+        div#button{
+            text-align:center;
+            width: 100%;
         }
 
         #result {
@@ -25,8 +26,7 @@
             font-size: 500pt;
             color: #333;
             position: relative; /* 為了使用絕對定位 */
-            text-align: center;
-            width:1080px;
+            width:100%;
         }
         
 
@@ -38,11 +38,11 @@
                     color: #333;
                     position: relative; /* 為了使用絕對定位 */
                     text-align: center;
-                    width:920px;
+                    width:100%;
         }}
     </style>
 </head>
-<body onload="onload2();">
+<body onload="onload2();" id="body">
 
     <!-- <h1>隨機抽取數字</h1> -->
     <div id="settings">設定最小值：<input type="text" id="bottom" value="1"></input>
@@ -50,12 +50,11 @@
     
     <div id="main" onclick="drawNumber()">
     <div id="result">00</div>
-    <button onclick="drawNumber()">抽數字</button></div>
+    <div id="button"><button onclick="drawNumber()">抽數字</button></div></div>
     <script>
         function onload2(){
-            var M = document.getElementById('main');
-            M.setAttribute('style','width:'+window.screen.width*0.8+'px;height:'+window.screen.height*0.8+'px');
-            
+            var M = document.getElementById('body');
+            M.setAttribute('style','width:'+window.screen.width+'px;height:'+window.screen.height*0.8+'px;text-align:center;');
         }
         var recordDict = {}
         function onload(BN,UN){    
