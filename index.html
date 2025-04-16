@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>辦公小工具首頁</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    header {
+      background-color: #007BFF;
+      padding: 1rem;
+      color: white;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      background-color: #f1f1f1;
+      border-bottom: 1px solid #ccc;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+
+    nav button:hover {
+      background-color: #ddd;
+    }
+
+    iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body onload="loadTool('./pwdGenerator.html')">
+
+  <header>辦公小工具首頁</header>
+
+  <nav>
+    <button onclick="loadTool('./pwdGenerator.html')">密碼產生器</button>
+    <button onclick="loadTool('./timer3.html')">倒數計時器</button>
+    <button onclick="loadTool('./dice.html')">抽籤工具</button>
+  </nav>
+
+  <iframe id="toolFrame" src=""></iframe>
+
+  <script>
+    function loadTool(url) {
+      document.getElementById("toolFrame").src = url;
+    }
+  </script>
+
+</body>
+</html>
