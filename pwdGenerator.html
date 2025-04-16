@@ -1,24 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>美化密碼產生器</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>密碼產生器</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind 深色模式初始化設定
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8 space-y-6">
-    <h1 class="text-2xl font-bold text-center text-gray-800">🔐 密碼產生器</h1>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex items-center justify-center p-6">
 
-    <div class="grid md:grid-cols-2 gap-4">
+  <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 space-y-6 transition">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">🔐 密碼產生器</h1>
+      <button onclick="toggleDarkMode()"
+              class="bg-gray-200 dark:bg-gray-700 text-sm px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        🌗 切換主題
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="block text-gray-600 mb-1">密碼長度：</label>
+        <label class="block mb-1">密碼長度：</label>
         <input type="number" id="length" value="12" min="4" max="100"
-               class="w-full border rounded-lg p-2" />
+               class="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600" />
       </div>
       <div>
-        <label class="block text-gray-600 mb-1">產生組數：</label>
+        <label class="block mb-1">產生組數：</label>
         <input type="number" id="count" value="5" min="1" max="100"
-               class="w-full border rounded-lg p-2" />
+               class="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600" />
       </div>
     </div>
 
@@ -46,12 +60,16 @@
       🚀 產生密碼
     </button>
 
-    <div id="error" class="text-red-600 text-sm"></div>
+    <div id="error" class="text-red-500 text-sm"></div>
 
     <div id="result" class="space-y-4"></div>
   </div>
 
   <script>
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+    }
+
     function generatePasswords() {
       const length = parseInt(document.getElementById('length').value);
       const count = parseInt(document.getElementById('count').value);
@@ -99,19 +117,19 @@
         password = password.split('').sort(() => Math.random() - 0.5).join('');
 
         const card = document.createElement('div');
-        card.className = 'bg-gray-50 p-4 rounded-lg border shadow flex justify-between items-center';
+        card.className = 'bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border shadow flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0';
 
         const text = document.createElement('div');
-        text.className = 'font-mono text-lg break-all text-gray-800';
+        text.className = 'font-mono text-lg break-words text-gray-800 dark:text-white';
         text.textContent = password;
 
         const strength = evaluateStrength(password);
         const strengthLabel = document.createElement('span');
-        strengthLabel.className = `ml-4 text-sm font-bold ${strengthColor(strength)}`;
+        strengthLabel.className = `text-sm font-bold ${strengthColor(strength)}`;
         strengthLabel.textContent = `強度：${strength}`;
 
         const copyBtn = document.createElement('button');
-        copyBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm ml-4';
+        copyBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm';
         copyBtn.textContent = '複製';
         copyBtn.onclick = () => {
           navigator.clipboard.writeText(password);
@@ -119,9 +137,13 @@
           setTimeout(() => copyBtn.textContent = '複製', 1500);
         };
 
+        const actionBox = document.createElement('div');
+        actionBox.className = 'flex items-center space-x-4';
+        actionBox.appendChild(strengthLabel);
+        actionBox.appendChild(copyBtn);
+
         card.appendChild(text);
-        card.appendChild(strengthLabel);
-        card.appendChild(copyBtn);
+        card.appendChild(actionBox);
         resultBox.appendChild(card);
       }
     }
