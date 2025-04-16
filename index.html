@@ -5,13 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>辦公小工具首頁</title>
   <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --primary-color: #007BFF;
+      --nav-bg: #f1f1f1;
+      --hover-bg: #ddd;
+    }
+
+    body.dark {
+      --bg-color: #1e1e1e;
+      --text-color: #f1f1f1;
+      --primary-color: #3399ff;
+      --nav-bg: #2c2c2c;
+      --hover-bg: #444;
+    }
+
     body {
       margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
     header {
-      background-color: #007BFF;
+      background-color: var(--primary-color);
       padding: 1rem;
       color: white;
       text-align: center;
@@ -22,27 +40,45 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      background-color: #f1f1f1;
+      background-color: var(--nav-bg);
       border-bottom: 1px solid #ccc;
     }
 
-    nav button {
+    nav button, #toggleButton, #themeToggle {
       background: none;
       border: none;
       padding: 1rem;
       cursor: pointer;
       font-size: 1rem;
+      color: var(--text-color);
       transition: background 0.3s;
     }
 
-    nav button:hover {
-      background-color: #ddd;
+    nav button:hover, #toggleButton:hover, #themeToggle:hover {
+      background-color: var(--hover-bg);
+    }
+
+    #toggleButton {
+      width: 100%;
+      background-color: var(--nav-bg);
+      text-align: center;
+    }
+
+    #themeToggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
     }
 
     iframe {
       width: 100%;
-      height: 80vh;
+      height: calc(100vh - 164px);
       border: none;
+      transition: height 0.3s;
+    }
+
+    .hidden {
+      display: none;
     }
 
     @media (max-width: 600px) {
@@ -54,13 +90,15 @@
 </head>
 <body onload="loadTool('./pwdGenerator.html')">
 
-  <header>辦公小工具首頁</header>
+  <header id="pageHeader">辦公小工具首頁</header>
 
-  <nav>
+  <nav id="navBar">
     <button onclick="loadTool('./pwdGenerator.html')">密碼產生器</button>
     <button onclick="loadTool('./timer3.html')">倒數計時器</button>
     <button onclick="loadTool('./dice.html')">抽籤工具</button>
   </nav>
+  <button id="toggleButton" onclick="toggleHeaderAndNav()">隱藏導航列與標題</button>
+  <button id="themeToggle" onclick="toggleTheme()">🌙 深色模式</button>
 
   <iframe id="toolFrame" src=""></iframe>
 
@@ -68,6 +106,41 @@
     function loadTool(url) {
       document.getElementById("toolFrame").src = url;
     }
+
+    function toggleHeaderAndNav() {
+      const header = document.getElementById("pageHeader");
+      const nav = document.getElementById("navBar");
+      const toggleBtn = document.getElementById("toggleButton");
+      const frame = document.getElementById("toolFrame");
+      const hidden = header.classList.toggle("hidden");
+      nav.classList.toggle("hidden");
+
+      if (hidden) {
+        toggleBtn.textContent = "顯示導航列與標題";
+        frame.style.height = "100vh";
+      } else {
+        toggleBtn.textContent = "隱藏導航列與標題";
+        frame.style.height = "calc(100vh - 164px)";
+      }
+    }
+
+    function toggleTheme() {
+      const body = document.body;
+      const themeBtn = document.getElementById("themeToggle");
+      const isDark = body.classList.toggle("dark");
+
+      themeBtn.textContent = isDark ? "☀️ 淺色模式" : "🌙 深色模式";
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    // 自動套用本地儲存的主題設定
+    (function () {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        document.getElementById("themeToggle").textContent = "☀️ 淺色模式";
+      }
+    })();
   </script>
 
 </body>
