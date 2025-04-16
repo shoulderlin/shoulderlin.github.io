@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>美化密碼產生器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8 space-y-6">
+    <h1 class="text-2xl font-bold text-center text-gray-800">🔐 密碼產生器</h1>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-600 mb-1">密碼長度：</label>
+        <input type="number" id="length" value="12" min="4" max="100"
+               class="w-full border rounded-lg p-2" />
+      </div>
+      <div>
+        <label class="block text-gray-600 mb-1">產生組數：</label>
+        <input type="number" id="count" value="5" min="1" max="100"
+               class="w-full border rounded-lg p-2" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" id="includeLower" checked class="accent-blue-600" />
+        <span>小寫字母</span>
+      </label>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" id="includeUpper" checked class="accent-blue-600" />
+        <span>大寫字母</span>
+      </label>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" id="includeNumbers" checked class="accent-blue-600" />
+        <span>數字</span>
+      </label>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" id="includeSymbols" checked class="accent-blue-600" />
+        <span>特殊符號</span>
+      </label>
+    </div>
+
+    <button onclick="generatePasswords()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+      🚀 產生密碼
+    </button>
+
+    <div id="error" class="text-red-600 text-sm"></div>
+
+    <div id="result" class="space-y-4"></div>
+  </div>
+
+  <script>
+    function generatePasswords() {
+      const length = parseInt(document.getElementById('length').value);
+      const count = parseInt(document.getElementById('count').value);
+      const includeLower = document.getElementById('includeLower').checked;
+      const includeUpper = document.getElementById('includeUpper').checked;
+      const includeNumbers = document.getElementById('includeNumbers').checked;
+      const includeSymbols = document.getElementById('includeSymbols').checked;
+
+      const lower = 'abcdefghijklmnopqrstuvwxyz';
+      const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      const symbols = '!@#$%^&()_+-=[]{}|;:,.<>?';
+
+      const pools = [];
+      if (includeLower) pools.push(lower);
+      if (includeUpper) pools.push(upper);
+      if (includeNumbers) pools.push(numbers);
+      if (includeSymbols) pools.push(symbols);
+
+      const resultBox = document.getElementById('result');
+      const errorBox = document.getElementById('error');
+      resultBox.innerHTML = '';
+      errorBox.textContent = '';
+
+      if (pools.length === 0) {
+        errorBox.textContent = '請至少勾選一種元素。';
+        return;
+      }
+      if (length < pools.length) {
+        errorBox.textContent = `密碼長度至少要有 ${pools.length}，以確保每種類型至少一個字元。`;
+        return;
+      }
+
+      for (let i = 0; i < count; i++) {
+        let password = '';
+        pools.forEach(pool => {
+          password += pool.charAt(Math.floor(Math.random() * pool.length));
+        });
+
+        const allChars = pools.join('');
+        for (let j = password.length; j < length; j++) {
+          password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+        }
+
+        password = password.split('').sort(() => Math.random() - 0.5).join('');
+
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 p-4 rounded-lg border shadow flex justify-between items-center';
+
+        const text = document.createElement('div');
+        text.className = 'font-mono text-lg break-all text-gray-800';
+        text.textContent = password;
+
+        const strength = evaluateStrength(password);
+        const strengthLabel = document.createElement('span');
+        strengthLabel.className = `ml-4 text-sm font-bold ${strengthColor(strength)}`;
+        strengthLabel.textContent = `強度：${strength}`;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm ml-4';
+        copyBtn.textContent = '複製';
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(password);
+          copyBtn.textContent = '✅ 已複製';
+          setTimeout(() => copyBtn.textContent = '複製', 1500);
+        };
+
+        card.appendChild(text);
+        card.appendChild(strengthLabel);
+        card.appendChild(copyBtn);
+        resultBox.appendChild(card);
+      }
+    }
+
+    function evaluateStrength(pw) {
+      let score = 0;
+      if (/[a-z]/.test(pw)) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^a-zA-Z0-9]/.test(pw)) score++;
+      if (pw.length >= 12) score++;
+
+      switch (score) {
+        case 5: return '非常強';
+        case 4: return '強';
+        case 3: return '中等';
+        case 2: return '弱';
+        default: return '非常弱';
+      }
+    }
+
+    function strengthColor(level) {
+      switch (level) {
+        case '非常強': return 'text-green-600';
+        case '強': return 'text-lime-600';
+        case '中等': return 'text-yellow-600';
+        case '弱': return 'text-orange-600';
+        default: return 'text-red-600';
+      }
+    }
+  </script>
+</body>
+</html>
