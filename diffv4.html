@@ -218,11 +218,11 @@
           originalHTML += data.replace(/\n/g, "<br>");
           modifiedHTML += data.replace(/\n/g, "<br>");
         } else if (op === -1) {
-          const styled = `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic);">${data}</span>`;
-          originalHTML += deleteUnderline ? `<u>${styled}</u>` : styled;
+          const underlined = deleteUnderline ? `<u>${data}</u>` : data;
+          originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic);">${underlined}</span>`;
         } else if (op === 1) {
-          const styled = `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic);">${data}</span>`;
-          modifiedHTML += insertUnderline ? `<u>${styled}</u>` : styled;
+          const underlined = insertUnderline ? `<u>${data}</u>` : data;
+          modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic);">${underlined}</span>`;
         }
       });
     
