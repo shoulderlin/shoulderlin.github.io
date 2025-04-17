@@ -7,18 +7,22 @@
   <script src="https://unpkg.com/diff-match-patch"></script>
   <style>
     :root {
+      /* insert and delete styles */
       --insert-color: green;
       --insert-bg: transparent;
       --insert-bold: normal;
       --insert-italic: normal;
       --insert-underline: underline;
-
+      --insert-font-size: 1em;
+    
       --delete-color: red;
       --delete-bg: transparent;
       --delete-bold: normal;
       --delete-italic: normal;
       --delete-underline: underline;
+      --delete-font-size: 1em;
     }
+
 
     * {
       box-sizing: border-box;
@@ -203,6 +207,10 @@
     
     <div class="format-controls">
       <h3>新增文字樣式</h3>
+      <label>字型大小:
+  <input type="number" min="0.5" max="5" step="0.1" value="1" onchange="updateStyle('--insert-font-size', this.value + 'em')">
+</label>
+
       <label>顏色:
         <input type="color" onchange="updateStyle('--insert-color', this.value)" value="#008000">
       </label>
@@ -221,6 +229,10 @@
     </div>
     <div class="format-controls">
       <h3>刪除文字樣式</h3>
+      <label>字型大小:
+  <input type="number" min="0.5" max="5" step="0.1" value="1" onchange="updateStyle('--delete-font-size', this.value + 'em')">
+</label>
+
       <label>顏色:
         <input type="color" onchange="updateStyle('--delete-color', this.value)" value="#ff0000">
       </label>
@@ -264,10 +276,12 @@
           modifiedHTML += data.replace(/\n/g, "<br>");
         } else if (op === -1) {
           const decorated = deleteUnderline ? `<u>${data}</u>` : data;
-          originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic);">${decorated}</span>`;
+          originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic); font-size: var(--delete-font-size);">${decorated}</span>`;
+
         } else if (op === 1) {
           const decorated = insertUnderline ? `<u>${data}</u>` : data;
-          modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic);">${decorated}</span>`;
+          modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic); font-size: var(--insert-font-size);">${decorated}</span>`;
+
         }
       });
 
