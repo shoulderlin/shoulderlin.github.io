@@ -161,15 +161,16 @@
     <div class="column">
       <label>原文：</label>
       <textarea id="original" placeholder="輸入原文..."></textarea>
+      <label>修改後文字：</label>
+      <textarea id="modified" placeholder="輸入修改後文字..."></textarea>
+      
+    </div>
+
+    <div class="column">
       <label>原文比對結果：</label>
       <div class="result" id="originalDiff" onclick="copyHtmlToClipboard('originalDiff', 'copiedOriginal')"></div>
       <button onclick="copyHtmlToClipboard('originalDiff', 'copiedOriginal')">複製原文比對結果</button>
       <div id="copiedOriginal" class="copy-message">✅ 已複製！</div>
-    </div>
-
-    <div class="column">
-      <label>修改後文字：</label>
-      <textarea id="modified" placeholder="輸入修改後文字..."></textarea>
       <label>修改後比對結果：</label>
       <div class="result" id="modifiedDiff"onclick="copyHtmlToClipboard('modifiedDiff', 'copiedModified')"></div>
       <button onclick="copyHtmlToClipboard('modifiedDiff', 'copiedModified')">複製修改後比對結果</button>
@@ -230,33 +231,6 @@
       modifiedDiff.innerHTML = modifiedHTML;
     }
 
-
-
-
-    
-    // function updateDiffs() {
-    //   const text1 = originalInput.value;
-    //   const text2 = modifiedInput.value;
-    //   const diffs = dmp.diff_main(text1, text2);
-    //   dmp.diff_cleanupSemantic(diffs);
-
-    //   let originalHTML = '';
-    //   let modifiedHTML = '';
-
-    //   diffs.forEach(([op, data]) => {
-    //     if (op === 0) {
-    //       originalHTML += data.replace(/\n/g, "<br>");
-    //       modifiedHTML += data.replace(/\n/g, "<br>");
-    //     } else if (op === -1) {
-    //       originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic); text-decoration: var(--delete-underline);">${data}</span>`;
-    //     } else if (op === 1) {
-    //       modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic); text-decoration: var(--insert-underline);">${data}</span>`;
-    //     }
-    //   });
-      
-    //   originalDiff.innerHTML = originalHTML;
-    //   modifiedDiff.innerHTML = modifiedHTML;
-    // }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark');
