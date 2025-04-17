@@ -205,24 +205,58 @@
       const text2 = modifiedInput.value;
       const diffs = dmp.diff_main(text1, text2);
       dmp.diff_cleanupSemantic(diffs);
-
+    
+      // 取得使用者設定
+      const insertUnderline = getComputedStyle(document.documentElement).getPropertyValue('--insert-underline').trim() === 'underline';
+      const deleteUnderline = getComputedStyle(document.documentElement).getPropertyValue('--delete-underline').trim() === 'underline';
+    
       let originalHTML = '';
       let modifiedHTML = '';
-
+    
       diffs.forEach(([op, data]) => {
         if (op === 0) {
           originalHTML += data.replace(/\n/g, "<br>");
           modifiedHTML += data.replace(/\n/g, "<br>");
         } else if (op === -1) {
-          originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic); text-decoration: var(--delete-underline);">${data}</span>`;
+          const styled = `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic);">${data}</span>`;
+          originalHTML += deleteUnderline ? `<u>${styled}</u>` : styled;
         } else if (op === 1) {
-          modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic); text-decoration: var(--insert-underline);">${data}</span>`;
+          const styled = `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic);">${data}</span>`;
+          modifiedHTML += insertUnderline ? `<u>${styled}</u>` : styled;
         }
       });
-      
+    
       originalDiff.innerHTML = originalHTML;
       modifiedDiff.innerHTML = modifiedHTML;
     }
+
+
+
+
+    
+    // function updateDiffs() {
+    //   const text1 = originalInput.value;
+    //   const text2 = modifiedInput.value;
+    //   const diffs = dmp.diff_main(text1, text2);
+    //   dmp.diff_cleanupSemantic(diffs);
+
+    //   let originalHTML = '';
+    //   let modifiedHTML = '';
+
+    //   diffs.forEach(([op, data]) => {
+    //     if (op === 0) {
+    //       originalHTML += data.replace(/\n/g, "<br>");
+    //       modifiedHTML += data.replace(/\n/g, "<br>");
+    //     } else if (op === -1) {
+    //       originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic); text-decoration: var(--delete-underline);">${data}</span>`;
+    //     } else if (op === 1) {
+    //       modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic); text-decoration: var(--insert-underline);">${data}</span>`;
+    //     }
+    //   });
+      
+    //   originalDiff.innerHTML = originalHTML;
+    //   modifiedDiff.innerHTML = modifiedHTML;
+    // }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark');
