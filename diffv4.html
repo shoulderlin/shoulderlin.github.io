@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雙邊文字比對工具</title>
+  <script src="https://unpkg.com/diff-match-patch"></script>
+  <style>
+    :root {
+      --insert-color: green;
+      --insert-bg: transparent;
+      --insert-bold: normal;
+      --insert-italic: normal;
+      --insert-underline: underline;
+
+      --delete-color: red;
+      --delete-bg: transparent;
+      --delete-bold: normal;
+      --delete-italic: normal;
+      --delete-underline: underline;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #111;
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background: #1e1e1e;
+      color: #fff;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .column {
+      flex: 1 1 45%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    body.dark .column {
+      background: #2a2a2a;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #000;
+    }
+
+    body.dark textarea {
+      background: #333;
+      color: #fff;
+      border-color: #555;
+    }
+
+    .result {
+      border: 1px solid #ccc;
+      padding: 10px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #fff;
+      min-height: 150px;
+      border-radius: 8px;
+    }
+
+    body.dark .result {
+      background: #2b2b2b;
+      border-color: #666;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #388e3c;
+    }
+
+    .copy-message {
+      display: none;
+      text-align: center;
+      margin-top: 5px;
+      color: #4CAF50;
+      font-size: 0.9em;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .format-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 10px 0 30px;
+      justify-content: center;
+    }
+
+    .format-controls label {
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>雙邊文字比對工具</h1>
+  <div class="controls">
+    <button onclick="toggleDarkMode()">切換 Dark Mode</button>
+  </div>
+
+  <div class="container">
+    <div class="column">
+      <label>原文：</label>
+      <textarea id="original" placeholder="輸入原文..."></textarea>
+      <label>原文比對結果：</label>
+      <div class="result" id="originalDiff" onclick="copyHtmlToClipboard('originalDiff', 'copiedOriginal')"></div>
+      <button onclick="copyHtmlToClipboard('originalDiff', 'copiedOriginal')">複製原文比對結果</button>
+      <div id="copiedOriginal" class="copy-message">✅ 已複製！</div>
+    </div>
+
+    <div class="column">
+      <label>修改後文字：</label>
+      <textarea id="modified" placeholder="輸入修改後文字..."></textarea>
+      <label>修改後比對結果：</label>
+      <div class="result" id="modifiedDiff"onclick="copyHtmlToClipboard('modifiedDiff', 'copiedModified')"></div>
+      <button onclick="copyHtmlToClipboard('modifiedDiff', 'copiedModified')">複製修改後比對結果</button>
+      <div id="copiedModified" class="copy-message">✅ 已複製！</div>
+    </div>
+  </div>
+
+  <h2 style="text-align:center">樣式設定</h2>
+  <div class="format-controls">
+    <label>新增文字顏色: <input type="color" onchange="updateStyle('--insert-color', this.value)" value="#008000"></label>
+    <label>新增背景: <input type="color" onchange="updateStyle('--insert-bg', this.value)" value="#ffffff"></label>
+    <label>新增粗體: <input type="checkbox" onchange="updateStyle('--insert-bold', this.checked ? 'bold' : 'normal')"></label>
+    <label>新增斜體: <input type="checkbox" onchange="updateStyle('--insert-italic', this.checked ? 'italic' : 'normal')"></label>
+    <label>新增底線: <input type="checkbox" checked onchange="updateStyle('--insert-underline', this.checked ? 'underline' : 'none')"></label>
+  </div>
+  <div class="format-controls">
+    <label>刪除文字顏色: <input type="color" onchange="updateStyle('--delete-color', this.value)" value="#ff0000"></label>
+    <label>刪除背景: <input type="color" onchange="updateStyle('--delete-bg', this.value)" value="#ffffff"></label>
+    <label>刪除粗體: <input type="checkbox" onchange="updateStyle('--delete-bold', this.checked ? 'bold' : 'normal')"></label>
+    <label>刪除斜體: <input type="checkbox" onchange="updateStyle('--delete-italic', this.checked ? 'italic' : 'normal')"></label>
+    <label>刪除底線: <input type="checkbox" checked onchange="updateStyle('--delete-underline', this.checked ? 'underline' : 'none')"></label>
+  </div>
+
+  <script>
+    const dmp = new diff_match_patch();
+    const originalInput = document.getElementById("original");
+    const modifiedInput = document.getElementById("modified");
+    const originalDiff = document.getElementById("originalDiff");
+    const modifiedDiff = document.getElementById("modifiedDiff");
+
+    function updateDiffs() {
+      const text1 = originalInput.value;
+      const text2 = modifiedInput.value;
+      const diffs = dmp.diff_main(text1, text2);
+      dmp.diff_cleanupSemantic(diffs);
+
+      let originalHTML = '';
+      let modifiedHTML = '';
+
+      diffs.forEach(([op, data]) => {
+        if (op === 0) {
+          originalHTML += data.replace(/\n/g, "<br>");
+          modifiedHTML += data.replace(/\n/g, "<br>");
+        } else if (op === -1) {
+          originalHTML += `<span style="color: var(--delete-color); background-color: var(--delete-bg); font-weight: var(--delete-bold); font-style: var(--delete-italic); text-decoration: var(--delete-underline);">${data}</span>`;
+        } else if (op === 1) {
+          modifiedHTML += `<span style="color: var(--insert-color); background-color: var(--insert-bg); font-weight: var(--insert-bold); font-style: var(--insert-italic); text-decoration: var(--insert-underline);">${data}</span>`;
+        }
+      });
+      
+      originalDiff.innerHTML = originalHTML;
+      modifiedDiff.innerHTML = modifiedHTML;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    function updateStyle(variable, value) {
+      document.documentElement.style.setProperty(variable, value);
+    }
+
+    function copyHtmlToClipboard(elementId, messageId) {
+      const el = document.getElementById(elementId);
+      const range = document.createRange();
+      range.selectNode(el);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      try {
+        document.execCommand('copy');
+        const msg = document.getElementById(messageId);
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 1500);
+      } catch (err) {
+        console.error('複製失敗', err);
+      }
+      selection.removeAllRanges();
+    }
+
+    originalInput.addEventListener("input", updateDiffs);
+    modifiedInput.addEventListener("input", updateDiffs);
+  </script>
+</body>
+</html>
