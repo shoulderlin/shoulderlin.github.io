@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>進階 QR Code 產生器</title>
+  <style>
+    :root {
+      --bg-color: #f4f4f4;
+      --text-color: #333;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --button-bg: #007bff;
+      --button-hover: #0056b3;
+      --button-text: #ffffff;
+      --card-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    body.dark {
+      --bg-color: #121212;
+      --text-color: #fff;
+      --card-bg: #1f1f1f;
+      --input-bg: #333;
+      --button-bg: #555;
+      --button-hover: #888;
+      --card-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.8em;
+      color: var(--text-color);
+    }
+
+    .toggle-theme {
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      padding: 0.5em;
+      font-size: 1.2em;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+      margin-bottom: 1.5em;
+      transition: background-color 0.3s ease;
+    }
+
+    .toggle-theme:hover {
+      background-color: var(--button-hover);
+    }
+
+    select, input {
+      width: 100%;
+      padding: 0.8em;
+      margin: 0.8em 0;
+      font-size: 1em;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 0.8em;
+      width: 100%;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    #qrCode svg {
+      margin-top: 1em;
+      display: block;
+      margin: auto;
+      max-width: 100%;
+    }
+
+    .download-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1em;
+    }
+
+    .download-buttons button {
+      width: 48%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="toggle-theme" onclick="toggleTheme()">🌙 切換主題</button>
+    <h2>QR Code 產生器</h2>
+
+    <select id="qrType" onchange="renderInputs()">
+      <option value="text">純文字</option>
+      <option value="url" selected>網址</option>
+      <option value="email">Email</option>
+      <option value="sms">簡訊</option>
+      <option value="tel">電話</option>
+      <option value="wifi">WiFi 設定</option>
+      <option value="vcard">名片</option>
+    </select>
+
+    <div id="inputFields"></div>
+
+    <select id="errorLevel">
+      <option value="L">容錯率：L（7%）</option>
+      <option value="M">容錯率：M（15%）</option>
+      <option value="Q">容錯率：Q（25%）</option>
+      <option value="H" selected>容錯率：H（30%）</option>
+    </select>
+
+   <input type="number" id="size" placeholder="QR Code 寬度（例如：512）" value="512" />
+
+    <button onclick="generateQRCode()">產生 QR Code</button>
+
+    <div id="qrCode"></div>
+    
+    <div class="download-buttons" style="display: none;" id="downloadButtons">
+      <button onclick="downloadSVG()">下載 SVG</button>
+      <button onclick="downloadPNG()">下載 PNG</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script>
+    function renderInputs() {
+      const type = document.getElementById("qrType").value;
+      const container = document.getElementById("inputFields");
+      container.innerHTML = "";
+
+      switch (type) {
+        case "vcard":
+          container.innerHTML = `
+            <input type="text" id="vcard_name" placeholder="姓名">
+            <input type="text" id="vcard_tel" placeholder="電話">
+            <input type="email" id="vcard_email" placeholder="Email">
+          `;
+          break;
+        case "wifi":
+          container.innerHTML = `
+            <input type="text" id="wifi_ssid" placeholder="WiFi 名稱 (SSID)">
+            <input type="text" id="wifi_password" placeholder="密碼">
+            <select id="wifi_type">
+              <option value="WPA">WPA</option>
+              <option value="WEP">WEP</option>
+              <option value="">無密碼</option>
+            </select>
+          `;
+          break;
+        default:
+          container.innerHTML = `<input type="text" id="qrInput" placeholder="請輸入內容">`;
+      }
+    }
+
+    function generateQRCode() {
+      const type = document.getElementById("qrType").value;
+      const errorLevel = document.getElementById("errorLevel").value;
+      const size = parseInt(document.getElementById("size").value);
+      const container = document.getElementById("qrCode");
+      const downloadButtons = document.getElementById("downloadButtons");
+
+      let data = "";
+
+      if (type === "vcard") {
+        const name = document.getElementById("vcard_name").value;
+        const tel = document.getElementById("vcard_tel").value;
+        const email = document.getElementById("vcard_email").value;
+        data = `BEGIN:VCARD\nVERSION:3.0\nN:${name}\nTEL:${tel}\nEMAIL:${email}\nEND:VCARD`;
+      } else if (type === "wifi") {
+        const ssid = document.getElementById("wifi_ssid").value;
+        const password = document.getElementById("wifi_password").value;
+        const security = document.getElementById("wifi_type").value;
+        data = `WIFI:T:${security};S:${ssid};P:${password};;`;
+      } else {
+        const input = document.getElementById("qrInput").value;
+        if (type === "url") {
+          data = input.startsWith("http") ? input : "https://" + input;
+        } else if (type === "email") {
+          data = `mailto:${input}`;
+        } else if (type === "sms") {
+          data = `sms:${input}`;
+        } else if (type === "tel") {
+          data = `tel:${input}`;
+        } else {
+          data = input;
+        }
+      }
+
+      const qr = qrcode(0, errorLevel);
+      qr.addData(data, 'Byte');
+      qr.make();
+
+      const svgTag = qr.createSvgTag({ scalable: true });
+      container.innerHTML = svgTag;
+      const svgElement = container.querySelector("svg");
+      svgElement.setAttribute("width", size);
+      svgElement.setAttribute("height", size);
+
+      downloadButtons.style.display = "block";
+    }
+
+    function downloadSVG() {
+      const svgElement = document.querySelector("svg");
+      if (!svgElement) return;
+      const data = new XMLSerializer().serializeToString(svgElement);
+      const blob = new Blob([data], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "qrcode.svg";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadPNG() {
+      const canvas = document.createElement("canvas");
+      const svgElement = document.querySelector("svg");
+      if (!svgElement) return;
+
+      const ctx = canvas.getContext("2d");
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml" });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(svgUrl);
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = "qrcode.png";
+        a.click();
+      };
+      img.src = svgUrl;
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
+
+    window.onload = renderInputs;
+  </script>
+</body>
+</html>
