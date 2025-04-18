@@ -167,6 +167,7 @@
     function minimizeAd(){
         const Ad = document.getElementsByClassName('ad-container')[0];
         Ad.hidden = true;
+        window.setTimeout((() =>Ad.hidden=false),1000*60);
     }
 
     // 自動套用本地儲存的主題設定
