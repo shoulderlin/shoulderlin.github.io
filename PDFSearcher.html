@@ -27,6 +27,11 @@
       padding: 10px;
       border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      display: none; /* 預設隱藏檔案清單 */
+    }
+    #file-list {
+      list-style-type: none;
+      padding: 0;
     }
     #results {
       margin-top: 20px;
@@ -56,6 +61,12 @@
     a:hover {
       text-decoration: underline;
     }
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: gray;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -66,26 +77,35 @@
   <br>
   <input type="text" id="search-input" placeholder="輸入關鍵字來搜尋 PDF...">
   <button onclick="searchInPDFs()">🔍 搜尋</button>
-
+  
+  <!-- 檔案清單區域 -->
+  <button onclick="toggleFileList()">📂 顯示/隱藏已上傳檔案</button>
   <div id="uploaded-list">
     <h3>已上傳檔案：</h3>
     <ul id="file-list"></ul>
   </div>
 
+  <!-- 搜尋結果區域 -->
   <div id="results"></div>
-  <footer style="margin-top: 40px; font-size: 14px; color: gray;">
+
+  <footer>
     <hr>
     <p>
-      📌 本工具為純前端應用，所有操作皆在瀏覽器本地端執行，不會上傳任何檔案。請勿上傳包含機密、個資或商業敏感資訊之文件。
-      使用者需自負風險，開發者不負資料保管責任。
+      📌 本工具為純前端應用，所有操作皆在瀏覽器本地端執行，不會上傳任何檔案。請勿上傳包含機密、個資或商業敏感資訊之文件。<br>
+      使用者需自負風險，開發者不負資料保管責任。<br>
+      
+      📌 本網站使用了開源程式碼，並遵循 <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0 授權條款</a>。
+    詳情請參見授權頁面。
     </p>
   </footer>
+
   <script>
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     let pdfFiles = [];
 
+    // 檔案上傳處理
     document.getElementById('pdf-upload').addEventListener('change', function (e) {
       pdfFiles = Array.from(e.target.files);
       const fileList = document.getElementById('file-list');
@@ -97,6 +117,13 @@
       });
     });
 
+    // 顯示/隱藏檔案清單
+    function toggleFileList() {
+      const fileList = document.getElementById('uploaded-list');
+      fileList.style.display = (fileList.style.display === 'none') ? 'block' : 'none';
+    }
+
+    // 取得 PDF 文字
     async function getTextFromPDF(file) {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -112,6 +139,7 @@
       return textContent;
     }
 
+    // 搜尋 PDF 檔案
     async function searchInPDFs() {
       const keyword = document.getElementById('search-input').value.trim().toLowerCase();
       const resultsContainer = document.getElementById('results');
@@ -122,6 +150,8 @@
         return;
       }
 
+      let allResults = [];
+      
       for (let file of pdfFiles) {
         const contentArray = await getTextFromPDF(file);
         let fileResults = [];
@@ -143,20 +173,30 @@
         });
 
         if (fileResults.length > 0) {
-          const card = document.createElement('div');
-          card.className = 'pdf-card';
-          const blobURL = URL.createObjectURL(file);
-          card.innerHTML = `
-            <h3><a href="${blobURL}" target="_blank">${file.name}</a></h3>
-            ${fileResults.join('')}
-          `;
-          resultsContainer.appendChild(card);
+          allResults.push({
+            fileName: file.name,
+            fileResults: fileResults,
+            file: file
+          });
         }
       }
 
-      if (resultsContainer.innerHTML === '') {
+      if (allResults.length === 0) {
         resultsContainer.innerHTML = '<p>❌ 沒有找到任何結果。</p>';
+        return;
       }
+
+      // 顯示所有結果
+      allResults.forEach(result => {
+        const card = document.createElement('div');
+        card.className = 'pdf-card';
+        const blobURL = URL.createObjectURL(result.file);
+        card.innerHTML = `
+          <h3><a href="${blobURL}" target="_blank">${result.fileName}</a></h3>
+          ${result.fileResults.join('')}
+        `;
+        resultsContainer.appendChild(card);
+      });
     }
   </script>
 </body>
