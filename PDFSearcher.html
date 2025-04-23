@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>跨 PDF 搜尋</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <style>
+    body {
+      font-family: "Helvetica Neue", sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #0057a3;
+    }
+    input[type="file"],
+    input[type="text"],
+    button {
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+    }
+    #uploaded-list {
+      margin-top: 15px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    #results {
+      margin-top: 20px;
+    }
+    .pdf-card {
+      background: #ffffff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 5px solid #0057a3;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .result-item {
+      margin-top: 10px;
+      padding: 8px;
+      border-left: 3px solid #ccc;
+      background: #f9f9f9;
+    }
+    .highlight {
+      background-color: yellow;
+      font-weight: bold;
+    }
+    a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📄 跨 PDF 搜尋工具</h1>
+
+  <input type="file" id="pdf-upload" multiple accept="application/pdf">
+  <br>
+  <input type="text" id="search-input" placeholder="輸入關鍵字來搜尋 PDF...">
+  <button onclick="searchInPDFs()">🔍 搜尋</button>
+
+  <div id="uploaded-list">
+    <h3>已上傳檔案：</h3>
+    <ul id="file-list"></ul>
+  </div>
+
+  <div id="results"></div>
+  <footer style="margin-top: 40px; font-size: 14px; color: gray;">
+    <hr>
+    <p>
+      📌 本工具為純前端應用，所有操作皆在瀏覽器本地端執行，不會上傳任何檔案。請勿上傳包含機密、個資或商業敏感資訊之文件。
+      使用者需自負風險，開發者不負資料保管責任。
+    </p>
+  </footer>
+  <script>
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    let pdfFiles = [];
+
+    document.getElementById('pdf-upload').addEventListener('change', function (e) {
+      pdfFiles = Array.from(e.target.files);
+      const fileList = document.getElementById('file-list');
+      fileList.innerHTML = '';
+      pdfFiles.forEach(file => {
+        const li = document.createElement('li');
+        li.textContent = file.name;
+        fileList.appendChild(li);
+      });
+    });
+
+    async function getTextFromPDF(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let textContent = [];
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const strings = content.items.map(item => item.str).join(' ');
+        textContent.push({ page: i, text: strings });
+      }
+
+      return textContent;
+    }
+
+    async function searchInPDFs() {
+      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+      const resultsContainer = document.getElementById('results');
+      resultsContainer.innerHTML = '';
+
+      if (!keyword) {
+        resultsContainer.textContent = '⚠️ 請輸入關鍵字再搜尋';
+        return;
+      }
+
+      for (let file of pdfFiles) {
+        const contentArray = await getTextFromPDF(file);
+        let fileResults = [];
+
+        contentArray.forEach(({ page, text }) => {
+          const lowerText = text.toLowerCase();
+          const keywordIndex = lowerText.indexOf(keyword);
+          if (keywordIndex >= 0) {
+            const start = Math.max(0, keywordIndex - 50);
+            const end = Math.min(text.length, keywordIndex + 150);
+            let context = text.substring(start, end);
+            context = context.replace(new RegExp(keyword, 'gi'), match => `<span class="highlight">${match}</span>`);
+            fileResults.push(`
+              <div class="result-item">
+                <strong>第 ${page} 頁：</strong> ${context}
+              </div>
+            `);
+          }
+        });
+
+        if (fileResults.length > 0) {
+          const card = document.createElement('div');
+          card.className = 'pdf-card';
+          const blobURL = URL.createObjectURL(file);
+          card.innerHTML = `
+            <h3><a href="${blobURL}" target="_blank">${file.name}</a></h3>
+            ${fileResults.join('')}
+          `;
+          resultsContainer.appendChild(card);
+        }
+      }
+
+      if (resultsContainer.innerHTML === '') {
+        resultsContainer.innerHTML = '<p>❌ 沒有找到任何結果。</p>';
+      }
+    }
+  </script>
+</body>
+</html>
