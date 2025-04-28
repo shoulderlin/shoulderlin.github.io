@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>日曆筆記 PDF 產生器</title>
+    <style>
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background: #f9f9f9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .controls input,
+        .controls button {
+            margin-right: 10px;
+            font-size: 16px;
+            padding: 5px 8px;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            /* height: 400mm; */
+            padding: 40px 50px;
+            box-sizing: border-box;
+            page-break-after: always;
+            background: white;
+            margin: auto;
+            position: relative;
+        }
+
+        .page:first-of-type {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            height: 250mm;
+        }
+
+        .page:last-of-type {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            height: 250mm;
+        }
+
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .date-block {
+            text-align: center;
+        }
+
+        .date-YM {
+            font-size: 20px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: #222;
+            line-height: 1;
+        }
+
+        .date-main {
+            font-size: 100px;
+            font-weight: 1000;
+            letter-spacing: 2px;
+            color: #222;
+            line-height: 1;
+        }
+
+        .date-sub {
+            font-size: 20px;
+            color: #666;
+            font-weight: 400;
+            margin-top: 8px;
+            line-height: 0;
+        }
+
+        .calendars {
+            display: flex;
+            gap: 20px;
+        }
+
+        .mini-calendar {
+            font-size: 12px;
+            text-align: center;
+            width: 200px;
+        }
+
+        .mini-calendar-header {
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+
+
+        .mini-calendar table {
+            width: 110%;
+            border-collapse: collapse;
+        }
+
+        .mini-calendar .today {
+            background-color: #f77f00;
+            color: white;
+            border-radius: 50%;
+            display: inline-block;
+            width: 68%;
+            height: 80%;
+            /* line-height: 22px; */
+        }
+
+        /* .mini-calendar th,
+        .mini-calendar td {
+            width: 14.28%;
+            padding: 2px;
+            text-align: center;
+        }
+
+        .mini-calendar th {
+            color: #888;
+        } */
+
+        .note-line {
+            height: 32px;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 16px;
+        }
+
+        @media print {
+            .controls {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+
+            .page {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls" id="controller">
+        <label>起始日期：
+            <input type="date" id="startDate">
+        </label>
+        <label>結束日期：
+            <input type="date" id="endDate">
+        </label>
+        <button onclick="generatePages()">產生日曆</button>
+    </div>
+
+    <div id="calendarContainer"></div>
+
+    <script>
+        function generatePages() {
+            const container = document.getElementById("calendarContainer");
+            container.innerHTML = "";
+
+            const start = new Date(document.getElementById("startDate").value);
+            const end = new Date(document.getElementById("endDate").value);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+                alert("請輸入正確的起訖日期！");
+                return;
+            }
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const page = document.createElement("div");
+                page.className = "page";
+
+                const year = d.getFullYear();
+                const month = d.getMonth();
+                const day = d.getDate();
+                const nextMonth = (month + 1) % 12;
+                const nextYear = month === 11 ? year + 1 : year;
+
+                // Header
+                const header = document.createElement("div");
+                header.className = "header";
+
+                const dateBlock = document.createElement("div");
+                dateBlock.className = "date-block";
+
+                const dateStr = d.toISOString().split("T")[0];
+                const weekday = d.toLocaleDateString("zh-TW", { weekday: "long" });
+
+                dateBlock.innerHTML = `
+                <div class="date-YM">${(year).toString()}-${(month + 1).toString().padStart(2, '0')}</div>
+                <div class="date-main">${day.toString().padStart(2, '0')}</div>
+                <div class="date-sub">${weekday}</div>
+            `;
+
+                const calendars = document.createElement("div");
+                calendars.className = "calendars";
+                calendars.innerHTML = generateMiniCalendar(year, month, d) + generateMiniCalendar(nextYear, nextMonth, d);
+
+                header.appendChild(dateBlock);
+                header.appendChild(calendars);
+
+                page.appendChild(header);
+
+                for (let i = 0; i < 21 * 2; i++) {
+                    const line = document.createElement("div");
+                    line.className = "note-line";
+                    page.appendChild(line);
+                }
+
+                container.appendChild(page);
+            }
+            document.getElementById('controller').remove();
+        }
+
+        function generateMiniCalendar(year, month, today) {
+            const monthName = new Date(year, month).toLocaleDateString('zh-TW', { month: 'long' });
+            const firstDay = new Date(year, month, 1);
+            const startDay = firstDay.getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const isToday = (d, m, y) =>
+                d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+
+            let html = `<div class="mini-calendar"><div class="mini-calendar-header">${monthName} ${year}</div>`;
+            html += "<table><thead><tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr></thead><tbody><tr>";
+
+            let day = 1;
+            for (let i = 0; i < 42; i++) {
+                if (i < startDay || day > daysInMonth) {
+                    html += "<td></td>";
+                } else {
+                    const className = isToday(day, month, year) ? "today" : "";
+                    html += `<td><span class="${className}">${day}</span></td>`;
+                    day++;
+                }
+
+                if ((i + 1) % 7 === 0 && day <= daysInMonth) {
+                    html += "</tr><tr>";
+                }
+            }
+
+            html += "</tr></tbody></table></div>";
+            return html;
+        }
+
+    </script>
+
+</body>
+
+</html>

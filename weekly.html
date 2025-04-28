@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>週曆筆記 PDF 產生器</title>
+    <style>
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background: #f9f9f9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .controls input, .controls button {
+            margin-right: 10px;
+            font-size: 16px;
+            padding: 5px 8px;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            padding: 30px 40px;
+            box-sizing: border-box;
+            page-break-after: always;
+            background: white;
+            margin: auto;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .week-number {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .motto {
+            font-size: 16px;
+            color: #555;
+            text-align: right;
+            flex-grow: 1;
+        }
+
+        .day-block {
+            border: 1px solid #ddd;
+            margin-bottom: 0px;
+            height: 147px;
+            display: flex;
+        }
+
+        .left-column {
+            width: 15%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .left-column .month {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .left-column .date {
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .left-column .weekday {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .weekend {
+            font-size: 18px;
+            color: red;
+        }
+
+        .right-column {
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 10px;
+        }
+
+        .dash-line {
+            width: 100%;
+            border-bottom: 1px dashed #ddd;
+            margin: 0;
+        }
+
+        @media print {
+            .controls {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+            .page {
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="controls" id="controller">
+    <label>起始日期：<input type="date" id="startDate"></label>
+    <label>結束日期：<input type="date" id="endDate"></label>
+    <button onclick="generatePages()">產生週曆</button>
+</div>
+
+<div id="calendarContainer"></div>
+
+<script>
+    const mottos = [
+        "每天進步一點點！",
+        "相信自己，無所不能！",
+        "累積小成功，成就大夢想！",
+        "保持熱情，創造奇蹟！",
+        "今天的努力是明天的收穫！",
+        "別怕慢，只怕停！",
+        "挑戰讓我們成長！",
+        "每天都是新的開始！",
+        "成功源自堅持！",
+        "夢想不會辜負努力的人！"
+    ];
+
+    function generatePages() {
+        const container = document.getElementById("calendarContainer");
+        container.innerHTML = "";
+
+        let start = new Date(document.getElementById("startDate").value);
+        const end = new Date(document.getElementById("endDate").value);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+            alert("請輸入正確的起訖日期！");
+            return;
+        }
+
+        // 調整到該週的週一
+        const day = start.getDay();
+        if (day !== 1) {
+            const diff = (day === 0) ? -6 : 1 - day;
+            start.setDate(start.getDate() + diff);
+        }
+
+        let current = new Date(start);
+        while (current <= end) {
+            const page = document.createElement("div");
+            page.className = "page";
+            const yr = current.getFullYear();
+            const header = document.createElement("div");
+            header.className = "header";
+            const weekNumber = document.createElement("div");
+            weekNumber.className = "week-number";
+            weekNumber.textContent = yr + "年 第 " + getWeekNumber(current) + " 週";
+            const motto = document.createElement("div");
+            motto.className = "motto";
+            motto.textContent = mottos[Math.floor(Math.random() * mottos.length)];
+            header.appendChild(weekNumber);
+            header.appendChild(motto);
+            page.appendChild(header);
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(current);
+                day.setDate(current.getDate() + i);
+
+                const dayBlock = document.createElement("div");
+                dayBlock.className = "day-block";
+
+                const leftColumn = document.createElement("div");
+                leftColumn.className = "left-column";
+
+                const month = document.createElement("div");
+                month.className = "month";
+                month.textContent = day.toLocaleDateString('en-US', { month: 'long' });
+
+                const date = document.createElement("div");
+                date.className = "date" + ((day.getDay() === 0 || day.getDay() === 6) ? " weekend" : "");
+                date.textContent = day.getDate();
+
+                const weekday = document.createElement("div");
+                weekday.className = ((day.getDay() === 0 || day.getDay() === 6) ? " weekend" : "weekday");
+                weekday.textContent = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][day.getDay()];
+
+                leftColumn.appendChild(month);
+                leftColumn.appendChild(date);
+                leftColumn.appendChild(weekday);
+
+                const rightColumn = document.createElement("div");
+                rightColumn.className = "right-column";
+                for (let j = 0; j < 5; j++) {
+                    const dashLine = document.createElement("div");
+                    dashLine.className = "dash-line";
+                    rightColumn.appendChild(dashLine);
+                }
+
+                dayBlock.appendChild(leftColumn);
+                dayBlock.appendChild(rightColumn);
+
+                page.appendChild(dayBlock);
+            }
+
+            container.appendChild(page);
+
+            current.setDate(current.getDate() + 7);
+        }
+
+        document.getElementById('controller').remove();
+    }
+
+    function getWeekNumber(d) {
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+</script>
+
+</body>
+</html>
