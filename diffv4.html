@@ -191,10 +191,12 @@
     <div class="column">
       <label for="original">原文：</label>
       <textarea id="original" placeholder="輸入原文..."></textarea>
+      <div id="originalCount">字數：0</div>
     </div>
     <div class="column">
       <label for="modified">修改後文字：</label>
       <textarea id="modified" placeholder="輸入修改後文字..."></textarea>
+      <div id="modifiedCount">字數：0</div>
     </div>
   </div>
 
@@ -280,6 +282,12 @@
     function updateDiffs() {
       const text1 = originalInput.value;
       const text2 = modifiedInput.value;
+      const cleanText1 = text1.replace(/\s/g, '');
+      const cleanText2 = text2.replace(/\s/g, '');
+      // 更新字數（不含空白）
+      document.getElementById("originalCount").textContent = `字數：${cleanText1.length}`;
+      document.getElementById("modifiedCount").textContent = `字數：${cleanText2.length}`;
+      
       const diffs = dmp.diff_main(text1, text2);
       dmp.diff_cleanupSemantic(diffs);
 
@@ -306,6 +314,7 @@
 
       originalDiff.innerHTML = originalHTML;
       modifiedDiff.innerHTML = modifiedHTML;
+      
     }
 
     function toggleDarkMode() {
