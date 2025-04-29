@@ -216,7 +216,7 @@
 
   <!-- 樣式設定區 -->
   <div class="format-section">
-    <h2>樣式設定</h2>
+    <h2 onclick="sw();">樣式設定</h2>
     
     <div class="format-controls">
       <h3>新增文字樣式</h3>
@@ -270,7 +270,13 @@
     const modifiedInput = document.getElementById("modified");
     const originalDiff = document.getElementById("originalDiff");
     const modifiedDiff = document.getElementById("modifiedDiff");
-
+    function sw() {
+      const setting = document.getElementsByClassName('format-controls');
+      for (i = 0; i<setting.length();i++){
+        setting[i].style.display = (setting[i].style.display === 'flex') ? 'none': 'flex';
+      }
+      
+    }
     function updateDiffs() {
       const text1 = originalInput.value;
       const text2 = modifiedInput.value;
