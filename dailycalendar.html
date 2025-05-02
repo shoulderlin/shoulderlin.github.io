@@ -85,6 +85,10 @@
             margin-top: 8px;
             line-height: 0;
         }
+        .date-tag {
+            font-size: 4px;
+            color: #fff;
+        };
 
         .calendars {
             display: flex;
@@ -203,6 +207,7 @@
                 const weekday = d.toLocaleDateString("zh-TW", { weekday: "long" });
 
                 dateBlock.innerHTML = `
+                <div class="date-tag">${(year).toString()}${(month + 1).toString().padStart(2, '0')}${day.toString().padStart(2, '0')}</div>
                 <div class="date-YM">${(year).toString()}-${(month + 1).toString().padStart(2, '0')}</div>
                 <div class="date-main">${day.toString().padStart(2, '0')}</div>
                 <div class="date-sub">${weekday}</div>
@@ -217,7 +222,7 @@
 
                 page.appendChild(header);
 
-                for (let i = 0; i < 21 * 2; i++) {
+                for (let i = 0; i < 21; i++) {
                     const line = document.createElement("div");
                     line.className = "note-line";
                     page.appendChild(line);
