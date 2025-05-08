@@ -92,6 +92,11 @@
             font-size: 18px;
             color: red;
         }
+        .holidayNote {
+            font-size: 10px;
+            color: red;
+            padding: 0px;
+        }
 
         .right-column {
             width: 85%;
@@ -216,9 +221,11 @@
                 const weekday = document.createElement("div");
                 weekday.className = (holiday?.isHoliday ? "weekend" : "weekday");
                 const dayName = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][day.getDay()];
-                weekday.textContent = holiday?.isHoliday ? `${dayName}（${holiday.Note}）` : dayName;
+                weekday.textContent = dayName
 
-
+                const holidayNote = document.createElement("div");
+                holidayNote.className = "holidayNote"
+                holidayNote.textContent = holiday?.isHoliday ? ${holiday.Note} : "";
                 
                 leftColumn.appendChild(month);
                 leftColumn.appendChild(date);
