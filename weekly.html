@@ -135,7 +135,27 @@
 <script>
     // 勵志小語清單
     const mottos = ["","","","","","","","","","",""];
-
+    let holidays = {};
+    
+    // 載入台灣假日 CSV 並轉換成 Set
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQmlfN9RUl4My2dWRrLdRncZ-EE8wxxtm6RUh_RldrayAlGfht82PrB24X-V6TDV83ZKAx9EvsLb5Jh/pub?output=csv')
+      .then(response => response.text())
+      .then(csv => {
+        const lines = csv.split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',');
+          const date = cols[0].trim();
+          const isHoliday = cols[2].trim();
+            const HolidayName = cols[3].trim();
+          if (date.match(/^\d{4}-\d{2}-\d{2}$/) && (isHoliday=='2'))  {
+            holidays[date.replace(/\//g, '-')] ={
+                isHoliday : true,
+                Note : HolidayName
+            }                
+          }
+        }
+        console.log(`已載入 ${Object.keys(holidays).length} 筆假日資料`);
+      });
     function generatePages() {
         const container = document.getElementById("calendarContainer");
         container.innerHTML = "";
@@ -175,7 +195,10 @@
             for (let i = 0; i < 7; i++) {
                 const day = new Date(current);
                 day.setDate(current.getDate() + i);
+                const holiday = holidays[`${day.getFullYear()}-${(day.getMonth() + 1).toString().padStart(2, '0')}-${day.getDate().toString().padStart(2, '0')}`];
 
+
+                
                 const dayBlock = document.createElement("div");
                 dayBlock.className = "day-block";
 
@@ -185,15 +208,18 @@
                 const month = document.createElement("div");
                 month.className = "month";
                 month.textContent = day.toLocaleDateString('zh-TW', { month: 'long' });
-
+                
                 const date = document.createElement("div");
-                date.className = "date" + ((day.getDay() === 0 || day.getDay() === 6) ? " weekend" : "");
+                date.className = "date" + (holiday?.isHoliday ? " weekend" : "");
                 date.textContent = day.getDate();
 
                 const weekday = document.createElement("div");
-                weekday.className = ((day.getDay() === 0 || day.getDay() === 6) ? " weekend" : "weekday");
-                weekday.textContent = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][day.getDay()];
+                weekday.className = (holiday?.isHoliday ? "weekend" : "weekday");
+                const dayName = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][day.getDay()];
+                weekday.textContent = holiday?.isHoliday ? `${dayName}（${holiday.Note}）` : dayName;
 
+
+                
                 leftColumn.appendChild(month);
                 leftColumn.appendChild(date);
                 leftColumn.appendChild(weekday);
