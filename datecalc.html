@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>天數計算工具</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f7f9fb;
+      color: #333;
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 12px;
+      background: #eee;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .tab-button:hover {
+      background: #ddd;
+    }
+
+    .tab-button.active {
+      background: #fff;
+      border-bottom: 3px solid #007BFF;
+      font-weight: bold;
+      color: #007BFF;
+    }
+
+    .tab-content {
+      display: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-top: none;
+      padding: 20px;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+
+    input, select {
+      padding: 6px 8px;
+      width: 100%;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
+
+    p {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+
+    .result {
+      background: #f0f8ff;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 4px solid #007BFF;
+    }
+
+    @media (max-width: 600px) {
+      .tab-button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      input, select {
+        font-size: 14px;
+      }
+
+      .result {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>天數計算工具</h2>
+
+  <div class="tabs">
+    <button class="tab-button" onclick="switchTab(1)">模組 1：日期 + 天數 → 日期</button>
+    <button class="tab-button active" onclick="switchTab(2)">模組 2：起日 + 迄日 → 天數</button>
+  </div>
+
+  <div id="tab1" class="tab-content">
+    <label>選擇模式：
+      <select id="mode1-direction">
+        <option value="start">輸入起日 → 計算迄日</option>
+        <option value="end">輸入迄日 → 計算起日</option>
+      </select>
+    </label>
+
+    <label>日期：
+      <input type="date" id="mode1-date">
+    </label>
+
+    <label>天數類型：
+      <select id="mode1-type">
+        <option value="calendar">日曆天</option>
+        <option value="work">工作天</option>
+      </select>
+    </label>
+
+    <label>天數：
+      <input type="number" id="mode1-days" min="0">
+    </label>
+
+    <p class="result"><strong>結果：</strong> <span id="mode1-result">尚未計算</span></p>
+  </div>
+
+  <div id="tab2" class="tab-content active">
+    <label>起日：
+      <input type="date" id="start-date">
+    </label>
+    <label>迄日：
+      <input type="date" id="end-date">
+    </label>
+
+    <p class="result"><strong>日曆天數：</strong> <span id="calendar-days">尚未計算</span></p>
+    <p class="result"><strong>工作天數（排除假日）：</strong> <span id="work-days">尚未計算</span></p>
+  </div>
+
+  <script>
+    let holidays = new Set();
+
+    // 載入台灣假日 CSV 並轉換成 Set
+    fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQmlfN9RUl4My2dWRrLdRncZ-EE8wxxtm6RUh_RldrayAlGfht82PrB24X-V6TDV83ZKAx9EvsLb5Jh/pub?output=csv')
+      .then(response => response.text())
+      .then(csv => {
+        const lines = csv.split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',');
+          const date = cols[0].trim();
+          if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            holidays.add(date);
+          }
+        }
+        console.log(`已載入 ${holidays.size} 筆假日資料`);
+      });
+
+    // tab 切換
+    function switchTab(tabNumber) {
+      const tabs = document.querySelectorAll('.tab-button');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === tabNumber - 1);
+        contents[i].classList.toggle('active', i === tabNumber - 1);
+      });
+    }
+
+    function isWorkday(date) {
+      const day = date.getDay();
+      const ymd = date.toISOString().split('T')[0];
+      return day !== 0 && day !== 6 && !holidays.has(ymd);
+    }
+
+    function addWorkdays(date, days) {
+      let result = new Date(date);
+      let added = 0;
+      while (added < days) {
+        result.setDate(result.getDate() + 1);
+        if (isWorkday(result)) added++;
+      }
+      return result;
+    }
+
+    function subtractWorkdays(date, days) {
+      let result = new Date(date);
+      let removed = 0;
+      while (removed < days) {
+        result.setDate(result.getDate() - 1);
+        if (isWorkday(result)) removed++;
+      }
+      return result;
+    }
+
+    function calculateModule1() {
+      const direction = document.getElementById('mode1-direction').value;
+      const dateInput = document.getElementById('mode1-date').value;
+      const type = document.getElementById('mode1-type').value;
+      const days = parseInt(document.getElementById('mode1-days').value, 10);
+      const resultSpan = document.getElementById('mode1-result');
+
+      if (!dateInput || isNaN(days)) {
+        resultSpan.textContent = '請完整輸入資料';
+        return;
+      }
+
+      let baseDate = new Date(dateInput);
+      let resultDate;
+
+      if (type === 'calendar') {
+        resultDate = new Date(baseDate);
+        resultDate.setDate(resultDate.getDate() + (direction === 'start' ? days : -days));
+      } else {
+        resultDate = direction === 'start' ? addWorkdays(baseDate, days) : subtractWorkdays(baseDate, days);
+      }
+
+      resultSpan.textContent = resultDate.toISOString().split('T')[0];
+    }
+
+    function calculateModule2() {
+      const start = document.getElementById('start-date').value;
+      const end = document.getElementById('end-date').value;
+      const calendarSpan = document.getElementById('calendar-days');
+      const workSpan = document.getElementById('work-days');
+
+      if (!start || !end) {
+        calendarSpan.textContent = workSpan.textContent = '請選擇起日與迄日';
+        return;
+      }
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      let calendarDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      let workDays = 0;
+      let current = new Date(startDate);
+
+      while (current <= endDate) {
+        if (isWorkday(current)) workDays++;
+        current.setDate(current.getDate() + 1);
+      }
+
+      calendarSpan.textContent = `${calendarDays} 天`;
+      workSpan.textContent = `${workDays} 天`;
+    }
+
+    document.querySelectorAll('#mode1-direction, #mode1-date, #mode1-type, #mode1-days').forEach(el => {
+      el.addEventListener('input', calculateModule1);
+    });
+
+    document.querySelectorAll('#start-date, #end-date').forEach(el => {
+      el.addEventListener('input', calculateModule2);
+    });
+  </script>
+</body>
+</html>
