@@ -77,9 +77,8 @@
 
     .holiday-label {
       color: red;
-      font-size: 13px;
-      display: inline;
-      margin-left: 4px;
+      font-weight: bold;
+      font-size: 18px;
     }
     .holiday-note{
         color: red;
@@ -206,6 +205,7 @@
           if (holiday?.type == "2") {
             const label = document.createElement("span");
             header.className = "holiday-label";
+            label.className = "holiday-note";
             label.textContent = `${holiday.note}`;
             header.appendChild(label);
           } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
