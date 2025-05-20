@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <title>月曆筆記 PDF 產生器</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: #f9f9f9;
+    }
+
+    .controls {
+      padding: 20px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+
+    .controls input,
+    .controls button {
+      margin-right: 10px;
+      font-size: 16px;
+      padding: 5px 8px;
+    }
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 30px 30px;
+      box-sizing: border-box;
+      page-break-after: always;
+      background: white;
+      margin: auto;
+    }
+
+    .calendar-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border: 1px solid #ccc;
+      height: calc(100% - 60px);
+    }
+
+    .day-cell {
+      border: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 4px;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .day-header {
+      font-weight: bold;
+    }
+
+    .weekend {
+      color: red;
+    }
+
+    .holiday {
+      color: red;
+      font-size: 13px;
+    }
+
+    .note-line {
+      width: 100%;
+      border-bottom: 1px dashed #eee;
+      margin: 2px 0;
+      flex-grow: 1;
+    }
+
+    @media print {
+      .controls {
+        display: none;
+      }
+
+      body {
+        background: white;
+      }
+
+      .page {
+        margin: 0;
+        border: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="controls" id="controller">
+    <label>年份：<input type="number" id="year" value="2025" min="1900" max="2100"></label>
+    <button onclick="generateCalendars()">產生月曆</button>
+  </div>
+
+  <div id="calendarContainer"></div>
+
+  <script>
+    const HOLIDAY_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmlfN9RUl4My2dWRrLdRncZ-EE8wxxtm6RUh_RldrayAlGfht82PrB24X-V6TDV83ZKAx9EvsLb5Jh/pub?output=csv";
+    let holidayMap = {};
+
+    function parseHolidayCSV(text) {
+      const lines = text.trim().split('\n');
+      for (let i = 1; i < lines.length; i++) {
+        const [dateStr, , note, type] = lines[i].split(',');
+        if (!dateStr || !type) continue;
+        const dateKey = dateStr.replace(/\//g, '-');
+        holidayMap[dateKey] = {
+          isHoliday: type.trim() === '2',
+          note: note.trim()
+        };
+      }
+    }
+
+    async function generateCalendars() {
+      const container = document.getElementById("calendarContainer");
+      container.innerHTML = "";
+      const year = parseInt(document.getElementById("year").value);
+
+      const res = await fetch(HOLIDAY_CSV_URL);
+      const text = await res.text();
+      parseHolidayCSV(text);
+
+      for (let month = 0; month < 12; month++) {
+        const page = document.createElement("div");
+        page.className = "page";
+
+        const title = document.createElement("div");
+        title.className = "calendar-title";
+        title.textContent = `${year} 年 ${month + 1} 月`;
+        page.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "calendar-grid";
+
+        const firstDay = new Date(year, month, 1);
+        const startDay = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // 填入前置空白格
+        for (let i = 0; i < startDay; i++) {
+          const emptyCell = document.createElement("div");
+          emptyCell.className = "day-cell";
+          grid.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cell = document.createElement("div");
+          cell.className = "day-cell";
+
+          const dateObj = new Date(year, month, day);
+          const dayKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+          const weekday = dateObj.getDay();
+
+          const isWeekend = weekday === 0 || weekday === 6;
+          const holiday = holidayMap[dayKey];
+
+          const header = document.createElement("div");
+          header.className = "day-header" + (holiday?.isHoliday || isWeekend ? " weekend" : "");
+          header.textContent = day;
+
+          cell.appendChild(header);
+
+          if (holiday?.isHoliday) {
+            const tag = document.createElement("div");
+            tag.className = "holiday";
+            tag.textContent = holiday.note;
+            cell.appendChild(tag);
+          }
+
+          for (let i = 0; i < 3; i++) {
+            const line = document.createElement("div");
+            line.className = "note-line";
+            cell.appendChild(line);
+          }
+
+          grid.appendChild(cell);
+        }
+
+        page.appendChild(grid);
+        container.appendChild(page);
+      }
+
+      document.getElementById("controller").remove();
+    }
+  </script>
+
+</body>
+
+</html>
