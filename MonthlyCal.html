@@ -81,8 +81,9 @@
       font-size: 18px;
     }
     .holiday-note{
-        color: red;
-      font-size: 10px;
+      color: red;
+      font-size: 9px;
+      font-weight: normal;
     }
 
     .workday-label {
@@ -203,7 +204,7 @@
 
           header.textContent = day;
           if (holiday?.type == "2") {
-            const label = document.createElement("span");
+            const label = document.createElement("div");
             header.className = "holiday-label";
             label.className = "holiday-note";
             label.textContent = `  ${holiday.note}`;
