@@ -208,20 +208,16 @@
           const daylabel = document.createElement("div");
           daylabel.className = "day-label";
           daylabel.textContent = day;
-          header.appendChild(daylabel);
+          const label = document.createElement("div");
+          label.className = "day-note";
+          label.textContent = `${holiday.note}`;
           if (holiday?.type == "2") {
-            const label = document.createElement("div");
             daylabel.className = "day-label holiday";
             label.className = "day-note holiday";
-            label.textContent = `  ${holiday.note}`;
-            header.appendChild(label);
-          } else if (holiday?.type == "0"){//((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
-            const label = document.createElement("div");
-            label.className = "day-note";
-            label.textContent = `${holiday.note}`;
-            header.appendChild(label);
           }
-
+          
+          header.appendChild(daylabel);
+          header.appendChild(label);
           cell.appendChild(header);
 
           const line = document.createElement("div");
