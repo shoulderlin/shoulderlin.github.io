@@ -73,12 +73,16 @@
     .day-header {
       font-weight: bold;
       font-size: 18px;
+      display: inline-flex;
+      align-items: flex-end;
     }
-
-    .holiday-label {
-      color: red;
+    .day-label {
       font-weight: bold;
       font-size: 18px;
+    }
+
+    .holiday {
+      color: red;
     }
     .holiday-note{
       color: red;
@@ -201,16 +205,17 @@
 
           const holiday = holidayMap[dayKey];
           const weekday = dateObj.getDate();
-
-          header.textContent = day;
+          const daylabel = document.createElement("div");
+          daylabel.className = "day-label";
+          daylabel.textContent = day;
           if (holiday?.type == "2") {
             const label = document.createElement("div");
-            header.className = "holiday-label";
+            daylabel.className = "day-label holiday";
             label.className = "holiday-note";
             label.textContent = `  ${holiday.note}`;
             header.appendChild(label);
           } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
-            const label = document.createElement("span");
+            const label = document.createElement("div");
             label.className = "workday-label";
             label.textContent = `  ${holiday.note}`;
             header.appendChild(label);
