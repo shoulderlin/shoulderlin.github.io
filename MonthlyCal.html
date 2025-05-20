@@ -205,13 +205,13 @@
           header.textContent = day;
           if (holiday?.type == "2") {
             const label = document.createElement("span");
-            label.className = "holiday-label";
-            label.textContent = `（${holiday.note}）`;
+            header.className = "holiday-label";
+            label.textContent = `${holiday.note}`;
             header.appendChild(label);
           } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
             const label = document.createElement("span");
             label.className = "workday-label";
-            label.textContent = `（${holiday.note}）`;
+            label.textContent = `${holiday.note}`;
             header.appendChild(label);
           }
 
