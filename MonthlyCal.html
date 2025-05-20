@@ -27,9 +27,9 @@
     }
 
     .page {
-      width: 210mm;
-      height: 297mm;
-      padding: 30px 30px;
+      width: 297mm;
+      height: 210mm;
+      padding: 20px;
       box-sizing: border-box;
       page-break-after: always;
       background: white;
@@ -38,16 +38,24 @@
 
     .calendar-title {
       text-align: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       border: 1px solid #ccc;
-      height: calc(100% - 60px);
+      height: calc(100% - 50px);
+    }
+
+    .calendar-header {
+      background: #f0f0f0;
+      font-weight: bold;
+      text-align: center;
+      padding: 4px;
+      border: 1px solid #ccc;
     }
 
     .day-cell {
@@ -57,7 +65,7 @@
       justify-content: flex-start;
       align-items: flex-start;
       padding: 4px;
-      font-size: 14px;
+      font-size: 13px;
       position: relative;
     }
 
@@ -65,12 +73,13 @@
       font-weight: bold;
     }
 
-    .weekend {
-      color: red;
-    }
-
     .holiday {
       color: red;
+      font-size: 13px;
+    }
+
+    .workday {
+      color: blue;
       font-size: 13px;
     }
 
@@ -117,7 +126,7 @@
         if (!dateStr || !type) continue;
         const dateKey = dateStr.replace(/\//g, '-');
         holidayMap[dateKey] = {
-          isHoliday: type.trim() === '2',
+          type: type.trim(),
           note: note.trim()
         };
       }
@@ -144,11 +153,18 @@
         const grid = document.createElement("div");
         grid.className = "calendar-grid";
 
+        const headers = ["日", "一", "二", "三", "四", "五", "六"];
+        for (let h = 0; h < headers.length; h++) {
+          const cell = document.createElement("div");
+          cell.className = "calendar-header";
+          cell.textContent = headers[h];
+          grid.appendChild(cell);
+        }
+
         const firstDay = new Date(year, month, 1);
         const startDay = firstDay.getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // 填入前置空白格
         for (let i = 0; i < startDay; i++) {
           const emptyCell = document.createElement("div");
           emptyCell.className = "day-cell";
@@ -163,18 +179,21 @@
           const dayKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
           const weekday = dateObj.getDay();
 
-          const isWeekend = weekday === 0 || weekday === 6;
           const holiday = holidayMap[dayKey];
 
           const header = document.createElement("div");
-          header.className = "day-header" + (holiday?.isHoliday || isWeekend ? " weekend" : "");
+          header.className = "day-header";
           header.textContent = day;
-
           cell.appendChild(header);
 
-          if (holiday?.isHoliday) {
+          if (holiday?.type === "2") {
             const tag = document.createElement("div");
             tag.className = "holiday";
+            tag.textContent = holiday.note;
+            cell.appendChild(tag);
+          } else if (holiday?.type === "0") {
+            const tag = document.createElement("div");
+            tag.className = "workday";
             tag.textContent = holiday.note;
             cell.appendChild(tag);
           }
@@ -195,7 +214,6 @@
       document.getElementById("controller").remove();
     }
   </script>
-
 </body>
 
 </html>
