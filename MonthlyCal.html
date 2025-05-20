@@ -46,6 +46,7 @@
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
+      grid-auto-rows: 1fr;
       border: 1px solid #ccc;
       height: calc(100% - 50px);
     }
@@ -56,14 +57,15 @@
       text-align: center;
       padding: 4px;
       border: 1px solid #ccc;
+      line-height: 1.2;
+      font-size: 14px;
     }
 
     .day-cell {
       border: 1px solid #ddd;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      align-items: flex-start;
+      justify-content: space-between;
       padding: 4px;
       font-size: 13px;
       position: relative;
@@ -71,23 +73,28 @@
 
     .day-header {
       font-weight: bold;
+      font-size: 18px;
     }
 
-    .holiday {
+    .holiday-label {
       color: red;
       font-size: 13px;
+      display: inline;
+      margin-left: 4px;
     }
 
-    .workday {
+    .workday-label {
       color: blue;
       font-size: 13px;
+      display: inline;
+      margin-left: 4px;
     }
 
     .note-line {
       width: 100%;
-      border-bottom: 1px dashed #eee;
-      margin: 2px 0;
-      flex-grow: 1;
+      height: 1px;
+      border-bottom: 1px dashed #ccc;
+      margin: auto 0;
     }
 
     @media print {
@@ -177,32 +184,30 @@
 
           const dateObj = new Date(year, month, day);
           const dayKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-          const weekday = dateObj.getDay();
-
-          const holiday = holidayMap[dayKey];
 
           const header = document.createElement("div");
           header.className = "day-header";
+
+          const holiday = holidayMap[dayKey];
+
           header.textContent = day;
+          if (holiday?.type === "2") {
+            const label = document.createElement("span");
+            label.className = "holiday-label";
+            label.textContent = `（${holiday.note}）`;
+            header.appendChild(label);
+          } else if (holiday?.type === "0") {
+            const label = document.createElement("span");
+            label.className = "workday-label";
+            label.textContent = `（${holiday.note}）`;
+            header.appendChild(label);
+          }
+
           cell.appendChild(header);
 
-          if (holiday?.type === "2") {
-            const tag = document.createElement("div");
-            tag.className = "holiday";
-            tag.textContent = holiday.note;
-            cell.appendChild(tag);
-          } else if (holiday?.type === "0") {
-            const tag = document.createElement("div");
-            tag.className = "workday";
-            tag.textContent = holiday.note;
-            cell.appendChild(tag);
-          }
-
-          for (let i = 0; i < 3; i++) {
-            const line = document.createElement("div");
-            line.className = "note-line";
-            cell.appendChild(line);
-          }
+          const line = document.createElement("div");
+          line.className = "note-line";
+          cell.appendChild(line);
 
           grid.appendChild(cell);
         }
