@@ -81,6 +81,10 @@
       display: inline;
       margin-left: 4px;
     }
+    .holiday-note{
+        color: red;
+      font-size: 10px;
+    }
 
     .workday-label {
       color: blue;
@@ -128,7 +132,7 @@
     function parseHolidayCSV(text) {
       const lines = text.trim().split('\n');
       for (let i = 1; i < lines.length; i++) {
-        const [dateStr, , note, type] = lines[i].split(',');
+        const [dateStr,wee , note, type] = lines[i].split(',');
         if (!dateStr || !type) continue;
         const dateKey = dateStr.replace(/\//g, '-');
         holidayMap[dateKey] = {
@@ -196,14 +200,15 @@
           header.className = "day-header";
 
           const holiday = holidayMap[dayKey];
+          const weekday = dateObj.getDate();
 
           header.textContent = day;
-          if (holiday?.type === "2") {
+          if (holiday?.type == "2") {
             const label = document.createElement("span");
             label.className = "holiday-label";
             label.textContent = `（${holiday.note}）`;
             header.appendChild(label);
-          } else if (holiday?.type === "0") {
+          } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
             const label = document.createElement("span");
             label.className = "workday-label";
             label.textContent = `（${holiday.note}）`;
