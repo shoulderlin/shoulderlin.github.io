@@ -132,7 +132,7 @@
     function parseHolidayCSV(text) {
       const lines = text.trim().split('\n');
       for (let i = 1; i < lines.length; i++) {
-        const [dateStr,wee , note, type] = lines[i].split(',');
+        const [dateStr,wee , type, note] = lines[i].split(',');
         if (!dateStr || !type) continue;
         const dateKey = dateStr.replace(/\//g, '-');
         holidayMap[dateKey] = {
