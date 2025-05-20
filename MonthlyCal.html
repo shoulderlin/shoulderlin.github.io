@@ -208,6 +208,7 @@
           const daylabel = document.createElement("div");
           daylabel.className = "day-label";
           daylabel.textContent = day;
+          header.appendChild(daylabel);
           if (holiday?.type == "2") {
             const label = document.createElement("div");
             daylabel.className = "day-label holiday";
