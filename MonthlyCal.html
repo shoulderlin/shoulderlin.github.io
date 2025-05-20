@@ -85,7 +85,6 @@
       color: red;
     }
     .day-note{
-      color: red;
       font-size: 10px;
       font-weight: normal;
       padding-left: 10px;      
@@ -216,7 +215,7 @@
             label.className = "day-note holiday";
             label.textContent = `  ${holiday.note}`;
             header.appendChild(label);
-          } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
+          } else if (holiday?.type == "0"){//((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
             const label = document.createElement("div");
             label.className = "day-note";
             label.textContent = `${holiday.note}`;
