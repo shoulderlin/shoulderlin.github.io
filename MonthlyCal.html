@@ -84,7 +84,7 @@
     .holiday {
       color: red;
     }
-    .holiday-note{
+    .day-note{
       color: red;
       font-size: 10px;
       font-weight: normal;
@@ -213,13 +213,13 @@
           if (holiday?.type == "2") {
             const label = document.createElement("div");
             daylabel.className = "day-label holiday";
-            label.className = "holiday-note";
+            label.className = "day-note holiday";
             label.textContent = `  ${holiday.note}`;
             header.appendChild(label);
           } else if ((holiday?.type == "0") && ((weekday==0) || (weekday==6))) {
             const label = document.createElement("div");
-            label.className = "workday-label";
-            label.textContent = `  ${holiday.note}`;
+            label.className = "day-note";
+            label.textContent = `${holiday.note}`;
             header.appendChild(label);
           }
 
