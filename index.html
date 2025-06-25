@@ -142,28 +142,7 @@
     </div>
   </nav>
 <script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
-<div id="div-onead-nd-01"></div>
-<script type="text/javascript">
-  var custom_call = function (params) {
-      if (params.hasAd) {
-        console.log('ND has AD')
-      } else {
-        console.log('ND AD Empty');
-      }
-    }
-  ONEAD_TEXT = {};
-  ONEAD_TEXT.pub = {};
-  ONEAD_TEXT.pub.uid = "2000485";
-  ONEAD_TEXT.pub.slotobj = document.getElementById("div-onead-nd-01");
-  ONEAD_TEXT.pub.player_mode = "native-drive";
-  ONEAD_TEXT.pub.player_mode_div = "div-onead-ad";
-  ONEAD_TEXT.pub.max_threads = 3;
-  ONEAD_TEXT.pub.position_id = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)? "5" : "0";
-  ONEAD_TEXT.pub.queryAdCallback = custom_call;
-  window.ONEAD_text_pubs = window.ONEAD_text_pubs || [];
-  ONEAD_text_pubs.push(ONEAD_TEXT);
-</script>
-<script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
+
 
   
 <div id="div-onead-draft"></div>
@@ -199,6 +178,29 @@
   </div> -->
   
   <iframe id="toolFrame" src="./diffv4.html"></iframe>
+
+  <div id="div-onead-nd-01"></div>
+<script type="text/javascript">
+  var custom_call = function (params) {
+      if (params.hasAd) {
+        console.log('ND has AD')
+      } else {
+        console.log('ND AD Empty');
+      }
+    }
+  ONEAD_TEXT = {};
+  ONEAD_TEXT.pub = {};
+  ONEAD_TEXT.pub.uid = "2000485";
+  ONEAD_TEXT.pub.slotobj = document.getElementById("div-onead-nd-01");
+  ONEAD_TEXT.pub.player_mode = "native-drive";
+  ONEAD_TEXT.pub.player_mode_div = "div-onead-ad";
+  ONEAD_TEXT.pub.max_threads = 3;
+  ONEAD_TEXT.pub.position_id = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)? "5" : "0";
+  ONEAD_TEXT.pub.queryAdCallback = custom_call;
+  window.ONEAD_text_pubs = window.ONEAD_text_pubs || [];
+  ONEAD_text_pubs.push(ONEAD_TEXT);
+</script>
+<script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
   <section>
     <h2>關於本站</h2>
     <p>這是一個集合各種實用辦公小工具的網站，包含雙邊文字比對、跨PDF搜尋、QR Code 產生器、密碼產生器、倒數計時器與抽籤工具等，方便您快速完成日常任務。</p>
