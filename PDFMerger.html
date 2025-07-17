@@ -2,180 +2,155 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PDF 合併工具</title>
-  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <title>PDF 合併與浮水印工具</title>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
   <style>
     body {
-      font-family: "Helvetica Neue", sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #005BAC;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    input[type="file"] {
-      margin-bottom: 10px;
-    }
-    ul#fileList {
-      list-style: none;
-      padding: 0;
-    }
-    ul#fileList li {
-      background: #f0f0f0;
-      padding: 8px 12px;
-      margin: 5px 0;
-      border-radius: 6px;
-      cursor: move;
+      font-family: sans-serif;
+      margin: 2em;
+      background: #f5f5f5;
     }
     label {
       display: block;
-      margin-top: 12px;
+      margin-top: 1em;
     }
-    .form-group {
-      margin-bottom: 12px;
+    input, select {
+      width: 300px;
+      padding: 0.5em;
+      margin-top: 0.2em;
     }
     button {
-      background: #007BFF;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
+      margin-top: 2em;
+      padding: 0.8em 1.5em;
+      font-size: 1em;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>PDF 合併工具</h1>
-    <div class="form-group">
-      <label>選擇 PDF 檔案（可多選）：</label>
-      <input type="file" id="pdfFiles" accept="application/pdf" multiple />
-    </div>
-    <div class="form-group">
-      <label>拖曳調整檔案順序：</label>
-      <ul id="fileList"></ul>
-    </div>
-    <div class="form-group">
-      <label><input type="checkbox" id="addPageNumbers" /> 加入頁碼</label>
-      <label>頁碼格式（例如：第 {page} 頁）：</label>
-      <input type="text" id="pageFormat" placeholder="第 {page} 頁" value="第 {page} 頁" />
-    </div>
-    <div class="form-group">
-      <label>浮水印文字（可留空）：</label>
-      <input type="text" id="watermarkText" placeholder="例如：僅供內部使用" />
-    </div>
-    <button onclick="mergePDFs()">下載合併後的 PDF</button>
-  </div>
+  <h1>PDF 合併工具（支援浮水印與頁碼）</h1>
+
+  <label>選擇 PDF 檔案（可多選，支援調整順序）</label>
+  <input type="file" id="pdfFiles" accept="application/pdf" multiple />
+
+  <hr/>
+
+  <h2>浮水印設定</h2>
+  <label>內容</label>
+  <input type="text" id="watermarkText" value="僅供內部使用" />
+  <label>字型大小</label>
+  <input type="number" id="watermarkFontSize" value="24" />
+  <label>X 位置</label>
+  <input type="number" id="watermarkX" value="100" />
+  <label>Y 位置</label>
+  <input type="number" id="watermarkY" value="100" />
+  <label>顏色（CSS 格式）</label>
+  <input type="text" id="watermarkColor" value="rgba(255,0,0,0.4)" />
+
+  <hr/>
+
+  <h2>頁碼設定</h2>
+  <label>格式（使用 {page} 表示頁數）</label>
+  <input type="text" id="pageNumberFormat" value="第 {page} 頁" />
+  <label>字型大小</label>
+  <input type="number" id="pageFontSize" value="12" />
+  <label>X 位置</label>
+  <input type="number" id="pageX" value="450" />
+  <label>Y 位置</label>
+  <input type="number" id="pageY" value="20" />
+  <label>顏色（CSS 格式）</label>
+  <input type="text" id="pageColor" value="black" />
+
+  <button onclick="mergePDFs()">產生合併檔案</button>
 
   <script>
-    const pdfInput = document.getElementById("pdfFiles");
-    const fileList = document.getElementById("fileList");
-    const files = [];
-
-    pdfInput.addEventListener("change", (e) => {
-      fileList.innerHTML = "";
-      files.length = 0;
-
-      Array.from(e.target.files).forEach((file, index) => {
-        files.push(file);
-        const li = document.createElement("li");
-        li.textContent = file.name;
-        li.dataset.index = index;
-        fileList.appendChild(li);
-      });
-    });
-
-    new Sortable(fileList, {
-      animation: 150,
-      onEnd: () => {
-        const newOrder = Array.from(fileList.children).map(li => parseInt(li.dataset.index));
-        const newFiles = newOrder.map(i => files[i]);
-        files.length = 0;
-        files.push(...newFiles);
-      }
-    });
-
     async function mergePDFs() {
-      if (files.length === 0) {
-        alert("請選擇至少一個 PDF 檔案！");
-        return;
-      }
+      const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
+      const files = Array.from(document.getElementById('pdfFiles').files);
+      if (files.length === 0) return alert('請選擇至少一個 PDF 檔案');
 
-      const mergedPdf = await PDFLib.PDFDocument.create();
-      let totalPages = 0;
-      const addPageNumbers = document.getElementById("addPageNumbers").checked;
-      const pageFormat = document.getElementById("pageFormat").value || "第 {page} 頁";
-      const watermarkText = document.getElementById("watermarkText").value;
+      const mergedPdf = await PDFDocument.create();
 
-      const pdfDocs = [];
+      // 中文字型嵌入（Noto Sans TC）
+      const fontBytes = await fetch("https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/TraditionalChinese/NotoSansTC-Regular.otf").then(res => res.arrayBuffer());
+      const customFont = await mergedPdf.embedFont(fontBytes);
 
       for (const file of files) {
-        const bytes = await file.arrayBuffer();
-        const pdf = await PDFLib.PDFDocument.load(bytes);
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await PDFDocument.load(arrayBuffer);
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-        copiedPages.forEach((page) => mergedPdf.addPage(page));
-        pdfDocs.push({ doc: pdf, pages: copiedPages.length });
-        totalPages += copiedPages.length;
+
+        copiedPages.forEach((page, idx) => {
+          mergedPdf.addPage(page);
+        });
       }
+
+      const watermarkText = document.getElementById('watermarkText').value;
+      const watermarkFontSize = parseInt(document.getElementById('watermarkFontSize').value);
+      const watermarkX = parseInt(document.getElementById('watermarkX').value);
+      const watermarkY = parseInt(document.getElementById('watermarkY').value);
+      const watermarkColor = document.getElementById('watermarkColor').value;
+
+      const pageNumberFormat = document.getElementById('pageNumberFormat').value;
+      const pageFontSize = parseInt(document.getElementById('pageFontSize').value);
+      const pageX = parseInt(document.getElementById('pageX').value);
+      const pageY = parseInt(document.getElementById('pageY').value);
+      const pageColor = document.getElementById('pageColor').value;
 
       const pages = mergedPdf.getPages();
-
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i];
+      pages.forEach((page, index) => {
         const { width, height } = page.getSize();
-        const font = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
-        const fontSize = 10;
 
-        if (addPageNumbers) {
-          const text = pageFormat.replace("{page}", (i + 1).toString());
-          page.drawText(text, {
-            x: width - 100,
-            y: 20,
-            size: fontSize,
-            font,
-            color: PDFLib.rgb(0, 0, 0)
-          });
-        }
-
+        // 浮水印
         if (watermarkText) {
+          const { r, g, b, a } = parseCssColor(watermarkColor);
           page.drawText(watermarkText, {
-            x: width / 2 - 100,
-            y: height / 2,
-            size: 30,
-            font,
-            rotate: PDFLib.degrees(-45),
-            color: PDFLib.rgb(0.8, 0.8, 0.8),
-            opacity: 0.4
+            x: watermarkX,
+            y: watermarkY,
+            size: watermarkFontSize,
+            font: customFont,
+            color: rgb(r, g, b),
+            opacity: a,
           });
         }
-      }
 
-      const mergedBytes = await mergedPdf.save();
-      const blob = new Blob([mergedBytes], { type: "application/pdf" });
+        // 頁碼
+        const pageText = pageNumberFormat.replace('{page}', (index + 1));
+        if (pageText) {
+          const { r, g, b, a } = parseCssColor(pageColor);
+          page.drawText(pageText, {
+            x: pageX,
+            y: pageY,
+            size: pageFontSize,
+            font: customFont,
+            color: rgb(r, g, b),
+            opacity: a,
+          });
+        }
+      });
+
+      const mergedPdfBytes = await mergedPdf.save();
+      const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
-      a.download = "合併後.pdf";
+      a.download = '合併檔案.pdf';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    function parseCssColor(css) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = css;
+      const computed = ctx.fillStyle;
+      const rgbaMatch = computed.match(/rgba?\((\d+), ?(\d+), ?(\d+)(?:, ?([\d.]+))?\)/);
+      if (!rgbaMatch) return { r: 0, g: 0, b: 0, a: 1 };
+      return {
+        r: parseInt(rgbaMatch[1]) / 255,
+        g: parseInt(rgbaMatch[2]) / 255,
+        b: parseInt(rgbaMatch[3]) / 255,
+        a: rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1,
+      };
     }
   </script>
 </body>
