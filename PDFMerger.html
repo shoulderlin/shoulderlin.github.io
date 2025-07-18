@@ -72,7 +72,7 @@
 
   <script>
     let fileHandles = [];
-    const fontUrl = './fonts/NotoSansTC-Regular.ttf';
+    const fontUrl = './NotoSansTC-Regular.ttf';
     const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
     const customFont = await pdfDoc.embedFont(fontBytes);
     const fileInput = document.getElementById('pdfFiles');
