@@ -58,6 +58,8 @@
   </select>
 
   <h2>頁碼設定</h2>
+  <label>格式（使用 {page} 表示頁數）</label>
+  <input type="text" id="pageNumberFormat" value="第 {page} 頁" />
   <input type="color" id="pageNumberColor" value="#000000" />
   <input type="number" id="pageNumberFontSize" placeholder="頁碼字體大小（預設12）" />
   <select id="pageNumberPosition">
@@ -70,7 +72,9 @@
 
   <script>
     let fileHandles = [];
-
+    const fontUrl = './fonts/NotoSansTC-Regular.ttf';
+    const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+    const customFont = await pdfDoc.embedFont(fontBytes);
     const fileInput = document.getElementById('pdfFiles');
     const fileList = document.getElementById('fileList');
 
@@ -121,7 +125,7 @@
     async function mergePDFs() {
       const { PDFDocument, rgb, degrees } = PDFLib;
       const mergedPdf = await PDFDocument.create();
-
+      const pageNumberFormat = document.getElementById('pageNumberFormat').value;;
       const watermarkText = document.getElementById('watermarkText').value;
       const watermarkColor = document.getElementById('watermarkColor').value;
       const watermarkFontSize = parseInt(document.getElementById('watermarkFontSize').value) || 24;
@@ -182,7 +186,7 @@
         }
 
         // 頁碼
-        const pageNumberText = `第 ${i + 1} 頁`;
+        const pageNumberText = pageNumberFormat.replace('{page}', (i + 1));;
         const colorRgb = hexToRgb(pageNumberColor);
         const pageX = {
           'bottom-center': width / 2 - (pageNumberText.length * pageNumberFontSize) / 4,
