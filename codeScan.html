@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁條碼掃描器</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #reader { width: 100%; max-width: 500px; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; }
+        #result { margin-top: 20px; padding: 15px; background: #f0f0f0; width: 100%; max-width: 500px; word-break: break-all; border-radius: 8px; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>條碼掃描器</h2>
+    
+    <div id="reader"></div>
+    
+    <div id="result">掃描結果將顯示於此...</div>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            // 成功掃描後的回傳處理
+            console.log(`掃描成功: ${decodedText}`, decodedResult);
+            document.getElementById('result').innerHTML = `
+                <strong style="color: green;">掃描成功！</strong><br>
+                內容：<span style="font-size: 1.2em;">${decodedText}</span>
+            `;
+            
+            // 如果你只想掃描一次就停止，可以取消註解下面這行
+            // html5QrcodeScanner.clear();
+        }
+
+        function onScanFailure(error) {
+            // 掃描失敗（通常是沒對準），這裡通常不特別處理以保持流暢
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { 
+                fps: 10,            // 每秒偵測幀數
+                qrbox: {width: 250, height: 150}, // 掃描框大小
+                aspectRatio: 1.0    // 比例
+            }, 
+            /* verbose= */ false
+        );
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
+</body>
+</html>
