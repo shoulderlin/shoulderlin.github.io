@@ -41,11 +41,11 @@
                     <tr>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-12">#</th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商名稱 <span class="text-red-500">*</span></th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源<span class="text-red-500">*</span></th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源 <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號</th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質<span class="text-red-500">*</span></th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質 <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">生產品項</th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月)<span class="text-red-500">*</span></th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月) <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-16">操作</th>
                     </tr>
                 </thead>
@@ -71,7 +71,7 @@
         <div id="result-section" class="mt-10 bg-white p-6 rounded-xl shadow-lg border border-slate-200 hidden fade-in">
             <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
                 <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                資料已生成！請複製以下內容後貼回Google表單
+                資料已生成！請複製以下內容
             </h2>
             <textarea id="output-text" rows="10" class="w-full border-slate-300 rounded-lg shadow-sm p-4 bg-slate-50 text-slate-700 font-mono text-sm focus:ring-blue-500 focus:border-blue-500" readonly></textarea>
             
@@ -105,7 +105,7 @@
                         <input type="text" class="i-name w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：OO公司">
                     </td>
                     <td class="p-2 min-w-[140px]">
-                        <input type="text" class="i-source w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：台塑、李長榮等">
+                        <input type="text" class="i-source w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：台塑、李長榮">
                     </td>
                     <td class="p-2 min-w-[120px]">
                         <input type="text" class="i-model w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：3204">
@@ -153,7 +153,8 @@
 
         // 提取資料並格式化為純文字
         function generateText() {
-            const rows = document.querySelectorAll('.supplier-row');
+            let rows = document.querySelectorAll('.supplier-row');
+
             // 1. 預先檢查並移除所有欄位皆為空白的列
             rows.forEach((row) => {
                 const name = row.querySelector('.i-name').value.trim();
@@ -180,11 +181,10 @@
                 return;
             }
 
-
-            
             let formattedText = '';
             let hasError = false;
 
+            // 2. 進行剩餘列的資料驗證與文字串接
             rows.forEach((row, index) => {
                 // 取得各欄位的值，並去除前後空白
                 const name = row.querySelector('.i-name').value.trim();
@@ -216,7 +216,6 @@
                 validateField(sourceInput, source);
                 validateField(materialInput, material);
                 validateField(demandInput, demand);
-                
 
                 // 排版文字格式
                 formattedText += `【供應商 ${index + 1}】,`;
