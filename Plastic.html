@@ -154,6 +154,34 @@
         // 提取資料並格式化為純文字
         function generateText() {
             const rows = document.querySelectorAll('.supplier-row');
+            // 1. 預先檢查並移除所有欄位皆為空白的列
+            rows.forEach((row) => {
+                const name = row.querySelector('.i-name').value.trim();
+                const source = row.querySelector('.i-source').value.trim();
+                const model = row.querySelector('.i-model').value.trim();
+                const material = row.querySelector('.i-material').value.trim();
+                const product = row.querySelector('.i-product').value.trim();
+                const demand = row.querySelector('.i-demand').value.trim();
+
+                // 如果六個欄位都是完全空白的，直接將這列刪除
+                if (!name && !source && !model && !material && !product && !demand) {
+                    row.remove();
+                }
+            });
+
+            // 重新更新編號並取得剩餘的列
+            updateLabels();
+            rows = document.querySelectorAll('.supplier-row');
+
+            // 如果全部都被自動清空了，補回一列並中斷執行
+            if (rows.length === 0) {
+                addSupplier();
+                showToast('您尚未填寫任何資料！', 'error');
+                return;
+            }
+
+
+            
             let formattedText = '';
             let hasError = false;
 
