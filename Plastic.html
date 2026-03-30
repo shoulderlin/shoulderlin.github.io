@@ -186,13 +186,16 @@
 
             // 2. 進行剩餘列的資料驗證與文字串接
             rows.forEach((row, index) => {
+                // 將所有的半形逗號取代為全形，避免破壞 CSV 結構
+                const safeText = (text) => text.replace(/,/g, '，');
+                
                 // 取得各欄位的值，並去除前後空白
-                const name = row.querySelector('.i-name').value.trim();
-                const source = row.querySelector('.i-source').value.trim();
-                const model = row.querySelector('.i-model').value.trim();
-                const material = row.querySelector('.i-material').value.trim();
-                const product = row.querySelector('.i-product').value.trim();
-                const demand = row.querySelector('.i-demand').value.trim();
+                const name = safeText(row.querySelector('.i-name').value.trim());
+                const source = safeText(row.querySelector('.i-source').value.trim());
+                const model = safeText(row.querySelector('.i-model').value.trim());
+                const material = safeText(row.querySelector('.i-material').value.trim());
+                const product = safeText(row.querySelector('.i-product').value.trim());
+                const demand = safeText(row.querySelector('.i-demand').value.trim());
 
                 const nameInput = row.querySelector('.i-name');
                 const sourceInput = row.querySelector('.i-source');
