@@ -41,11 +41,11 @@
                     <tr>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-12">#</th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商名稱 <span class="text-red-500">*</span></th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號</th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">生產品項</th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月)</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月)<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-16">操作</th>
                     </tr>
                 </thead>
@@ -167,16 +167,28 @@
                 const demand = row.querySelector('.i-demand').value.trim();
 
                 const nameInput = row.querySelector('.i-name');
+                const sourceInput = row.querySelector('.i-source');
+                const materialInput = row.querySelector('.i-material');
+                const demandInput = row.querySelector('.i-demand');
 
-                // 驗證必填欄位 (名稱)
-                if (!name) {
-                    hasError = true;
-                    nameInput.classList.remove('border-slate-300');
-                    nameInput.classList.add('border-red-500', 'bg-red-50');
-                } else {
-                    nameInput.classList.add('border-slate-300');
-                    nameInput.classList.remove('border-red-500', 'bg-red-50');
-                }
+                // 驗證必填欄位共用函式
+                const validateField = (input, val) => {
+                    if (!val) {
+                        hasError = true;
+                        input.classList.remove('border-slate-300');
+                        input.classList.add('border-red-500', 'bg-red-50');
+                    } else {
+                        input.classList.add('border-slate-300');
+                        input.classList.remove('border-red-500', 'bg-red-50');
+                    }
+                };
+
+                // 檢查所有必填欄位
+                validateField(nameInput, name);
+                validateField(sourceInput, source);
+                validateField(materialInput, material);
+                validateField(demandInput, demand);
+                
 
                 // 排版文字格式
                 formattedText += `【供應商 ${index + 1}】,`;
@@ -194,7 +206,7 @@
             });
 
             if (hasError) {
-                showToast('請確認所有供應商的「名稱」皆已填寫！', 'error');
+                showToast('請確認所有供應商的「必填欄位(*)」皆已填寫！', 'error');
                 return;
             }
 
