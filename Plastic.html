@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>塑料供應商資料回報小幫手</title>
+    <!-- 引入 Tailwind CSS 以進行快速且美觀的排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自訂一些簡單的過渡動畫 */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 pb-12">
+
+    <!-- 頂部導覽/標題 -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-2xl md:text-3xl font-bold flex items-center">
+                <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                塑料供應商資料回報小幫手
+            </h1>
+            <p class="mt-2 text-blue-100 text-sm md:text-base">
+                因應 Google 表單無法填寫多筆供應商，請在此依序新增您的所有供應商資料。<br class="hidden md:block">
+                填寫完成後，點擊「產生並複製」，即可將整理好的文字直接貼回 Google 表單中！
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-8">
+        <!-- 供應商表單區塊 (改為表格容器) -->
+        <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-slate-200">
+            <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead class="bg-slate-100 border-b border-slate-200">
+                    <tr>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-12">#</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商名稱 <span class="text-red-500">*</span></th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">生產品項</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月)</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-16">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliers-container" class="divide-y divide-slate-100">
+                    <!-- 透過 JS 動態產生表格列 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 動作按鈕 -->
+        <div class="mt-6 flex flex-col sm:flex-row gap-4">
+            <button onclick="addSupplier()" class="flex-1 flex justify-center items-center bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition-colors shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                新增下一筆供應商
+            </button>
+            <button onclick="generateText()" class="flex-1 flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                產生文字並準備複製
+            </button>
+        </div>
+
+        <!-- 結果輸出區塊 (預設隱藏) -->
+        <div id="result-section" class="mt-10 bg-white p-6 rounded-xl shadow-lg border border-slate-200 hidden fade-in">
+            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                資料已生成！請複製以下內容
+            </h2>
+            <textarea id="output-text" rows="10" class="w-full border-slate-300 rounded-lg shadow-sm p-4 bg-slate-50 text-slate-700 font-mono text-sm focus:ring-blue-500 focus:border-blue-500" readonly></textarea>
+            
+            <button onclick="copyToClipboard()" class="mt-4 w-full flex justify-center items-center bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md text-lg">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                一鍵複製文字
+            </button>
+        </div>
+    </main>
+
+    <!-- 吐司提示訊息 (Toast) -->
+    <div id="toast" class="fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-xl transform transition-transform duration-300 translate-y-24 opacity-0 z-50 flex items-center">
+        <span id="toast-icon" class="mr-2"></span>
+        <span id="toast-message" class="font-medium"></span>
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // 頁面載入時自動新增第一筆表單
+        document.addEventListener('DOMContentLoaded', () => {
+            addSupplier();
+        });
+
+        // 產生單一供應商表單的 HTML (改為表格列)
+        function addSupplier() {
+            const container = document.getElementById('suppliers-container');
+            const rowHtml = `
+                <tr class="supplier-row hover:bg-slate-50 transition-colors fade-in">
+                    <td class="p-3 text-center font-medium text-slate-500 supplier-index">1</td>
+                    <td class="p-2 min-w-[160px]">
+                        <input type="text" class="i-name w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：OO公司">
+                    </td>
+                    <td class="p-2 min-w-[140px]">
+                        <input type="text" class="i-source w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：台塑、李長榮等">
+                    </td>
+                    <td class="p-2 min-w-[120px]">
+                        <input type="text" class="i-model w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：3204">
+                    </td>
+                    <td class="p-2 min-w-[120px]">
+                        <input type="text" class="i-material w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：PET">
+                    </td>
+                    <td class="p-2 min-w-[140px]">
+                        <input type="text" class="i-product w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：管路">
+                    </td>
+                    <td class="p-2 min-w-[120px]">
+                        <input type="number" min="0" step="0.01" class="i-demand w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：50.5">
+                    </td>
+                    <td class="p-2 text-center">
+                        <button type="button" onclick="removeSupplier(this)" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-colors inline-flex justify-center items-center" title="刪除此筆">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            container.insertAdjacentHTML('beforeend', rowHtml);
+            updateLabels();
+        }
+
+        // 移除單一供應商表單 (改為移除表格列)
+        function removeSupplier(btnElement) {
+            const container = document.getElementById('suppliers-container');
+            if (container.children.length <= 1) {
+                showToast('至少需要保留一筆供應商資料！', 'error');
+                return;
+            }
+            const row = btnElement.closest('.supplier-row');
+            row.remove();
+            updateLabels();
+        }
+
+        // 更新編號標籤 (確保刪除後編號依然連續)
+        function updateLabels() {
+            const rows = document.querySelectorAll('.supplier-row');
+            rows.forEach((row, index) => {
+                const indexCell = row.querySelector('.supplier-index');
+                indexCell.textContent = index + 1;
+            });
+        }
+
+        // 提取資料並格式化為純文字
+        function generateText() {
+            const rows = document.querySelectorAll('.supplier-row');
+            let formattedText = '';
+            let hasError = false;
+
+            rows.forEach((row, index) => {
+                // 取得各欄位的值，並去除前後空白
+                const name = row.querySelector('.i-name').value.trim();
+                const source = row.querySelector('.i-source').value.trim();
+                const model = row.querySelector('.i-model').value.trim();
+                const material = row.querySelector('.i-material').value.trim();
+                const product = row.querySelector('.i-product').value.trim();
+                const demand = row.querySelector('.i-demand').value.trim();
+
+                const nameInput = row.querySelector('.i-name');
+
+                // 驗證必填欄位 (名稱)
+                if (!name) {
+                    hasError = true;
+                    nameInput.classList.remove('border-slate-300');
+                    nameInput.classList.add('border-red-500', 'bg-red-50');
+                } else {
+                    nameInput.classList.add('border-slate-300');
+                    nameInput.classList.remove('border-red-500', 'bg-red-50');
+                }
+
+                // 排版文字格式
+                formattedText += `【供應商 ${index + 1}】,`;
+                formattedText += `${name || '(未填寫)'},`;
+                formattedText += `${source || '(未填寫)'},`;
+                formattedText += `${model || '(未填寫)'},`;
+                formattedText += `${material || '(未填寫)'},`;
+                formattedText += `${product || '(未填寫)'},`;
+                formattedText += `${demand ? demand + ' 噸/月' : '(未填寫)'}`;
+                
+                // 每筆資料之間加入空行
+                if (index < rows.length - 1) {
+                    formattedText += `\n`;
+                }
+            });
+
+            if (hasError) {
+                showToast('請確認所有供應商的「名稱」皆已填寫！', 'error');
+                return;
+            }
+
+            // 顯示結果區塊
+            const resultSection = document.getElementById('result-section');
+            const outputText = document.getElementById('output-text');
+            
+            outputText.value = formattedText;
+            resultSection.classList.remove('hidden');
+            
+            // 平滑滾動到結果區塊
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showToast('文字已產生！請點擊下方按鈕複製。', 'success');
+        }
+
+        // 複製到剪貼簿功能
+        function copyToClipboard() {
+            const outputText = document.getElementById('output-text');
+            
+            if (!outputText.value) {
+                showToast('沒有可複製的內容，請先點擊產生文字。', 'error');
+                return;
+            }
+
+            // 選取文字 (支援多數瀏覽器)
+            outputText.select();
+            outputText.setSelectionRange(0, 99999); // 針對手機的相容性設定
+
+            try {
+                // 使用 execCommand 來支援較舊的環境或 iframe 內的複製
+                document.execCommand('copy');
+                showToast('複製成功！現在可以切換回 Google 表單貼上了。', 'success');
+                
+                // 取消選取狀態，讓畫面乾淨
+                window.getSelection().removeAllRanges();
+            } catch (err) {
+                console.error('複製失敗', err);
+                showToast('複製失敗，請手動框選文字並複製。', 'error');
+            }
+        }
+
+        // 顯示提示訊息小工具 (Toast)
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+
+            // 根據類型設定顏色與圖標
+            if (type === 'success') {
+                toast.className = 'fixed bottom-4 md:bottom-8 right-4 md:right-8 bg-green-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-all duration-300 z-50 flex items-center';
+                toastIcon.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            } else {
+                toast.className = 'fixed bottom-4 md:bottom-8 right-4 md:right-8 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-all duration-300 z-50 flex items-center';
+                toastIcon.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            }
+
+            // 動畫顯示
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-24', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            // 3秒後自動隱藏
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
