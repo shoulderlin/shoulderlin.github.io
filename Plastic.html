@@ -42,9 +42,9 @@
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-12">#</th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商名稱 <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源 <span class="text-red-500">*</span></th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質 <span class="text-red-500">*</span></th>
-                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">生產品項</th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">生產品項<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">需求量(噸/月) <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-16">操作</th>
                     </tr>
@@ -201,7 +201,9 @@
                 const sourceInput = row.querySelector('.i-source');
                 const materialInput = row.querySelector('.i-material');
                 const demandInput = row.querySelector('.i-demand');
-
+                const modelInput = row.querySelector('.i-model');
+                const productInput = row.querySelector('.i-product');
+    
                 // 驗證必填欄位共用函式
                 const validateField = (input, val) => {
                     if (!val) {
@@ -217,8 +219,10 @@
                 // 檢查所有必填欄位
                 validateField(nameInput, name);
                 validateField(sourceInput, source);
+                validateField(modelInput, model);
                 validateField(materialInput, material);
                 validateField(demandInput, demand);
+                validateField(productInput, product);
 
                 // 排版文字格式
                 formattedText += `【供應商 ${index + 1}】,`;
