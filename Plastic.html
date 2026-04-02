@@ -41,6 +41,7 @@
                     <tr>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap text-center w-12">#</th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商名稱 <span class="text-red-500">*</span></th>
+                        <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料供應商聯絡窗口 <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料來源 <span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料型號<span class="text-red-500">*</span></th>
                         <th class="p-3 font-semibold text-slate-700 text-sm whitespace-nowrap">塑料材質 <span class="text-red-500">*</span></th>
@@ -104,6 +105,9 @@
                     <td class="p-2 min-w-[160px]">
                         <input type="text" class="i-name w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：OO公司">
                     </td>
+                    <td class="p-2 min-w-[160px]">
+                        <input type="text" class="i-nameTel w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：OO公司">
+                    </td>
                     <td class="p-2 min-w-[140px]">
                         <input type="text" class="i-source w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="例如：台塑、李長榮">
                     </td>
@@ -158,6 +162,7 @@
             // 1. 預先檢查並移除所有欄位皆為空白的列
             rows.forEach((row) => {
                 const name = row.querySelector('.i-name').value.trim();
+                const nameTEL  = row.querySelector('.i-nameTEL').value.trim();
                 const source = row.querySelector('.i-source').value.trim();
                 const model = row.querySelector('.i-model').value.trim();
                 const material = row.querySelector('.i-material').value.trim();
@@ -191,6 +196,7 @@
                 
                 // 取得各欄位的值，並去除前後空白
                 const name = safeText(row.querySelector('.i-name').value.trim());
+                const nameTEL = safeText(row.querySelector('.i-nameTEL').value.trim());
                 const source = safeText(row.querySelector('.i-source').value.trim());
                 const model = safeText(row.querySelector('.i-model').value.trim());
                 const material = safeText(row.querySelector('.i-material').value.trim());
@@ -198,6 +204,7 @@
                 const demand = safeText(row.querySelector('.i-demand').value.trim());
 
                 const nameInput = row.querySelector('.i-name');
+                const nameTELInput = row.querySelector('.i-nameTEL');
                 const sourceInput = row.querySelector('.i-source');
                 const materialInput = row.querySelector('.i-material');
                 const demandInput = row.querySelector('.i-demand');
@@ -218,6 +225,7 @@
 
                 // 檢查所有必填欄位
                 validateField(nameInput, name);
+                validateField(nameTELInput, nameTEL);
                 validateField(sourceInput, source);
                 validateField(modelInput, model);
                 validateField(materialInput, material);
@@ -231,7 +239,8 @@
                 formattedText += `${model || '(未填寫)'},`;
                 formattedText += `${material || '(未填寫)'},`;
                 formattedText += `${product || '(未填寫)'},`;
-                formattedText += `${demand ? demand + ' 噸/月' : '(未填寫)'}`;
+                formattedText += `${demand ? demand + ' 噸/月' : '(未填寫)'},`;
+                formattedText += `${nameTEL || '(未填寫)'},`;
                 
                 // 每筆資料之間加入空行
                 if (index < rows.length - 1) {
