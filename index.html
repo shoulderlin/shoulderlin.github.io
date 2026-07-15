@@ -151,6 +151,17 @@
     .hidden {
       display: none !important;
     }
+    .bottom-container {
+      width: 100%;
+      background-color: var(--nav-bg);
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+    }
+    
+    #div-onead-nd-01 {
+      margin: 10px auto;
+      max-width: 100%;
+    }
 
     @media (max-width: 768px) {
       nav {
@@ -173,6 +184,8 @@
         justify-content: space-between;
       }
     }
+    /* 讓廣告與頁尾的容器有固定的樣式，方便 iframe 扣除高度 */
+    
   </style>
 
   <script src="https://onead.onevision.com.tw/v2/adsrv?version=20250516&amp;uid=2000485&amp;category=-1&amp;cookie=true&amp;ip=&amp;guid=fb0cffa9919712d91c4119cc4dcf1f06&amp;channel=0&amp;volume=0.5&amp;r=&amp;adid=&amp;response_freq_multiple=native-drive.0&amp;web_location=https%3A%2F%2Fshoulderlin.github.io%2F&amp;title=%E8%BE%A6%E5%85%AC%E5%B0%8F%E5%B7%A5%E5%85%B7%E9%A6%96%E9%A0%81&amp;fp=fb0cffa9919712d91c4119cc4dcf1f06&amp;_t=1784106722141&amp;cb=ONEAD_text_response_3opye&amp;pb=0&amp;spid=&amp;player_type=NATIVE_LIST&amp;player_type=DPA_4_GRID_ND_300x250&amp;bgid=0" async></script>
@@ -204,8 +217,14 @@
 
   <iframe id="toolFrame" name="toolFrame" src="./diffv4.html"></iframe>
 
-  <div id="div-onead-nd-01"></div>
-  
+
+  <div id="pageBottom" class="bottom-container">
+    <div id="div-onead-nd-01"></div>
+    
+    <footer id="pageFooter" style="border-top: none; padding: 0.5rem 1rem;">
+      <a href="privacy.html">隱私權政策</a> | <a href="mailto:shoulder.winner@gmail.com">聯絡我們</a>
+    </footer>
+  </div>
   <script src="https://onead.onevision.com.tw/v2/et/oid?cb=window.text_etag_callback_3opye" async></script>
   <script type="text/javascript">
     var custom_call = function (params) {
@@ -229,24 +248,6 @@
     window.ONEAD_text_pubs.push(ONEAD_TEXT);
   </script>
   <script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
-
-  <main id="aboutSection">
-    <h2>關於本站</h2>
-    <p>本網站提供多種辦公用小工具，讓您更有效率完成日常任務。</p>
-    <ul>
-      <li><strong>文字比對：</strong>比較兩段文字差異。</li>
-      <li><strong>PDF 搜尋：</strong>快速搜尋多個 PDF 檔。</li>
-      <li><strong>QR Code：</strong>轉換文字為 QR Code。</li>
-      <li><strong>日曆/週曆/月曆：</strong>產生各式可列印日程表。</li>
-      <li><strong>密碼產生器：</strong>生成強密碼。</li>
-      <li><strong>倒數計時器：</strong>簡單時間管理工具。</li>
-      <li><strong>抽籤工具：</strong>分組或抽獎用途。</li>
-    </ul>
-  </main>
-
-  <footer id="pageFooter">
-    <a href="privacy.html">隱私權政策</a> | <a href="mailto:shoulder.winner@gmail.com">聯絡我們</a>
-  </footer>
 
   <script>
     // 載入工具並更新選單 active 狀態
@@ -291,14 +292,15 @@
     function adjustIframeHeight() {
       const header = document.getElementById("pageHeader");
       const nav = document.getElementById("navBar");
-      const footer = document.getElementById("pageFooter");
+      const bottom = document.getElementById("pageBottom"); // 取得底部容器
       const frame = document.getElementById("toolFrame");
       
       const headerHeight = header && !header.classList.contains("hidden") ? header.offsetHeight : 0;
       const navHeight = nav && !nav.classList.contains("hidden") ? nav.offsetHeight : 0;
+      const bottomHeight = bottom ? bottom.offsetHeight : 0; // 取得廣告+Footer的總高度
       
-      // 計算剩餘的可用視窗高度
-      const remainingHeight = window.innerHeight - headerHeight - navHeight;
+      // 計算剩餘可用高度
+      const remainingHeight = window.innerHeight - headerHeight - navHeight - bottomHeight;
       frame.style.height = `${remainingHeight}px`;
     }
 
