@@ -288,20 +288,30 @@
       }
     }
 
-    // 精準計算 iframe 高度，避免多餘滾動條
+    // 精準計算 iframe 高度，並將變數抽離避免重複宣告
     function adjustIframeHeight() {
       const header = document.getElementById("pageHeader");
       const nav = document.getElementById("navBar");
-      const bottom = document.getElementById("pageBottom"); // 取得底部容器
+      const bottom = document.getElementById("pageBottom");
       const frame = document.getElementById("toolFrame");
       
       const headerHeight = header && !header.classList.contains("hidden") ? header.offsetHeight : 0;
       const navHeight = nav && !nav.classList.contains("hidden") ? nav.offsetHeight : 0;
-      const bottomHeight = bottom ? bottom.offsetHeight : 0; // 取得廣告+Footer的總高度
+      const bottomHeight = bottom ? bottom.offsetHeight : 0;
       
       // 計算剩餘可用高度
       const remainingHeight = window.innerHeight - headerHeight - navHeight - bottomHeight;
       frame.style.height = `${remainingHeight}px`;
+    }
+
+    // 🌟 新增：監聽底部容器（包含廣告與頁尾）的尺寸變化
+    // 當 OneAD 廣告非同步載入、撐開高度時，自動重新調整 iframe 高度
+    const bottomContainer = document.getElementById("pageBottom");
+    if (bottomContainer) {
+      const resizeObserver = new ResizeObserver(() => {
+        adjustIframeHeight();
+      });
+      resizeObserver.observe(bottomContainer);
     }
 
     // 監聽視窗調整大小與載入
