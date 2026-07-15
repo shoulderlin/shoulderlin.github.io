@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>辦公小工具首頁</title>
-  <meta name="description" content="集合多款實用辦公小工具，如文字比對、跨PDF搜尋、QR Code 產生器等，提升工作效率。" />
-  <meta name="keywords" content="辦公工具, PDF搜尋, QR Code, 密碼產生器, 倒數計時器" />
-  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="集合多款實用辦公小工具，如文字比對、跨PDF搜尋、QR Code 產生器等，提升工作效率。">
+  <meta name="keywords" content="辦公工具, PDF搜尋, QR Code, 密碼產生器, 倒數計時器">
+  <meta name="color-scheme" content="light dark">
   <style>
     :root {
       --bg-color: #ffffff;
@@ -14,6 +14,9 @@
       --primary-color: #007BFF;
       --nav-bg: #f1f1f1;
       --hover-bg: #ddd;
+      --active-bg: #007BFF;
+      --active-text: #ffffff;
+      --border-color: #ccc;
     }
 
     body.dark {
@@ -22,6 +25,9 @@
       --primary-color: #3399ff;
       --nav-bg: #2c2c2c;
       --hover-bg: #444;
+      --active-bg: #3399ff;
+      --active-text: #ffffff;
+      --border-color: #444;
     }
 
     body {
@@ -29,6 +35,7 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden; /* 防止主頁面出現雙滾動條 */
     }
 
     header {
@@ -37,6 +44,7 @@
       text-align: center;
       padding: 1rem;
       font-size: 1.5rem;
+      font-weight: bold;
     }
 
     nav {
@@ -44,8 +52,9 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
+      align-items: center;
       padding: 0.5rem 1rem;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid var(--border-color);
     }
 
     nav ul {
@@ -66,115 +75,162 @@
       text-decoration: none;
       color: var(--text-color);
       border-radius: 4px;
-      transition: background 0.3s;
+      transition: background 0.3s, color 0.3s;
     }
 
     nav a:hover {
       background-color: var(--hover-bg);
     }
 
-    #themeToggle {
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-size: 1rem;
-      color: var(--text-color);
+    /* 當前選中工具的樣式 */
+    nav a.active {
+      background-color: var(--active-bg);
+      color: var(--active-text);
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-buttons button {
       padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .nav-buttons button:hover {
+      background-color: var(--hover-bg);
+    }
+
+    #themeToggle {
+      font-size: 1rem;
     }
 
     #toolFrame {
       width: 100%;
       border: none;
+      display: block;
     }
 
     main {
       max-width: 800px;
       margin: auto;
-      padding: 1rem;
+      padding: 2rem 1rem;
+      /* 預設隱私與介紹，若iframe載入則此區塊被覆蓋或僅作SEO/備份 */
+      display: none; 
     }
 
     footer {
       text-align: center;
       font-size: 0.9rem;
       padding: 1rem;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--nav-bg);
     }
 
     #toggleButton {
       position: fixed;
       top: 10px;
       left: 10px;
-      z-index: 1000;
-      padding: 0.5rem 1rem;
+      z-index: 1001; /* 提升層級避免被 Header 擋住 */
+      padding: 0.5rem 0.8rem;
       background-color: var(--primary-color);
       color: white;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .hidden {
       display: none !important;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
       nav ul {
         flex-direction: column;
         width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      nav li {
+        width: 100%;
+      }
+      nav a {
+        display: block;
+        text-align: center;
+      }
+      .nav-buttons {
+        justify-content: space-between;
       }
     }
   </style>
+
+  <script src="https://onead.onevision.com.tw/v2/adsrv?version=20250516&amp;uid=2000485&amp;category=-1&amp;cookie=true&amp;ip=&amp;guid=fb0cffa9919712d91c4119cc4dcf1f06&amp;channel=0&amp;volume=0.5&amp;r=&amp;adid=&amp;response_freq_multiple=native-drive.0&amp;web_location=https%3A%2F%2Fshoulderlin.github.io%2F&amp;title=%E8%BE%A6%E5%85%AC%E5%B0%8F%E5%B7%A5%E5%85%B7%E9%A6%96%E9%A0%81&amp;fp=fb0cffa9919712d91c4119cc4dcf1f06&amp;_t=1784106722141&amp;cb=ONEAD_text_response_3opye&amp;pb=0&amp;spid=&amp;player_type=NATIVE_LIST&amp;player_type=DPA_4_GRID_ND_300x250&amp;bgid=0" async></script>
 </head>
 <body>
-  <button id="toggleButton" onclick="toggleHeaderAndNav()">≡</button>
+
+  <button id="toggleButton" onclick="toggleHeaderAndNav()" title="切換選單顯示">≡</button>
 
   <header id="pageHeader">辦公小工具首頁</header>
 
   <nav id="navBar">
-    <ul>
-      <li><a href="#" onclick="loadTool('./diffv4.html'); return false;">文字比對</a></li>
-      <li><a href="#" onclick="loadTool('./PDFSearcher.html'); return false;">PDF 搜尋</a></li>
-      <li><a href="#" onclick="loadTool('./QRCodeGenerator.html'); return false;">QR Code</a></li>
-      <li><a href="#" onclick="loadTool('./dailycalendar.html'); return false;">日曆</a></li>
-      <li><a href="#" onclick="loadTool('./weekly.html'); return false;">週曆</a></li>
-      <li><a href="#" onclick="loadTool('./MonthlyCal.html'); return false;">月曆</a></li>
-      <li><a href="#" onclick="loadTool('./pwdGenerator.html'); return false;">密碼產生</a></li>
-      <li><a href="#" onclick="loadTool('./datecalc.html'); return false;">天數計算</a></li>
-      <li><a href="#" onclick="loadTool('./timer3.html'); return false;">倒數計時</a></li>
-      <li><a href="#" onclick="loadTool('./dice2.html'); return false;">抽籤</a></li>
+    <ul id="toolMenu">
+      <li><a href="#" class="active" onclick="loadTool('./diffv4.html', this); return false;">文字比對</a></li>
+      <li><a href="#" onclick="loadTool('./PDFSearcher.html', this); return false;">PDF 搜尋</a></li>
+      <li><a href="#" onclick="loadTool('./QRCodeGenerator.html', this); return false;">QR Code</a></li>
+      <li><a href="#" onclick="loadTool('./dailycalendar.html', this); return false;">日曆</a></li>
+      <li><a href="#" onclick="loadTool('./weekly.html', this); return false;">週曆</a></li>
+      <li><a href="#" onclick="loadTool('./MonthlyCal.html', this); return false;">月曆</a></li>
+      <li><a href="#" onclick="loadTool('./pwdGenerator.html', this); return false;">密碼產生</a></li>
+      <li><a href="#" onclick="loadTool('./datecalc.html', this); return false;">天數計算</a></li>
+      <li><a href="#" onclick="loadTool('./timer3.html', this); return false;">倒數計時</a></li>
+      <li><a href="#" onclick="loadTool('./dice2.html', this); return false;">抽籤</a></li>
     </ul>
-    <div>
-      <button onclick="window.frames['toolFrame'].print();">列印</button>
+    <div class="nav-buttons">
+      <button onclick="window.frames['toolFrame'].print();">🖨️ 列印</button>
       <button id="themeToggle" onclick="toggleTheme()">🌙 深色模式</button>
     </div>
   </nav>
 
   <iframe id="toolFrame" name="toolFrame" src="./diffv4.html"></iframe>
 
-<div id="div-onead-nd-01"></div>
-<script type="text/javascript">
-  var custom_call = function (params) {
+  <div id="div-onead-nd-01"></div>
+  
+  <script src="https://onead.onevision.com.tw/v2/et/oid?cb=window.text_etag_callback_3opye" async></script>
+  <script type="text/javascript">
+    var custom_call = function (params) {
       if (params.hasAd) {
         console.log('ND has AD')
       } else {
         console.log('ND AD Empty');
       }
     }
-  ONEAD_TEXT = {};
-  ONEAD_TEXT.pub = {};
-  ONEAD_TEXT.pub.uid = "2000485";
-  ONEAD_TEXT.pub.slotobj = document.getElementById("div-onead-nd-01");
-  ONEAD_TEXT.pub.player_mode = "native-drive";
-  ONEAD_TEXT.pub.player_mode_div = "div-onead-ad";
-  ONEAD_TEXT.pub.max_threads = 3;
-  ONEAD_TEXT.pub.position_id = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)? "5" : "0";
-  ONEAD_TEXT.pub.queryAdCallback = custom_call;
-  window.ONEAD_text_pubs = window.ONEAD_text_pubs || [];
-  ONEAD_text_pubs.push(ONEAD_TEXT);
-</script>
-<script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
+    ONEAD_TEXT = {};
+    ONEAD_TEXT.pub = {};
+    ONEAD_TEXT.pub.uid = "2000485";
+    // 修正此處：讓 ID 與上面的廣告 div 容器 "div-onead-nd-01" 保持一致
+    ONEAD_TEXT.pub.slotobj = document.getElementById("div-onead-nd-01");
+    ONEAD_TEXT.pub.player_mode = "native-drive";
+    ONEAD_TEXT.pub.player_mode_div = "div-onead-ad";
+    ONEAD_TEXT.pub.max_threads = 3;
+    ONEAD_TEXT.pub.position_id = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)? "5" : "0";
+    ONEAD_TEXT.pub.queryAdCallback = custom_call;
+    window.ONEAD_text_pubs = window.ONEAD_text_pubs || [];
+    window.ONEAD_text_pubs.push(ONEAD_TEXT);
+  </script>
+  <script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
 
-  
-  <main>
+  <main id="aboutSection">
     <h2>關於本站</h2>
     <p>本網站提供多種辦公用小工具，讓您更有效率完成日常任務。</p>
     <ul>
@@ -188,39 +244,70 @@
     </ul>
   </main>
 
-  <footer>
+  <footer id="pageFooter">
     <a href="privacy.html">隱私權政策</a> | <a href="mailto:shoulder.winner@gmail.com">聯絡我們</a>
   </footer>
 
   <script>
-    function loadTool(url) {
+    // 載入工具並更新選單 active 狀態
+    function loadTool(url, element) {
       document.getElementById("toolFrame").src = url;
+      
+      // 移除所有選單的 active 樣式
+      const links = document.querySelectorAll("#toolMenu a");
+      links.forEach(link => link.classList.remove("active"));
+      
+      // 為當前點擊的選項加上 active 樣式
+      if (element) {
+        element.classList.add("active");
+      }
     }
 
+    // 切換頁首與選單顯示/隱藏
     function toggleHeaderAndNav() {
       document.getElementById("pageHeader").classList.toggle("hidden");
       document.getElementById("navBar").classList.toggle("hidden");
       adjustIframeHeight();
     }
 
+    // 主題切換功能
     function toggleTheme() {
       const body = document.body;
       const isDark = body.classList.toggle("dark");
       document.getElementById("themeToggle").textContent = isDark ? "☀️ 淺色模式" : "🌙 深色模式";
       localStorage.setItem("theme", isDark ? "dark" : "light");
+      
+      // 建議：如果您的子工具頁面（如 diffv4.html）支援深色模式，
+      // 可以透過 postMessage 通知子網頁切換主題。
+      try {
+        const iframeWin = document.getElementById("toolFrame").contentWindow;
+        iframeWin.postMessage({ theme: isDark ? 'dark' : 'light' }, '*');
+      } catch (e) {
+        console.log("無法向 iframe 發送主題切換通知（可能跨域）");
+      }
     }
 
+    // 精準計算 iframe 高度，避免多餘滾動條
     function adjustIframeHeight() {
       const header = document.getElementById("pageHeader");
       const nav = document.getElementById("navBar");
+      const footer = document.getElementById("pageFooter");
       const frame = document.getElementById("toolFrame");
-      const height = (header?.offsetHeight || 0) + (nav?.offsetHeight || 0);
-      frame.style.height = `calc(100vh - ${height}px)`;
+      
+      const headerHeight = header && !header.classList.contains("hidden") ? header.offsetHeight : 0;
+      const navHeight = nav && !nav.classList.contains("hidden") ? nav.offsetHeight : 0;
+      
+      // 計算剩餘的可用視窗高度
+      const remainingHeight = window.innerHeight - headerHeight - navHeight;
+      frame.style.height = `${remainingHeight}px`;
     }
 
+    // 監聽視窗調整大小與載入
     window.addEventListener("resize", adjustIframeHeight);
     window.addEventListener("load", () => {
       adjustIframeHeight();
+      
+      // 初始化深色模式設定
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "dark") {
         document.body.classList.add("dark");
@@ -228,5 +315,7 @@
       }
     });
   </script>
+
+  <iframe id="onead-oneck" src="https://pixel.onead.com.tw/static/html/oneadCookie1.html?oid=fb0cffa9919712d91c4119cc4dcf1f06&amp;enc=tbKQFpdofvxjx%2FoUYCycs5%2FSu1QZ%2FeCwX7eeUsSUT37Vhb4%3D&amp;location=shoulderlin.github.io" style="display: none;"></iframe>
 </body>
 </html>
