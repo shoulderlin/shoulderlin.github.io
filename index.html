@@ -30,12 +30,20 @@
       --border-color: #444;
     }
 
+    /* 電腦版預設：鎖定高度，不出現外層雙滾動條 */
     body {
       margin: 0;
       background-color: var(--bg-color);
       color: var(--text-color);
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden; /* 防止主頁面出現雙滾動條 */
+      overflow: hidden; 
+      display: flex;
+      flex-direction: column;
+      height: 100vh; 
+    }
+
+    header, nav {
+      flex-shrink: 0;
     }
 
     header {
@@ -82,7 +90,6 @@
       background-color: var(--hover-bg);
     }
 
-    /* 當前選中工具的樣式 */
     nav a.active {
       background-color: var(--active-bg);
       color: var(--active-text);
@@ -116,21 +123,27 @@
       width: 100%;
       border: none;
       display: block;
+      flex: 1; 
+      min-height: 0;
     }
 
-    main {
-      max-width: 800px;
-      margin: auto;
-      padding: 2rem 1rem;
-      /* 預設隱私與介紹，若iframe載入則此區塊被覆蓋或僅作SEO/備份 */
-      display: none; 
+    .bottom-container {
+      width: 100%;
+      background-color: var(--nav-bg);
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    #div-onead-nd-01 {
+      margin: 10px auto;
+      max-width: 100%;
     }
 
     footer {
       text-align: center;
       font-size: 0.9rem;
       padding: 1rem;
-      border-top: 1px solid var(--border-color);
       background-color: var(--nav-bg);
     }
 
@@ -138,7 +151,7 @@
       position: fixed;
       top: 10px;
       left: 10px;
-      z-index: 1001; /* 提升層級避免被 Header 擋住 */
+      z-index: 1001;
       padding: 0.5rem 0.8rem;
       background-color: var(--primary-color);
       color: white;
@@ -151,41 +164,53 @@
     .hidden {
       display: none !important;
     }
-    .bottom-container {
-      width: 100%;
-      background-color: var(--nav-bg);
-      border-top: 1px solid var(--border-color);
-      text-align: center;
-    }
-    
-    #div-onead-nd-01 {
-      margin: 10px auto;
-      max-width: 100%;
-    }
 
+    /* 📱 關鍵優化：手機與平板行動裝置專用 RWD 樣式 */
     @media (max-width: 768px) {
+      body {
+        overflow-y: auto; /* 手機版允許整頁上下滾動，解決按鈕與廣告被瀏覽器 UI 遮擋的問題 */
+        height: auto;     /* 移除鎖死螢幕高度 */
+        display: block;   /* 取消電腦版的 flex 佈局限制 */
+      }
+
+      header {
+        padding: 0.8rem;
+        font-size: 1.2rem;
+      }
+
       nav {
         flex-direction: column;
         align-items: stretch;
+        padding: 0.5rem;
       }
+
       nav ul {
         flex-direction: column;
         width: 100%;
         margin-bottom: 0.5rem;
       }
+
       nav li {
         width: 100%;
+        margin: 0.15rem 0;
       }
+
       nav a {
         display: block;
         text-align: center;
+        padding: 0.6rem; /* 稍微放大點擊區域，方便手指操作 */
       }
+
       .nav-buttons {
         justify-content: space-between;
+        margin-top: 0.25rem;
+      }
+
+      #toolFrame {
+        height: 75vh !important; /* 手機上固定給予工具視窗 75% 螢幕高度，確保工具好操作 */
+        min-height: 550px;       /* 避免工具被壓太扁 */
       }
     }
-    /* 讓廣告與頁尾的容器有固定的樣式，方便 iframe 扣除高度 */
-    
   </style>
 
   <script src="https://onead.onevision.com.tw/v2/adsrv?version=20250516&amp;uid=2000485&amp;category=-1&amp;cookie=true&amp;ip=&amp;guid=fb0cffa9919712d91c4119cc4dcf1f06&amp;channel=0&amp;volume=0.5&amp;r=&amp;adid=&amp;response_freq_multiple=native-drive.0&amp;web_location=https%3A%2F%2Fshoulderlin.github.io%2F&amp;title=%E8%BE%A6%E5%85%AC%E5%B0%8F%E5%B7%A5%E5%85%B7%E9%A6%96%E9%A0%81&amp;fp=fb0cffa9919712d91c4119cc4dcf1f06&amp;_t=1784106722141&amp;cb=ONEAD_text_response_3opye&amp;pb=0&amp;spid=&amp;player_type=NATIVE_LIST&amp;player_type=DPA_4_GRID_ND_300x250&amp;bgid=0" async></script>
@@ -217,7 +242,6 @@
 
   <iframe id="toolFrame" name="toolFrame" src="./diffv4.html"></iframe>
 
-
   <div id="pageBottom" class="bottom-container">
     <div id="div-onead-nd-01"></div>
     
@@ -225,6 +249,7 @@
       <a href="privacy.html">隱私權政策</a> | <a href="mailto:shoulder.winner@gmail.com">聯絡我們</a>
     </footer>
   </div>
+
   <script src="https://onead.onevision.com.tw/v2/et/oid?cb=window.text_etag_callback_3opye" async></script>
   <script type="text/javascript">
     var custom_call = function (params) {
@@ -237,7 +262,6 @@
     ONEAD_TEXT = {};
     ONEAD_TEXT.pub = {};
     ONEAD_TEXT.pub.uid = "2000485";
-    // 修正此處：讓 ID 與上面的廣告 div 容器 "div-onead-nd-01" 保持一致
     ONEAD_TEXT.pub.slotobj = document.getElementById("div-onead-nd-01");
     ONEAD_TEXT.pub.player_mode = "native-drive";
     ONEAD_TEXT.pub.player_mode_div = "div-onead-ad";
@@ -250,62 +274,57 @@
   <script src="https://ad-specs.guoshipartners.com/static/js/ad-serv.min.js"></script>
 
   <script>
-    // 載入工具並更新選單 active 狀態
     function loadTool(url, element) {
       document.getElementById("toolFrame").src = url;
-      
-      // 移除所有選單的 active 樣式
       const links = document.querySelectorAll("#toolMenu a");
       links.forEach(link => link.classList.remove("active"));
-      
-      // 為當前點擊的選項加上 active 樣式
       if (element) {
         element.classList.add("active");
       }
     }
 
-    // 切換頁首與選單顯示/隱藏
     function toggleHeaderAndNav() {
       document.getElementById("pageHeader").classList.toggle("hidden");
       document.getElementById("navBar").classList.toggle("hidden");
       adjustIframeHeight();
     }
 
-    // 主題切換功能
     function toggleTheme() {
       const body = document.body;
       const isDark = body.classList.toggle("dark");
       document.getElementById("themeToggle").textContent = isDark ? "☀️ 淺色模式" : "🌙 深色模式";
       localStorage.setItem("theme", isDark ? "dark" : "light");
-      
-      // 建議：如果您的子工具頁面（如 diffv4.html）支援深色模式，
-      // 可以透過 postMessage 通知子網頁切換主題。
       try {
         const iframeWin = document.getElementById("toolFrame").contentWindow;
         iframeWin.postMessage({ theme: isDark ? 'dark' : 'light' }, '*');
       } catch (e) {
-        console.log("無法向 iframe 發送主題切換通知（可能跨域）");
+        console.log("無法向 iframe 發送主題切換通知");
       }
     }
 
-    // 精準計算 iframe 高度，並將變數抽離避免重複宣告
     function adjustIframeHeight() {
-      const header = document.getElementById("pageHeader");
-      const nav = document.getElementById("navBar");
-      const bottom = document.getElementById("pageBottom");
-      const frame = document.getElementById("toolFrame");
-      
-      const headerHeight = header && !header.classList.contains("hidden") ? header.offsetHeight : 0;
-      const navHeight = nav && !nav.classList.contains("hidden") ? nav.offsetHeight : 0;
-      const bottomHeight = bottom ? bottom.offsetHeight : 0;
-      
-      // 計算剩餘可用高度
-      const remainingHeight = window.innerHeight - headerHeight - navHeight - bottomHeight;
-      frame.style.height = `${remainingHeight}px`;
+      // 只在非手機版（寬度大於 768px）時進行嚴格的高度動態計算
+      if (window.innerWidth > 768) {
+        const header = document.getElementById("pageHeader");
+        const nav = document.getElementById("navBar");
+        const bottom = document.getElementById("pageBottom");
+        const frame = document.getElementById("toolFrame");
+        
+        const headerHeight = header && !header.classList.contains("hidden") ? header.offsetHeight : 0;
+        const navHeight = nav && !nav.classList.contains("hidden") ? nav.offsetHeight : 0;
+        const bottomHeight = bottom ? bottom.offsetHeight : 0;
+        
+        const remainingHeight = window.innerHeight - headerHeight - navHeight - bottomHeight;
+        frame.style.height = `${remainingHeight}px`;
+        frame.style.flex = "none"; // 覆蓋 Flex，採用計算出來的高度
+      } else {
+        // 手機版時，高度改由 CSS 中的 75vh 和媒體查詢控制，此處移除行內高度樣式
+        const frame = document.getElementById("toolFrame");
+        frame.style.height = ""; 
+      }
     }
 
-    // 🌟 新增：監聽底部容器（包含廣告與頁尾）的尺寸變化
-    // 當 OneAD 廣告非同步載入、撐開高度時，自動重新調整 iframe 高度
+    // 當廣告非同步載入、底部容器高度變化時，自動調適（僅限電腦版）
     const bottomContainer = document.getElementById("pageBottom");
     if (bottomContainer) {
       const resizeObserver = new ResizeObserver(() => {
@@ -314,12 +333,9 @@
       resizeObserver.observe(bottomContainer);
     }
 
-    // 監聽視窗調整大小與載入
     window.addEventListener("resize", adjustIframeHeight);
     window.addEventListener("load", () => {
       adjustIframeHeight();
-      
-      // 初始化深色模式設定
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "dark") {
         document.body.classList.add("dark");
