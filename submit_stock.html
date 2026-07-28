@@ -230,13 +230,6 @@
             <input type="number" id="covidStock" min="0" value="0" required>
           </div>
         </div>
-        <div class="form-group" style="flex: 1;">
-          <label>流感快篩數量</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-virus"></i>
-            <input type="number" id="fluStock" min="0" value="0">
-          </div>
-        </div>
       </div>
 
       <div class="form-group">
@@ -316,7 +309,6 @@
         lat: lat,
         lng: lng,
         covidStock: parseInt(document.getElementById('covidStock').value) || 0,
-        fluStock: parseInt(document.getElementById('fluStock').value) || 0,
         hours: document.getElementById('hours').value || "09:00 - 21:00"
       };
 
