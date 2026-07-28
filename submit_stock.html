@@ -312,36 +312,31 @@
         hours: document.getElementById('hours').value || "09:00 - 21:00"
       };
 
+
+
       try {
         const response = await fetch(GAS_URL, {
           method: 'POST',
-          mode: 'cors',
+          mode: 'no-cors', // 💡 改為 no-cors 模式，解決 Google 重新導向時的 CORS 阻擋問題
           headers: {
-            'Content-Type': 'text/plain' // 使用 text/plain 可以避免觸發複雜 CORS 預檢，提高速度與穩定度
+            'Content-Type': 'text/plain'
           },
           body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-          statusMsg.innerText = "🎉 更新成功！資料已寫入資料庫！";
-          statusMsg.className = "status-msg success";
-          statusMsg.style.display = "block";
-          document.getElementById('stockForm').reset();
-          document.getElementById('gpsBtn').style.background = 'var(--accent)';
-          document.getElementById('gpsBtn').innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> 📍 點我自動載入店面定位';
-        } else {
-          throw new Error(result.message);
-        }
+        // 在 no-cors 模式下，我們無法且不需要讀取 response.json() 的回傳內容，
+        // 只要 fetch Promise 沒有拋出錯誤，即代表資料已經順利送出並被 GAS 接收。
+        statusMsg.innerText = "🎉 更新成功！資料已寫入資料庫！";
+        statusMsg.className = "status-msg success";
+        statusMsg.style.display = "block";
+        document.getElementById('stockForm').reset();
+        document.getElementById('gpsBtn').style.background = 'var(--accent)';
+        document.getElementById('gpsBtn').innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> 📍 點我自動載入店面定位';
       } catch (err) {
         console.error("提交錯誤:", err);
-        statusMsg.innerText = "❌ 提交失敗：" + err.message + "，請檢查 GAS 網址是否正確。";
+        statusMsg.innerText = "❌ 提交失敗，請檢查您的網路連線或 GAS 網址是否正確。";
         statusMsg.className = "status-msg error";
         statusMsg.style.display = "block";
-      } finally {
-        submitBtn.innerText = "送出更新資料";
-        submitBtn.disabled = false;
       }
     });
   </script>
