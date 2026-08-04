@@ -693,6 +693,12 @@
       border-left: 3px solid var(--danger);
     }
 
+    .diff-item.process-diff {
+      background-color: var(--warning-soft);
+      color: var(--warning);
+      border-left: 3px solid var(--warning);
+    }
+
     .diff-badge {
       font-size: 0.65rem;
       font-weight: 700;
@@ -710,6 +716,11 @@
 
     .diff-badge.removed {
       background-color: var(--danger);
+      color: white;
+    }
+
+    .diff-badge.process-diff {
+      background-color: var(--warning);
       color: white;
     }
 
@@ -829,11 +840,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Template Warning Banner (visible only when opening viewer_template.html directly) -->
-  <div id="templateWarningBanner" style="display: none; background-color: #ef4444; color: white; padding: 0.75rem 2rem; text-align: center; font-weight: bold; font-size: 0.95rem; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-    ⚠️ 警告：您目前開啟的是範本檔案 (viewer_template.html)，顯示的為測試資料。請開啟建置後的「qms_comparison.html」以檢視真實資料！
-  </div>
 
   <header>
     <div class="brand">
@@ -1045,7 +1051,7 @@
   
   <script>
     const DATA_SOURCE = {
-  "generatedAt": "2026-08-04 18:30:24",
+  "generatedAt": "2026-08-04 21:00:37",
   "data": [
     {
       "GMP/QMS No": "QMS2182",
@@ -7060,7 +7066,7 @@
     {
       "GMP/QMS No": "QMS2041",
       "製造廠名稱": "安搏生股份有限公司",
-      "製造廠地址": "新竹縣竹北市泰和里新泰路31號三樓之二",
+      "製造廠地址": "新竹縣竹北市泰和里新泰路31號三樓之二",
       "製造廠國別": "臺灣",
       "藥商名稱": "-",
       "有效日期": "117/02/23",
@@ -7535,7 +7541,7 @@
       "藥商名稱": "-",
       "有效日期": "117/04/03",
       "案件狀況": "續予核備",
-      "品項名稱": "1.血液與血液成分收集與處理之容器(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n2.泌尿導管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n3.胃腸管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n4.外科用覆蓋巾及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n5.血管內輸液套(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n6.心肺血管繞道術血管導管、套管及管子(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n7.動脈血管繞道術用接頭活塞、多管道接頭之附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n8.血液通路裝置之附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n9.導入/引流導管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n10.轉移套之設計、製造、包裝(含分裝)、貼標及最終驗放\n11.血管移植彌補物─人工血管接環(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n12.眼科用海棉之製造、包裝(含分裝)、貼標及最終驗放\n13.結直腸充氣系統配件組 (針筒、氣球導管、集液袋及管座)之製造、包裝(含分裝)、貼標及最終驗放\n14.活塞式注射筒(附針)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n15.血管攝影注射器和注射筒(滅菌)之製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n16.醫療器材之滅菌作業"
+      "品項名稱": "1.血液與血液成分收集與處理之容器(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n2.泌尿導管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n3.胃腸管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n4.外科用覆蓋巾及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n5.血管內輸液套(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n6.心肺血管繞道術血管導管、套管及管子(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n7.動脈血管繞道術用接頭活塞、多管道接頭之附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n8.血液通路裝置之附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n9.導入/引流導管及其附件(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n10.轉移套之設計、製造、包裝(含分裝)、貼標及最終驗放\n11.血管移植彌補物─人工血管接環(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n12.眼科用海棉之製造、包裝(含分裝)、貼標及最終驗放\n13.結直腸充氣系統配件組 (針筒、氣球導管、集液袋及管座)之製造、包裝(含分裝)、貼標及最終驗放\n14.活塞式注射筒(附針)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n15.血管攝影注射器和注射筒(滅菌)之製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n16.醫療器材之滅菌作業"
     },
     {
       "GMP/QMS No": "QMS2049",
@@ -7775,7 +7781,7 @@
       "藥商名稱": "-",
       "有效日期": "117/04/24",
       "案件狀況": "續予核備",
-      "品項名稱": "1.等速肌力試驗評估系統之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.浸泡式水浴之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.非交流電力式病患升降機之設計、製造、包裝(含分裝)、貼標及最終驗放"
+      "品項名稱": "1.等速肌力試驗評估系統之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.浸泡式水浴之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.非交流電力式病患升降機之設計、製造、包裝(含分裝)、貼標及最終驗放"
     },
     {
       "GMP/QMS No": "QMS5360",
@@ -8355,7 +8361,7 @@
       "藥商名稱": "-",
       "有效日期": "117/06/06",
       "案件狀況": "續予核備",
-      "品項名稱": "1.鑽孔蓋(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.預成形可變式頭顱造型板(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.頭顱造形板固定器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n4.外科用網片(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n5.非動力式神經外科用器械(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n6.手動式骨科手術器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n7.骨板(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n8.骨內固定螺絲或金屬線(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n9.單一或多重之金屬類骨固定裝置及附件(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n10.椎體間之脊椎矯正固定物(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n11.醫療面 (口)罩之設計、包裝(含分裝)、貼標及最終驗放\n12.椎弓板間之脊椎矯正固定物(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n13.被動式肌腱彌補物(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放"
+      "品項名稱": "1.鑽孔蓋(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.預成形可變式頭顱造型板(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.頭顱造形板固定器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n4.外科用網片(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n5.非動力式神經外科用器械(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n6.手動式骨科手術器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n7.骨板(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n8.骨內固定螺絲或金屬線(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n9.單一或多重之金屬類骨固定裝置及附件(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n10.椎體間之脊椎矯正固定物(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n11.醫療面 (口)罩之設計、包裝(含分裝)、貼標及最終驗放\n12.椎弓板間之脊椎矯正固定物(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n13.被動式肌腱彌補物(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放"
     },
     {
       "GMP/QMS No": "QMS2064",
@@ -10055,7 +10061,7 @@
       "藥商名稱": "-",
       "有效日期": "117/11/29",
       "案件狀況": "續予核備",
-      "品項名稱": "1.外部使用非吸收式紗布(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n2.洗腎包(外包巾、洞巾、鑷子、治療巾、紗布、檢診手套、棉球、棉棒)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n3.導尿包(外包巾、紗布、檢診手套、棉棒)(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n4.護理包(洞巾、治療巾、紗布、紗球、棉球)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n5.醫療用吸收纖維(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n6.手術準備包(包布、紗布墊、紙膠、隔離衣帽、防護袋、吸水墊、治療巾、冷熱敷包、洞巾、紗球）(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n7.外科手術用覆蓋巾(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n8.滅菌包之設計、製造、包裝(含分裝)、貼標及最終驗放\n9.醫療用衣物包(圓帽、隔離衣、鞋套)(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n10.防護袋(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n11.水性創傷與燒傷覆蓋材(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n12.醫療用口罩之製造、包裝(含分裝)、貼標及最終驗放\n13.內視鏡及儀器保護套(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n14.醫療器材之包裝(含分裝)、貼標作業\n15.醫療器材之滅菌作業"
+      "品項名稱": "1.外部使用非吸收式紗布(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n2.洗腎包(外包巾、洞巾、鑷子、治療巾、紗布、檢診手套、棉球、棉棒)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n3.導尿包(外包巾、紗布、檢診手套、棉棒)(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n4.護理包(洞巾、治療巾、紗布、紗球、棉球)(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n5.醫療用吸收纖維(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n6.手術準備包(包布、紗布墊、紙膠、隔離衣帽、防護袋、吸水墊、治療巾、冷熱敷包、洞巾、紗球）(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n7.外科手術用覆蓋巾(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n8.滅菌包之設計、製造、包裝(含分裝)、貼標及最終驗放\n9.醫療用衣物包(圓帽、隔離衣、鞋套)(滅菌)之設計、包裝(含分裝)、貼標、滅菌作業及最終驗放\n10.防護袋(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n11.水性創傷與燒傷覆蓋材(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n12.醫療用口罩之製造、包裝(含分裝)、貼標及最終驗放\n13.內視鏡及儀器保護套(滅菌)之設計、製造、包裝(含分裝)、貼標、滅菌作業及最終驗放\n14.醫療器材之包裝(含分裝)、貼標作業\n15.醫療器材之滅菌作業"
     },
     {
       "GMP/QMS No": "QMS2386",
@@ -10625,7 +10631,7 @@
       "藥商名稱": "-",
       "有效日期": "118/01/18",
       "案件狀況": "續予核備",
-      "品項名稱": "1.病毒核酸純化試劑組之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.人類白血球抗原分子B27檢測試劑組之設計、製造、包裝(含分裝)、貼標及最終驗放"
+      "品項名稱": "1.病毒核酸純化試劑組之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.人類白血球抗原分子B27檢測試劑組之設計、製造、包裝(含分裝)、貼標及最終驗放"
     },
     {
       "GMP/QMS No": "QMS2116",
@@ -11875,7 +11881,7 @@
       "藥商名稱": "-",
       "有效日期": "118/05/25",
       "案件狀況": "續予核備",
-      "品項名稱": "1.PMMA骨水泥(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n2.椎弓板間之脊椎矯正固定物(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n3.脊椎固定系統(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n4.椎體間融合裝置(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n5.骨內植體(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n6.單一或多重之金屬類骨固定裝置及附件(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n7.手動式骨科手術器械(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n8.脊椎內視鏡工具之設計、包裝(含分裝)、貼標及最終驗放\n9.包皮環切吻合器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n10.醫療器材之貼標作業"
+      "品項名稱": "1.PMMA骨水泥(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n2.椎弓板間之脊椎矯正固定物(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n3.脊椎固定系統(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n4.椎體間融合裝置(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n5.骨內植體(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n6.單一或多重之金屬類骨固定裝置及附件(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n7.手動式骨科手術器械(滅菌)之設計、包裝(含分裝)、貼標及最終驗放\n8.脊椎內視鏡工具之設計、包裝(含分裝)、貼標及最終驗放\n9.包皮環切吻合器(滅菌)之設計、製造、包裝(含分裝)、貼標及最終驗放\n10.醫療器材之貼標作業"
     },
     {
       "GMP/QMS No": "QMS1693",
@@ -12405,7 +12411,7 @@
       "藥商名稱": "-",
       "有效日期": "118/08/27",
       "案件狀況": "續予核備",
-      "品項名稱": "1.庫姆氏自動試驗系統之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.梅毒螺旋體非螺旋體試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.品管材料(分析與非分析)之設計、製造、包裝(含分裝)、貼標及最終驗放\n4.螺旋桿菌屬血清試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n5.新型冠狀病毒檢測試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n6.醫療器材之貼標作業"
+      "品項名稱": "1.庫姆氏自動試驗系統之設計、製造、包裝(含分裝)、貼標及最終驗放\n2.梅毒螺旋體非螺旋體試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n3.品管材料(分析與非分析)之設計、製造、包裝(含分裝)、貼標及最終驗放\n4.螺旋桿菌屬血清試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n5.新型冠狀病毒檢測試劑之設計、製造、包裝(含分裝)、貼標及最終驗放\n6.醫療器材之貼標作業"
     },
     {
       "GMP/QMS No": "QMS2190",
@@ -69790,7 +69796,7 @@
     {
       "GMP/QMS No": "QSD17591",
       "製造廠名稱": "SEMİKAL TEKN. SAN. VE TİC. A.Ş.",
-      "製造廠地址": "Aosb3kisim Mah. (Bucağı/Köyü)/25 Cad., Bina No:14 Döşemealti/Antalya, Türkiye",
+      "製造廠地址": "Aosb3kisim Mah. (Bucağı/Köyü)/25 Cad., Bina No:14 Döşemealti/Antalya, Türkiye",
       "製造廠國別": "TUR",
       "藥商名稱": "萊恩醫療器材有限公司",
       "有效日期": "118/03/29",
@@ -79889,7 +79895,6 @@
         dataList = DATA_SOURCE.data || [];
         document.getElementById('generationTime').innerText = DATA_SOURCE.generatedAt || new Date().toLocaleString();
       } else {
-        document.getElementById('templateWarningBanner').style.display = 'block';
         console.error("DATA_SOURCE is not defined! Data injection failed.");
         // Fallback mock data for local debugging
         dataList = [
@@ -80305,8 +80310,15 @@
         // Render Column A cell
         const cellA = document.createElement('div');
         if (row.a !== null) {
-          const typeClass = row.type === 'removed' ? 'removed' : 'match';
-          const badgeHtml = row.type === 'removed' ? '<span class="diff-badge removed">A 獨有</span>' : '';
+          let typeClass = 'match';
+          let badgeHtml = '';
+          if (row.type === 'removed') {
+            typeClass = 'removed';
+            badgeHtml = '<span class="diff-badge removed">A 獨有</span>';
+          } else if (row.type === 'process-diff') {
+            typeClass = 'process-diff';
+            badgeHtml = '<span class="diff-badge process-diff">製程差異</span>';
+          }
           cellA.className = `diff-item ${typeClass}`;
           cellA.innerHTML = `${badgeHtml} <span>${row.a}</span>`;
         } else {
@@ -80316,8 +80328,15 @@
         // Render Column B cell
         const cellB = document.createElement('div');
         if (row.b !== null) {
-          const typeClass = row.type === 'added' ? 'added' : 'match';
-          const badgeHtml = row.type === 'added' ? '<span class="diff-badge added">B 新增</span>' : '';
+          let typeClass = 'match';
+          let badgeHtml = '';
+          if (row.type === 'added') {
+            typeClass = 'added';
+            badgeHtml = '<span class="diff-badge added">B 新增</span>';
+          } else if (row.type === 'process-diff') {
+            typeClass = 'process-diff';
+            badgeHtml = '<span class="diff-badge process-diff">製程差異</span>';
+          }
           cellB.className = `diff-item ${typeClass}`;
           cellB.innerHTML = `${badgeHtml} <span>${row.b}</span>`;
         } else {
@@ -80332,46 +80351,82 @@
 
     // Longest Common Subsequence (LCS) for line-level alignment
     function alignLines(linesA, linesB) {
-      // Normalize line contents by removing index numbers (e.g. "1.", "(2)", "①") and trimming spaces
-      const norm = str => {
-        if (!str) return '';
-        return str
-          .replace(/^[\d\(\)（）①-⑩\.\s、\-]+/, '') // remove leading counters
-          .trim()
-          .toLowerCase();
+      // Helper function to parse line into product name and processes
+      const parseLine = line => {
+        const clean = line.replace(/^[\d\(\)（）①-⑩\.\s、\-]+/, '').trim();
+        const idx = clean.indexOf('之');
+        if (idx !== -1) {
+          return {
+            name: clean.substring(0, idx).trim(),
+            proc: clean.substring(idx + 1).trim()
+          };
+        }
+        return { name: clean, proc: '' };
       };
-      
-      const n = linesA.length;
-      const m = linesB.length;
-      
-      // DP Table
-      const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
-      for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-          if (norm(linesA[i-1]) === norm(linesB[j-1])) {
-            dp[i][j] = dp[i-1][j-1] + 1;
-          } else {
-            dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
-          }
+
+      const parsedA = linesA.map((line, idx) => ({
+        original: line,
+        idx,
+        ...parseLine(line),
+        matched: false,
+        matchWith: null
+      }));
+
+      const parsedB = linesB.map((line, idx) => ({
+        original: line,
+        idx,
+        ...parseLine(line),
+        matched: false,
+        matchWith: null
+      }));
+
+      const normName = name => name.toLowerCase().trim();
+
+      // Greedy match by product name
+      parsedA.forEach(itemA => {
+        const matchB = parsedB.find(itemB => !itemB.matched && normName(itemA.name) === normName(itemB.name));
+        if (matchB) {
+          itemA.matched = true;
+          itemA.matchWith = matchB;
+          matchB.matched = true;
+          matchB.matchWith = itemA;
         }
-      }
-      
-      // Backtrack
+      });
+
       const alignment = [];
-      let i = n, j = m;
-      while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && norm(linesA[i-1]) === norm(linesB[j-1])) {
-          alignment.unshift({ a: linesA[i-1], b: linesB[j-1], type: 'match' });
-          i--;
-          j--;
-        } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
-          alignment.unshift({ a: null, b: linesB[j-1], type: 'added' });
-          j--;
+
+      // Loop through A in original order to place matched and A-unmatched rows
+      parsedA.forEach(itemA => {
+        if (itemA.matched) {
+          let type = 'match';
+          if (itemA.proc !== itemA.matchWith.proc) {
+            type = 'process-diff';
+          }
+          alignment.push({
+            a: itemA.original,
+            b: itemA.matchWith.original,
+            type: type
+          });
         } else {
-          alignment.unshift({ a: linesA[i-1], b: null, type: 'removed' });
-          i--;
+          alignment.push({
+            a: itemA.original,
+            b: null,
+            type: 'removed'
+          });
         }
-      }
+      });
+
+      // Loop through B to place B-unmatched rows
+      parsedB.forEach(itemB => {
+        if (!itemB.matched) {
+          alignment.push({
+            a: null,
+            b: itemB.original,
+            type: 'added'
+          });
+        }
+      });
+
       return alignment;
     }
   </script>
