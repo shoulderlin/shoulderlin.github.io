@@ -1235,7 +1235,7 @@
   
   <script>
     const DATA_SOURCE = {
-  "generatedAt": "2026-08-04 21:09:37",
+  "generatedAt": "2026-08-04 21:22:50",
   "data": [
     {
       "GMP/QMS No": "QMS2182",
@@ -80567,7 +80567,18 @@
         matchWith: null
       }));
 
-      const normName = name => name.toLowerCase().trim();
+      const normName = name => {
+        if (!name) return '';
+        return name
+          .toLowerCase()
+          // 1. Remove common sterile/non-sterile modifiers (both English and Chinese parentheses)
+          .replace(/\((sterile|non-sterile|sterile\s*\/\s*non-sterile)\)/g, '')
+          .replace(/（(滅菌|未滅菌|滅菌\s*\/\s*未滅菌)）/g, '')
+          .replace(/\((滅菌|未滅菌|滅菌\s*\/\s*未滅菌)\)/g, '')
+          // 2. Remove all spaces and punctuation/special chars to do pure text matching
+          .replace(/[\s\(\)（）\[\]【】\-\_\/\,\.，。、]/g, '')
+          .trim();
+      };
 
       // Greedy match by product name
       parsedA.forEach(itemA => {
