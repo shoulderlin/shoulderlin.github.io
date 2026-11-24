@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outlook 草稿 (.eml) 批次產生工具 — 支援 HTML 表格編輯</title>
+  <style>
+    /* =====================================================================
+       全域設計系統（100% 離線原生 CSS，無外部 CDN）
+       ===================================================================== */
+    :root {
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-muted: #e2e8f0;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --indigo: #4f46e5;
+      --indigo-hover: #4338ca;
+      --indigo-light: #eef2ff;
+      --indigo-border: #c7d2fe;
+      --emerald: #059669;
+      --emerald-bg: #ecfdf5;
+      --emerald-border: #a7f3d0;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --amber-text: #92400e;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 30px rgba(15, 23, 42, 0.14);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans TC", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* =====================================================================
+       容器與頁首
+       ===================================================================== */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px 18px 60px;
+    }
+
+    .app-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .app-title-group h1 {
+      margin: 0 0 4px;
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .app-title-group p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.93rem;
+    }
+
+    .offline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      background-color: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid var(--emerald-border);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .offline-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #10b981;
+    }
+
+    /* =====================================================================
+       卡片與步驟標題
+       ===================================================================== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 22px 24px;
+      margin-bottom: 22px;
+    }
+
+    .step-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.28);
+    }
+
+    .step-title h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .step-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* =====================================================================
+       表單與按鈕
+       ===================================================================== */
+    label.field-label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      background-color: #ffffff;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    textarea.code-input {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-family: var(--font-sans);
+      font-size: 0.87rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background-color: var(--indigo);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--indigo-hover);
+    }
+
+    .btn-secondary {
+      background-color: #ffffff;
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--bg-subtle);
+      border-color: #94a3b8;
+    }
+
+    .btn-indigo-soft {
+      background-color: var(--indigo-light);
+      color: var(--indigo);
+      border-color: var(--indigo-border);
+    }
+
+    .btn-indigo-soft:hover:not(:disabled) {
+      background-color: #e0e7ff;
+    }
+
+    .btn-danger-outline {
+      background-color: #ffffff;
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    .btn-danger-outline:hover:not(:disabled) {
+      background-color: var(--danger-bg);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.82rem;
+    }
+
+    .btn-lg {
+      padding: 10px 18px;
+      font-size: 0.94rem;
+    }
+
+    /* =====================================================================
+       格線佈局
+       ===================================================================== */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid-4, .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        padding: 16px;
+      }
+    }
+
+    /* =====================================================================
+       解析狀態列與精簡表格預覽
+       ===================================================================== */
+    .parse-status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      font-size: 0.87rem;
+    }
+
+    .parse-status.ok {
+      background-color: var(--emerald-bg);
+      border-color: var(--emerald-border);
+      color: var(--emerald);
+      font-weight: 600;
+    }
+
+    .parse-status.empty {
+      background-color: var(--amber-bg);
+      border-color: var(--amber-border);
+      color: var(--amber-text);
+    }
+
+    .compact-table-wrap {
+      margin-top: 12px;
+      max-height: 195px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .compact-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .compact-table th {
+      position: sticky;
+      top: 0;
+      background-color: #f1f5f9;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-align: left;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .compact-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      white-space: nowrap;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =====================================================================
+       變數標籤區 (Variable Pills)
+       ===================================================================== */
+    .chips-panel {
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .chips-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .target-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      background-color: #e2e8f0;
+      color: #334155;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .var-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      background-color: var(--indigo-light);
+      color: var(--indigo);
+      border: 1px solid var(--indigo-border);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.81rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .var-chip:hover {
+      background-color: var(--indigo);
+      color: #ffffff;
+      border-color: var(--indigo);
+    }
+
+    /* =====================================================================
+       雙模式 HTML 內文編輯器（WYSIWYG + HTML 原始碼）
+       ===================================================================== */
+    .editor-wrapper {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background-color: #ffffff;
+      margin-top: 14px;
+    }
+
+    .editor-tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      background-color: #f1f5f9;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .mode-tabs {
+      display: inline-flex;
+      background-color: #e2e8f0;
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      gap: 3px;
+    }
+
+    .mode-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 5px 13px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .mode-tab.active {
+      background-color: #ffffff;
+      color: var(--indigo);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px;
+      background-color: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .toolbar-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding-right: 7px;
+      margin-right: 4px;
+      border-right: 1px solid var(--border-strong);
+    }
+
+    .toolbar-group:last-child {
+      border-right: none;
+      padding-right: 0;
+      margin-right: 0;
+    }
+
+    .tb-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: 30px;
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background-color: transparent;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .tb-btn:hover {
+      background-color: #e2e8f0;
+    }
+
+    .tb-btn.tb-accent {
+      background-color: var(--indigo-light);
+      color: var(--indigo);
+      border-color: var(--indigo-border);
+    }
+
+    .tb-btn.tb-accent:hover {
+      background-color: #e0e7ff;
+    }
+
+    .tb-btn.tb-table-op {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      background-color: #ffffff;
+    }
+
+    .tb-btn.tb-table-op:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      background-color: var(--indigo-light);
+    }
+
+    .tb-btn.tb-table-del:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background-color: var(--danger-bg);
+    }
+
+    .color-picker-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      height: 30px;
+      padding: 0 6px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background-color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .color-picker-wrap input[type="color"] {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .table-context-badge {
+      font-size: 0.75rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background-color: #e2e8f0;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .table-context-badge.inside {
+      background-color: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid var(--emerald-border);
+    }
+
+    /* WYSIWYG 編輯區 */
+    .wysiwyg-area {
+      min-height: 290px;
+      max-height: 540px;
+      overflow-y: auto;
+      padding: 18px 20px;
+      font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: #1e293b;
+      outline: none;
+    }
+
+    .wysiwyg-area:focus {
+      background-color: #ffffff;
+    }
+
+    .wysiwyg-area p {
+      margin: 0 0 10px;
+    }
+
+    .wysiwyg-area table {
+      border-collapse: collapse;
+      max-width: 100%;
+    }
+
+    /* HTML 原始碼編輯區 */
+    .source-area {
+      width: 100%;
+      min-height: 290px;
+      max-height: 540px;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: #0f172a;
+      background-color: #f8fafc;
+      resize: vertical;
+      display: none;
+    }
+
+    .source-area:focus {
+      outline: none;
+      box-shadow: none;
+      background-color: #ffffff;
+    }
+
+    /* 插入表格 Popover */
+    .table-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 10px;
+      z-index: 60;
+      width: 280px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 14px 16px;
+      display: none;
+    }
+
+    .table-popover.open {
+      display: block;
+    }
+
+    .table-popover h4 {
+      margin: 0 0 10px;
+      font-size: 0.92rem;
+      color: var(--text-primary);
+    }
+
+    .popover-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .popover-check {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.84rem;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .popover-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 14px;
+      padding: 10px 13px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--indigo);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .checkbox-row label {
+      font-size: 0.89rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* =====================================================================
+       即時渲染預覽面板
+       ===================================================================== */
+    .live-preview-box {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 20px;
+      background-color: #ffffff;
+    }
+
+    .live-preview-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      background-color: #f1f5f9;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .preview-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 240px;
+      max-width: 520px;
+    }
+
+    .preview-switcher select {
+      padding: 6px 10px;
+      font-size: 0.86rem;
+    }
+
+    .mail-meta-panel {
+      padding: 12px 16px;
+      background-color: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 6px 10px;
+      font-size: 0.88rem;
+    }
+
+    .mail-meta-label {
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .mail-meta-value {
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .live-preview-body {
+      padding: 18px 20px;
+      min-height: 180px;
+      font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: #1e293b;
+      background-color: #ffffff;
+      overflow-x: auto;
+    }
+
+    /* =====================================================================
+       批次清單表格
+       ===================================================================== */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    table.list-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 740px;
+      font-size: 0.87rem;
+    }
+
+    table.list-table thead th {
+      background-color: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-align: left;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.list-table tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    table.list-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.list-table tbody tr.active-row {
+      background-color: var(--indigo-light);
+    }
+
+    table.list-table tbody tr:hover:not(.active-row) {
+      background-color: #f8fafc;
+    }
+
+    .cell-truncate {
+      max-width: 230px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cell-mono {
+      font-family: var(--font-mono);
+      font-size: 0.81rem;
+      color: var(--text-secondary);
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .missing-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background-color: var(--danger-bg);
+      color: var(--danger);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .empty-table-msg {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--text-muted);
+    }
+
+    /* =====================================================================
+       Outlook 使用提示與 Toast
+       ===================================================================== */
+    .tip-box {
+      margin-top: 18px;
+      padding: 13px 16px;
+      background-color: var(--indigo-light);
+      border: 1px solid var(--indigo-border);
+      border-left: 4px solid var(--indigo);
+      border-radius: var(--radius-sm);
+      font-size: 0.86rem;
+      color: #312e81;
+      line-height: 1.65;
+    }
+
+    .tip-box code {
+      background-color: rgba(255, 255, 255, 0.75);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      font-size: 0.87rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 頁首 -->
+    <header class="app-header">
+      <div class="app-title-group">
+        <h1>Outlook 草稿 (.eml) 批次產生工具</h1>
+        <p>貼上 Excel 名單、使用視覺化 HTML 表格編輯器設計內文，一鍵產出含動態副本與 <code>X-Unsent: 1</code> 的 Outlook 草稿。</p>
+      </div>
+      <div class="offline-badge" title="100% 純瀏覽器端運算，無外部連線，資料不外洩">
+        <span class="offline-dot"></span>
+        100% 本機離線運作・支援 HTML 表格
+      </div>
+    </header>
+
+    <!-- =================================================================
+         步驟一：貼上 Excel 資料與欄位對應
+         ================================================================= -->
+    <section class="card" aria-labelledby="step1-title">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-badge">1</span>
+          <h2 id="step1-title">貼上 Excel 資料與對應欄位</h2>
+        </div>
+        <div class="step-actions">
+          <button type="button" class="btn btn-secondary" id="btnLoadSample">載入範例資料</button>
+          <button type="button" class="btn btn-danger-outline" id="btnClearData">清空資料</button>
+        </div>
+      </div>
+
+      <label class="field-label" for="excelInput">從 Excel 複製儲存格直接貼上（第一列為欄位標題，支援 Tab 分隔 TSV 與 CSV）：</label>
+      <textarea id="excelInput" class="code-input" rows="6" placeholder="請貼上 Excel 資料，或點擊右上角「載入範例資料」..."></textarea>
+
+      <div id="parseStatus" class="parse-status ok"><span>已成功解析 5 筆資料，共 5 個欄位</span></div>
+
+      <!-- 解析後的資料精簡預覽表 -->
+      <div id="parsedCompactWrap" class="compact-table-wrap" style="display: block;">
+        <table class="compact-table">
+          <thead id="parsedCompactHead"><tr><th style="width: 44px;">#</th><th>委員姓名</th><th>email</th><th>副本email</th><th>業者名稱</th><th>產品名稱</th></tr></thead>
+          <tbody id="parsedCompactBody"><tr><td>1</td><td title="陳志明">陳志明</td><td title="chihming.chen@example.com">chihming.chen@example.com</td><td title="cc1@example.com">cc1@example.com</td><td title="康健生醫股份有限公司">康健生醫股份有限公司</td><td title="智慧型電子血壓計">智慧型電子血壓計</td></tr><tr><td>2</td><td title="林淑芬">林淑芬</td><td title="shufen.lin@example.com">shufen.lin@example.com</td><td title="cc1@example.com; cc2@example.com">cc1@example.com; cc2@example.com</td><td title="永安醫療器材有限公司">永安醫療器材有限公司</td><td title="拋棄式無菌手術手套">拋棄式無菌手術手套</td></tr><tr><td>3</td><td title="張家豪">張家豪</td><td title="chiahao.chang@example.com">chiahao.chang@example.com</td><td title=""></td><td title="台灣精準生技股份有限公司">台灣精準生技股份有限公司</td><td title="居家用血糖監測系統">居家用血糖監測系統</td></tr><tr><td>4</td><td title="黃雅婷">黃雅婷</td><td title="yating.huang@example.com">yating.huang@example.com</td><td title="cc2@example.com">cc2@example.com</td><td title="瑞泰醫材科技股份有限公司">瑞泰醫材科技股份有限公司</td><td title="紅外線額溫槍">紅外線額溫槍</td></tr><tr><td>5</td><td title="吳建宏">吳建宏</td><td title="chienhung.wu@example.com">chienhung.wu@example.com</td><td title="cc1@example.com">cc1@example.com</td><td title="博愛生技醫藥有限公司">博愛生技醫藥有限公司</td><td title="醫用級矽膠傷口敷料">醫用級矽膠傷口敷料</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="grid-4">
+        <div>
+          <label class="field-label" for="toColumnSelect">收件者欄位 (To)</label>
+          <select id="toColumnSelect"><option value="委員姓名">委員姓名</option><option value="email">email</option><option value="副本email">副本email</option><option value="業者名稱">業者名稱</option><option value="產品名稱">產品名稱</option></select>
+        </div>
+        <div>
+          <label class="field-label" for="ccColumnSelect">副本欄位 (CC)</label>
+          <select id="ccColumnSelect"><option value="">（無）</option><option value="委員姓名">委員姓名</option><option value="email">email</option><option value="副本email">副本email</option><option value="業者名稱">業者名稱</option><option value="產品名稱">產品名稱</option></select>
+        </div>
+        <div>
+          <label class="field-label" for="fixedCcInput">固定額外副本 (選填)</label>
+          <input type="text" id="fixedCcInput" placeholder="例如：boss@example.com; team@example.com">
+          <div class="field-hint">支援逗號或分號分隔，自動合併並去重複</div>
+        </div>
+        <div>
+          <label class="field-label" for="filenameTemplate">檔名範本 (.eml)</label>
+          <input type="text" id="filenameTemplate" value="審查通知_{{委員姓名}}_{{業者名稱}}.eml">
+          <div class="field-hint">自動過濾 Windows 不合法字元</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         步驟二：主旨與雙模式 HTML 內文編輯器（含表格支援）
+         ================================================================= -->
+    <section class="card" aria-labelledby="step2-title">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-badge">2</span>
+          <h2 id="step2-title">設計主旨與 HTML 內文範本（支援表格）</h2>
+        </div>
+      </div>
+
+      <!-- 動態變數標籤列 -->
+      <div class="chips-panel">
+        <div class="chips-header">
+          <span>點擊變數標籤，直接插入至目前游標位置（主旨、檔名、視覺編輯器或 HTML 原始碼皆可）：</span>
+          <span class="target-pill" id="activeTargetHint">目前游標目標：HTML 內文（視覺編輯）</span>
+        </div>
+        <div id="variableChips" class="chips-list"><button type="button" class="var-chip">{{委員姓名}}</button><button type="button" class="var-chip">{{email}}</button><button type="button" class="var-chip">{{副本email}}</button><button type="button" class="var-chip">{{業者名稱}}</button><button type="button" class="var-chip">{{產品名稱}}</button></div>
+      </div>
+
+      <!-- 主旨輸入框 -->
+      <div>
+        <label class="field-label" for="subjectTemplate">信件主旨範本 (Subject)</label>
+        <input type="text" id="subjectTemplate" value="【審查通知】{{業者名稱}}「{{產品名稱}}」審查案件（{{委員姓名}} 委員）">
+      </div>
+
+      <!-- 雙模式 HTML 內文編輯器 -->
+      <div class="editor-wrapper">
+        <div class="editor-tabs-bar">
+          <div class="mode-tabs" role="tablist">
+            <button type="button" class="mode-tab active" id="tabWysiwyg" role="tab" aria-selected="true">視覺編輯模式 (WYSIWYG)</button>
+            <button type="button" class="mode-tab" id="tabSource" role="tab" aria-selected="false">HTML 原始碼模式</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="table-context-badge" id="tableContextBadge">游標未在表格內</span>
+            <button type="button" class="btn btn-indigo-soft btn-sm" id="btnInsertSampleTable">
+              一鍵插入範例表格
+            </button>
+          </div>
+        </div>
+
+        <!-- 視覺編輯模式工具列 -->
+        <div class="editor-toolbar" id="wysiwygToolbar">
+          <!-- 文字樣式 -->
+          <div class="toolbar-group">
+            <button type="button" class="tb-btn" data-cmd="bold" title="粗體"><strong>B</strong></button>
+            <button type="button" class="tb-btn" data-cmd="italic" title="斜體"><em>I</em></button>
+            <button type="button" class="tb-btn" data-cmd="underline" title="底線"><u>U</u></button>
+          </div>
+
+          <!-- 顏色與醒目提示 -->
+          <div class="toolbar-group">
+            <label class="color-picker-wrap" title="文字顏色">
+              <span>字色</span>
+              <input type="color" id="foreColorPicker" value="#dc2626">
+            </label>
+            <label class="color-picker-wrap" title="背景醒目提示">
+              <span>底色</span>
+              <input type="color" id="hiliteColorPicker" value="#fef08a">
+            </label>
+          </div>
+
+          <!-- 清單與對齊 -->
+          <div class="toolbar-group">
+            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="項目符號">• 清單</button>
+            <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="編號清單">1. 編號</button>
+            <button type="button" class="tb-btn" data-cmd="justifyLeft" title="靠左對齊">靠左</button>
+            <button type="button" class="tb-btn" data-cmd="justifyCenter" title="置中對齊">置中</button>
+            <button type="button" class="tb-btn" data-cmd="justifyRight" title="靠右對齊">靠右</button>
+          </div>
+
+          <!-- 表格插入與快捷操作 -->
+          <div class="toolbar-group">
+            <button type="button" class="tb-btn tb-accent" id="btnToggleTablePopover" title="自訂列數與欄數插入表格">
+              ＋ 插入表格
+            </button>
+            <button type="button" class="tb-btn tb-table-op" id="btnAddRow" title="於目前儲存格下方新增一列">＋ 新增一列</button>
+            <button type="button" class="tb-btn tb-table-op" id="btnAddCol" title="於目前儲存格右側新增一欄">＋ 新增一欄</button>
+            <button type="button" class="tb-btn tb-table-op tb-table-del" id="btnDelRow" title="刪除游標所在的列">－ 刪除目前列</button>
+            <button type="button" class="tb-btn tb-table-op tb-table-del" id="btnDelTable" title="刪除整個表格">刪除表格</button>
+          </div>
+
+          <!-- 插入表格設定 Popover -->
+          <div class="table-popover" id="tablePopover" role="dialog" aria-label="插入表格設定">
+            <h4>插入 Outlook 相容表格</h4>
+            <div class="popover-grid">
+              <div>
+                <label class="field-label" for="tblRowsInput" style="font-size: 0.8rem;">列數 (Rows)</label>
+                <input type="number" id="tblRowsInput" min="1" max="20" value="3">
+              </div>
+              <div>
+                <label class="field-label" for="tblColsInput" style="font-size: 0.8rem;">欄數 (Cols)</label>
+                <input type="number" id="tblColsInput" min="1" max="10" value="2">
+              </div>
+            </div>
+            <label class="popover-check">
+              <input type="checkbox" id="tblHeaderCheck" checked="">
+              <span>包含標題列（淺灰底粗體表頭）</span>
+            </label>
+            <div class="popover-actions">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnCancelTable">取消</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnConfirmInsertTable">插入表格</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 視覺編輯區 (contenteditable) -->
+        <div id="wysiwygEditor" class="wysiwyg-area" contenteditable="true" spellcheck="false" aria-label="視覺化 HTML 內文編輯器"><p>{{委員姓名}} 委員 您好：</p><p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p><p><br></p><p><br></p><table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; font-size: 10.5pt;"><thead><tr><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{業者名稱}}</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{產品名稱}}</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{委員姓名}} 委員</td></tr></tbody></table><p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p><p>敬祝 順心<br>承辦單位 敬上</p></div>
+
+        <!-- HTML 原始碼編輯區 -->
+        <textarea id="htmlSourceEditor" class="source-area" spellcheck="false" aria-label="HTML 原始碼編輯器"></textarea>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="unsentCheckbox" checked="">
+        <label for="unsentCheckbox">啟用 Outlook 草稿模式（於檔頭加入 <code>X-Unsent: 1</code>，傳統版 Outlook 雙擊可直接編輯並寄出）</label>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         步驟三：即時渲染預覽與批次下載
+         ================================================================= -->
+    <section class="card" aria-labelledby="step3-title">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-badge">3</span>
+          <h2 id="step3-title">即時渲染預覽與下載草稿</h2>
+        </div>
+        <div class="step-actions">
+          <button type="button" class="btn btn-primary btn-lg" id="btnDownloadZip">
+            一鍵打包下載全部 (.zip)
+          </button>
+        </div>
+      </div>
+
+      <!-- 即時渲染預覽卡片 -->
+      <div class="live-preview-box" id="livePreviewBox">
+        <div class="live-preview-bar">
+          <div class="preview-switcher">
+            <button type="button" class="btn btn-secondary btn-sm" id="btnPrevRecord" title="上一筆" disabled="">◀</button>
+            <select id="previewRecordSelect" aria-label="選擇要預覽的資料筆數"><option value="0">第 1 筆：審查通知_陳志明_康健生醫股份有限公司</option><option value="1">第 2 筆：審查通知_林淑芬_永安醫療器材有限公司</option><option value="2">第 3 筆：審查通知_張家豪_台灣精準生技股份有限公司</option><option value="3">第 4 筆：審查通知_黃雅婷_瑞泰醫材科技股份有限公司</option><option value="4">第 5 筆：審查通知_吳建宏_博愛生技醫藥有限公司</option></select>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnNextRecord" title="下一筆">▶</button>
+          </div>
+          <button type="button" class="btn btn-indigo-soft btn-sm" id="btnDownloadCurrentPreview">
+            下載此封 .eml
+          </button>
+        </div>
+        <div class="mail-meta-panel">
+          <div class="mail-meta-label">檔名：</div>
+          <div class="mail-meta-value cell-mono" id="pvFilename">審查通知_陳志明_康健生醫股份有限公司.eml</div>
+          <div class="mail-meta-label">收件者：</div>
+          <div class="mail-meta-value" id="pvTo">chihming.chen@example.com</div>
+          <div class="mail-meta-label">副本：</div>
+          <div class="mail-meta-value" id="pvCc">cc1@example.com</div>
+          <div class="mail-meta-label">主旨：</div>
+          <div class="mail-meta-value" id="pvSubject" style="font-weight: 700;">【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）</div>
+        </div>
+        <div class="live-preview-body" id="pvHtmlBody"><p>陳志明 委員 您好：</p><p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p><p><br></p><p><br></p><table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; font-size: 10.5pt;"><thead><tr><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">康健生醫股份有限公司</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">智慧型電子血壓計</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">陳志明 委員</td></tr></tbody></table><p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p><p>敬祝 順心<br>承辦單位 敬上</p></div>
+      </div>
+
+      <!-- 全部草稿列表 -->
+      <div class="table-wrap">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th style="width: 56px;">序號</th>
+              <th>收件者 (To)</th>
+              <th>副本 (CC)</th>
+              <th>主旨</th>
+              <th>檔名</th>
+              <th style="width: 162px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="draftListBody"><tr data-row-idx="0" class="active-row"><td>1</td><td class="cell-truncate" title="chihming.chen@example.com">chihming.chen@example.com</td><td class="cell-truncate" title="cc1@example.com">cc1@example.com</td><td class="cell-truncate" title="【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）">【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）</td><td class="cell-truncate cell-mono" title="審查通知_陳志明_康健生醫股份有限公司.eml">審查通知_陳志明_康健生醫股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="0">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="0">下載 .eml</button></div></td></tr><tr data-row-idx="1"><td>2</td><td class="cell-truncate" title="shufen.lin@example.com">shufen.lin@example.com</td><td class="cell-truncate" title="cc1@example.com, cc2@example.com">cc1@example.com, cc2@example.com</td><td class="cell-truncate" title="【審查通知】永安醫療器材有限公司「拋棄式無菌手術手套」審查案件（林淑芬 委員）">【審查通知】永安醫療器材有限公司「拋棄式無菌手術手套」審查案件（林淑芬 委員）</td><td class="cell-truncate cell-mono" title="審查通知_林淑芬_永安醫療器材有限公司.eml">審查通知_林淑芬_永安醫療器材有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="1">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="1">下載 .eml</button></div></td></tr><tr data-row-idx="2"><td>3</td><td class="cell-truncate" title="chiahao.chang@example.com">chiahao.chang@example.com</td><td class="cell-truncate" title=""><span style="color: var(--text-muted);">—</span></td><td class="cell-truncate" title="【審查通知】台灣精準生技股份有限公司「居家用血糖監測系統」審查案件（張家豪 委員）">【審查通知】台灣精準生技股份有限公司「居家用血糖監測系統」審查案件（張家豪 委員）</td><td class="cell-truncate cell-mono" title="審查通知_張家豪_台灣精準生技股份有限公司.eml">審查通知_張家豪_台灣精準生技股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="2">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="2">下載 .eml</button></div></td></tr><tr data-row-idx="3"><td>4</td><td class="cell-truncate" title="yating.huang@example.com">yating.huang@example.com</td><td class="cell-truncate" title="cc2@example.com">cc2@example.com</td><td class="cell-truncate" title="【審查通知】瑞泰醫材科技股份有限公司「紅外線額溫槍」審查案件（黃雅婷 委員）">【審查通知】瑞泰醫材科技股份有限公司「紅外線額溫槍」審查案件（黃雅婷 委員）</td><td class="cell-truncate cell-mono" title="審查通知_黃雅婷_瑞泰醫材科技股份有限公司.eml">審查通知_黃雅婷_瑞泰醫材科技股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="3">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="3">下載 .eml</button></div></td></tr><tr data-row-idx="4"><td>5</td><td class="cell-truncate" title="chienhung.wu@example.com">chienhung.wu@example.com</td><td class="cell-truncate" title="cc1@example.com">cc1@example.com</td><td class="cell-truncate" title="【審查通知】博愛生技醫藥有限公司「醫用級矽膠傷口敷料」審查案件（吳建宏 委員）">【審查通知】博愛生技醫藥有限公司「醫用級矽膠傷口敷料」審查案件（吳建宏 委員）</td><td class="cell-truncate cell-mono" title="審查通知_吳建宏_博愛生技醫藥有限公司.eml">審查通知_吳建宏_博愛生技醫藥有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="4">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="4">下載 .eml</button></div></td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="tip-box">
+        <strong>Outlook 開啟與相容性提示：</strong><br>
+        1. 本工具產生的 <code>.eml</code> 已內建 <code>X-Unsent: 1</code> 並採用 UTF-8 Base64 編碼與行內樣式表格，解壓縮後於<strong>傳統版 Outlook (Classic Outlook)</strong> 雙擊即可直接進入可編輯的草稿視窗。<br>
+        2. 若 Windows 雙擊 <code>.eml</code> 未以 Outlook 開啟，請對檔案按右鍵 &gt;「開啟檔案」&gt;「選擇其他應用程式」&gt; 選擇 <strong>Outlook</strong> 並勾選「一律使用此應用程式開啟 .eml 檔案」。
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast 通知容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =====================================================================
+         預設範例資料（TSV 格式）與預設 HTML 範本（含 Outlook 相容表格）
+         ===================================================================== */
+      const SAMPLE_TSV = [
+        '委員姓名\temail\t副本email\t業者名稱\t產品名稱',
+        '陳志明\tchihming.chen@example.com\tcc1@example.com\t康健生醫股份有限公司\t智慧型電子血壓計',
+        '林淑芬\tshufen.lin@example.com\tcc1@example.com; cc2@example.com\t永安醫療器材有限公司\t拋棄式無菌手術手套',
+        '張家豪\tchiahao.chang@example.com\t\t台灣精準生技股份有限公司\t居家用血糖監測系統',
+        '黃雅婷\tyating.huang@example.com\tcc2@example.com\t瑞泰醫材科技股份有限公司\t紅外線額溫槍',
+        '吳建宏\tchienhung.wu@example.com\tcc1@example.com\t博愛生技醫藥有限公司\t醫用級矽膠傷口敷料'
+      ].join('\n');
+
+      const SAMPLE_CASE_TABLE_HTML =
+        '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 10.5pt;">' +
+          '<thead>' +
+            '<tr>' +
+              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th>' +
+              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody>' +
+            '<tr>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{業者名稱}}</td>' +
+            '</tr>' +
+            '<tr>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{產品名稱}}</td>' +
+            '</tr>' +
+            '<tr>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td>' +
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{委員姓名}} 委員</td>' +
+            '</tr>' +
+          '</tbody>' +
+        '</table>';
+
+      const DEFAULT_BODY_HTML =
+        '<p>{{委員姓名}} 委員 您好：</p>' +
+        '<p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p>' +
+        SAMPLE_CASE_TABLE_HTML +
+        '<p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p>' +
+        '<p>敬祝 順心<br>承辦單位 敬上</p>';
+
+      /* =====================================================================
+         應用程式狀態與 DOM 參照
+         ===================================================================== */
+      const state = {
+        headers: [],
+        rows: [],
+        renderedEmails: [],
+        editorMode: 'wysiwyg', // 'wysiwyg' | 'source'
+        activeTarget: 'wysiwyg', // 'subject' | 'filename' | 'wysiwyg' | 'source'
+        savedRange: null,
+        selectedPreviewIndex: 0
+      };
+
+      const els = {
+        excelInput: document.getElementById('excelInput'),
+        btnLoadSample: document.getElementById('btnLoadSample'),
+        btnClearData: document.getElementById('btnClearData'),
+        parseStatus: document.getElementById('parseStatus'),
+        parsedCompactWrap: document.getElementById('parsedCompactWrap'),
+        parsedCompactHead: document.getElementById('parsedCompactHead'),
+        parsedCompactBody: document.getElementById('parsedCompactBody'),
+        toColumnSelect: document.getElementById('toColumnSelect'),
+        ccColumnSelect: document.getElementById('ccColumnSelect'),
+        fixedCcInput: document.getElementById('fixedCcInput'),
+        filenameTemplate: document.getElementById('filenameTemplate'),
+        variableChips: document.getElementById('variableChips'),
+        activeTargetHint: document.getElementById('activeTargetHint'),
+        subjectTemplate: document.getElementById('subjectTemplate'),
+        tabWysiwyg: document.getElementById('tabWysiwyg'),
+        tabSource: document.getElementById('tabSource'),
+        wysiwygToolbar: document.getElementById('wysiwygToolbar'),
+        wysiwygEditor: document.getElementById('wysiwygEditor'),
+        htmlSourceEditor: document.getElementById('htmlSourceEditor'),
+        tableContextBadge: document.getElementById('tableContextBadge'),
+        btnInsertSampleTable: document.getElementById('btnInsertSampleTable'),
+        foreColorPicker: document.getElementById('foreColorPicker'),
+        hiliteColorPicker: document.getElementById('hiliteColorPicker'),
+        btnToggleTablePopover: document.getElementById('btnToggleTablePopover'),
+        tablePopover: document.getElementById('tablePopover'),
+        tblRowsInput: document.getElementById('tblRowsInput'),
+        tblColsInput: document.getElementById('tblColsInput'),
+        tblHeaderCheck: document.getElementById('tblHeaderCheck'),
+        btnCancelTable: document.getElementById('btnCancelTable'),
+        btnConfirmInsertTable: document.getElementById('btnConfirmInsertTable'),
+        btnAddRow: document.getElementById('btnAddRow'),
+        btnAddCol: document.getElementById('btnAddCol'),
+        btnDelRow: document.getElementById('btnDelRow'),
+        btnDelTable: document.getElementById('btnDelTable'),
+        unsentCheckbox: document.getElementById('unsentCheckbox'),
+        btnDownloadZip: document.getElementById('btnDownloadZip'),
+        previewRecordSelect: document.getElementById('previewRecordSelect'),
+        btnPrevRecord: document.getElementById('btnPrevRecord'),
+        btnNextRecord: document.getElementById('btnNextRecord'),
+        btnDownloadCurrentPreview: document.getElementById('btnDownloadCurrentPreview'),
+        pvFilename: document.getElementById('pvFilename'),
+        pvTo: document.getElementById('pvTo'),
+        pvCc: document.getElementById('pvCc'),
+        pvSubject: document.getElementById('pvSubject'),
+        pvHtmlBody: document.getElementById('pvHtmlBody'),
+        draftListBody: document.getElementById('draftListBody'),
+        toastContainer: document.getElementById('toastContainer')
+      };
+
+      /* =====================================================================
+         基礎工具函式
+         ===================================================================== */
+      function showToast(msg) {
+        const div = document.createElement('div');
+        div.className = 'toast';
+        div.textContent = msg;
+        els.toastContainer.appendChild(div);
+        requestAnimationFrame(() => div.classList.add('show'));
+        setTimeout(() => {
+          div.classList.remove('show');
+          setTimeout(() => div.remove(), 220);
+        }, 2500);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function uint8ToBase64(bytes) {
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
+      }
+
+      function encodeUtf8Base64Wrapped(text) {
+        const bytes = new TextEncoder().encode(text);
+        const b64 = uint8ToBase64(bytes);
+        const lines = [];
+        for (let i = 0; i < b64.length; i += 76) {
+          lines.push(b64.slice(i, i + 76));
+        }
+        return lines.join('\r\n');
+      }
+
+      /**
+       * RFC 2047 UTF-8 Base64 主旨編碼（依字元切塊，不截斷多字節中文）
+       */
+      function encodeRfc2047Subject(subject) {
+        if (!subject) return '';
+        if (/^[\x20-\x7E]*$/.test(subject)) {
+          return subject;
+        }
+        const encoder = new TextEncoder();
+        const maxBytes = 42;
+        const chunks = [];
+        let curStr = '';
+        let curBytes = 0;
+
+        for (const ch of subject) {
+          const len = encoder.encode(ch).length;
+          if (curBytes + len > maxBytes && curStr.length > 0) {
+            chunks.push('=?UTF-8?B?' + uint8ToBase64(encoder.encode(curStr)) + '?=');
+            curStr = ch;
+            curBytes = len;
+          } else {
+            curStr += ch;
+            curBytes += len;
+          }
+        }
+        if (curStr.length > 0) {
+          chunks.push('=?UTF-8?B?' + uint8ToBase64(encoder.encode(curStr)) + '?=');
+        }
+        return chunks.join('\r\n ');
+      }
+
+      function normalizeEmailList(values) {
+        const seen = new Set();
+        const out = [];
+        values.forEach((raw) => {
+          if (!raw) return;
+          String(raw)
+            .split(/[;,，；\n]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((addr) => {
+              const key = addr.toLowerCase();
+              if (!seen.has(key)) {
+                seen.add(key);
+                out.push(addr);
+              }
+            });
+        });
+        return out.join(', ');
+      }
+
+      function sanitizeFilename(name, idx) {
+        let cleaned = String(name || '')
+          .replace(/[\\/:*?"<>|\r\n\t]/g, '_')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/\.+$/, '');
+        if (!cleaned) cleaned = '草稿_' + (idx + 1);
+        if (!cleaned.toLowerCase().endsWith('.eml')) cleaned += '.eml';
+        return cleaned;
+      }
+
+      /* =====================================================================
+         TSV / CSV 解析器（支援雙引號與儲存格內換行）
+         ===================================================================== */
+      function parseDelimitedText(rawText) {
+        const text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+        if (!text) return { headers: [], rows: [] };
+
+        const firstNl = text.indexOf('\n');
+        const firstLine = firstNl === -1 ? text : text.slice(0, firstNl);
+        const delimiter = firstLine.includes('\t') ? '\t' : ',';
+
+        const records = [];
+        let row = [];
+        let cell = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const next = text[i + 1];
+
+          if (inQuotes) {
+            if (ch === '"') {
+              if (next === '"') {
+                cell += '"';
+                i++;
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              cell += ch;
+            }
+          } else {
+            if (ch === '"' && cell === '') {
+              inQuotes = true;
+            } else if (ch === delimiter) {
+              row.push(cell.trim());
+              cell = '';
+            } else if (ch === '\n') {
+              row.push(cell.trim());
+              if (row.some((c) => c !== '')) records.push(row);
+              row = [];
+              cell = '';
+            } else {
+              cell += ch;
+            }
+          }
+        }
+        row.push(cell.trim());
+        if (row.some((c) => c !== '')) records.push(row);
+
+        if (records.length === 0) return { headers: [], rows: [] };
+
+        const headers = records[0].map((h, i) => h || '欄位' + (i + 1));
+        const rows = records.slice(1).map((cols) => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h] = cols[i] !== undefined ? cols[i] : '';
+          });
+          return obj;
+        });
+
+        return { headers, rows };
+      }
+
+      /* =====================================================================
+         WYSIWYG 選取範圍追蹤、格式化與表格編輯引擎
+         ===================================================================== */
+      function getCurrentBodyHtml() {
+        return state.editorMode === 'wysiwyg'
+          ? els.wysiwygEditor.innerHTML
+          : els.htmlSourceEditor.value;
+      }
+
+      function syncToSource() {
+        els.htmlSourceEditor.value = els.wysiwygEditor.innerHTML;
+      }
+
+      function syncToWysiwyg() {
+        els.wysiwygEditor.innerHTML = els.htmlSourceEditor.value;
+      }
+
+      function saveWysiwygSelection() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        if (els.wysiwygEditor.contains(range.commonAncestorContainer)) {
+          state.savedRange = range.cloneRange();
+          updateTableContextIndicator();
+        }
+      }
+
+      function restoreWysiwygSelection() {
+        els.wysiwygEditor.focus();
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        if (state.savedRange && els.wysiwygEditor.contains(state.savedRange.commonAncestorContainer)) {
+          sel.addRange(state.savedRange);
+        } else {
+          const range = document.createRange();
+          range.selectNodeContents(els.wysiwygEditor);
+          range.collapse(false);
+          sel.addRange(range);
+          state.savedRange = range.cloneRange();
+        }
+      }
+
+      function findActiveTableCell() {
+        let node = null;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && els.wysiwygEditor.contains(sel.anchorNode)) {
+          node = sel.anchorNode;
+        } else if (state.savedRange && els.wysiwygEditor.contains(state.savedRange.commonAncestorContainer)) {
+          node = state.savedRange.commonAncestorContainer;
+        }
+        if (!node) return null;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (!el) return null;
+        const cell = el.closest('td, th');
+        return cell && els.wysiwygEditor.contains(cell) ? cell : null;
+      }
+
+      function updateTableContextIndicator() {
+        const cell = findActiveTableCell();
+        if (cell) {
+          els.tableContextBadge.textContent = '游標位於表格內（可使用表格操作）';
+          els.tableContextBadge.classList.add('inside');
+        } else {
+          els.tableContextBadge.textContent = '游標未在表格內';
+          els.tableContextBadge.classList.remove('inside');
+        }
+      }
+
+      function buildOutlookTableHtml(rowsCount, colsCount, includeHeader) {
+        const r = Math.max(1, Math.min(20, parseInt(rowsCount, 10) || 3));
+        const c = Math.max(1, Math.min(10, parseInt(colsCount, 10) || 2));
+
+        let html =
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 10.5pt;">';
+
+        let startRow = 0;
+        if (includeHeader) {
+          html += '<thead><tr>';
+          for (let j = 0; j < c; j++) {
+            html +=
+              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">標題 ' +
+              (j + 1) +
+              '</th>';
+          }
+          html += '</tr></thead>';
+          startRow = 1;
+        }
+
+        html += '<tbody>';
+        const bodyRows = Math.max(1, includeHeader ? r - 1 : r);
+        for (let i = 0; i < bodyRows; i++) {
+          html += '<tr>';
+          for (let j = 0; j < c; j++) {
+            html +=
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">內容 ' +
+              (i + 1) +
+              '-' +
+              (j + 1) +
+              '</td>';
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table><p><br></p>';
+        return html;
+      }
+
+      function insertHtmlAtWysiwygCursor(htmlString) {
+        restoreWysiwygSelection();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlString;
+        const frag = document.createDocumentFragment();
+        let lastNode = null;
+        while (temp.firstChild) {
+          lastNode = frag.appendChild(temp.firstChild);
+        }
+        range.insertNode(frag);
+
+        if (lastNode) {
+          const newRange = document.createRange();
+          newRange.setStartAfter(lastNode);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+          state.savedRange = newRange.cloneRange();
+        }
+        syncToSource();
+        updateAllPreviews();
+        updateTableContextIndicator();
+      }
+
+      function insertTextIntoInput(inputEl, text) {
+        const start = inputEl.selectionStart != null ? inputEl.selectionStart : inputEl.value.length;
+        const end = inputEl.selectionEnd != null ? inputEl.selectionEnd : inputEl.value.length;
+        inputEl.value = inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
+        const pos = start + text.length;
+        inputEl.focus();
+        inputEl.setSelectionRange(pos, pos);
+      }
+
+      function insertVariableToken(token) {
+        if (state.activeTarget === 'subject') {
+          insertTextIntoInput(els.subjectTemplate, token);
+          updateAllPreviews();
+        } else if (state.activeTarget === 'filename') {
+          insertTextIntoInput(els.filenameTemplate, token);
+          updateAllPreviews();
+        } else if (state.editorMode === 'source' || state.activeTarget === 'source') {
+          insertTextIntoInput(els.htmlSourceEditor, token);
+          syncToWysiwyg();
+          updateAllPreviews();
+        } else {
+          restoreWysiwygSelection();
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const textNode = document.createTextNode(token);
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            state.savedRange = range.cloneRange();
+          }
+          syncToSource();
+          updateAllPreviews();
+        }
+      }
+
+      /* 表格快捷操作：新增列、新增欄、刪除列、刪除表格 */
+      function tableAddRow() {
+        const cell = findActiveTableCell();
+        if (!cell) {
+          showToast('請先將游標點進表格內的任一儲存格');
+          return;
+        }
+        const tr = cell.closest('tr');
+        const colCount = tr.children.length;
+        const newTr = document.createElement('tr');
+        for (let i = 0; i < colCount; i++) {
+          const td = document.createElement('td');
+          td.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;');
+          td.innerHTML = '&nbsp;';
+          newTr.appendChild(td);
+        }
+        if (tr.parentElement && tr.parentElement.tagName === 'THEAD') {
+          const table = tr.closest('table');
+          let tbody = table.querySelector('tbody');
+          if (!tbody) {
+            tbody = document.createElement('tbody');
+            table.appendChild(tbody);
+          }
+          tbody.insertBefore(newTr, tbody.firstChild);
+        } else {
+          tr.parentElement.insertBefore(newTr, tr.nextSibling);
+        }
+        syncToSource();
+        updateAllPreviews();
+        showToast('已新增一列');
+      }
+
+      function tableAddCol() {
+        const cell = findActiveTableCell();
+        if (!cell) {
+          showToast('請先將游標點進表格內的任一儲存格');
+          return;
+        }
+        const tr = cell.closest('tr');
+        const table = cell.closest('table');
+        const colIdx = Array.from(tr.children).indexOf(cell);
+
+        const allRows = table.querySelectorAll('tr');
+        allRows.forEach((row) => {
+          const isHeaderRow = row.querySelector('th') !== null;
+          const newCell = document.createElement(isHeaderRow ? 'th' : 'td');
+          if (isHeaderRow) {
+            newCell.setAttribute(
+              'style',
+              'background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;'
+            );
+            newCell.textContent = '新標題';
+          } else {
+            newCell.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;');
+            newCell.innerHTML = '&nbsp;';
+          }
+          const refCell = row.children[colIdx + 1] || null;
+          row.insertBefore(newCell, refCell);
+        });
+
+        syncToSource();
+        updateAllPreviews();
+        showToast('已新增一欄');
+      }
+
+      function tableDeleteRow() {
+        const cell = findActiveTableCell();
+        if (!cell) {
+          showToast('請先將游標點進表格內的任一儲存格');
+          return;
+        }
+        const tr = cell.closest('tr');
+        const table = cell.closest('table');
+        if (table.querySelectorAll('tr').length <= 1) {
+          table.remove();
+          showToast('已移除最後一列與表格');
+        } else {
+          tr.remove();
+          showToast('已刪除目前列');
+        }
+        syncToSource();
+        updateAllPreviews();
+        updateTableContextIndicator();
+      }
+
+      function tableDeleteWhole() {
+        const cell = findActiveTableCell();
+        if (!cell) {
+          showToast('請先將游標點進表格內的任一儲存格');
+          return;
+        }
+        const table = cell.closest('table');
+        if (table) table.remove();
+        syncToSource();
+        updateAllPreviews();
+        updateTableContextIndicator();
+        showToast('已刪除整個表格');
+      }
+
+      /* =====================================================================
+         EML 產生與純前端零依賴 ZIP 打包（STORE + CRC32 + UTF-8 0x0800）
+         ===================================================================== */
+      function buildEmlContent(emailObj, enableUnsent) {
+        const lines = [];
+        if (enableUnsent) {
+          lines.push('X-Unsent: 1');
+        }
+        lines.push('MIME-Version: 1.0');
+        lines.push('To: ' + emailObj.to);
+        if (emailObj.cc) {
+          lines.push('Cc: ' + emailObj.cc);
+        }
+        lines.push('Subject: ' + encodeRfc2047Subject(emailObj.subject));
+        lines.push('Content-Type: text/html; charset="utf-8"');
+        lines.push('Content-Transfer-Encoding: base64');
+        lines.push('');
+
+        const fullHtml =
+          '<!DOCTYPE html>\r\n' +
+          '<html>\r\n' +
+          '<head><meta charset="utf-8"></head>\r\n' +
+          '<body style="margin: 0; padding: 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 11pt; line-height: 1.65; color: #1e293b;">\r\n' +
+          emailObj.htmlBody +
+          '\r\n</body>\r\n' +
+          '</html>';
+
+        lines.push(encodeUtf8Base64Wrapped(fullHtml));
+        return lines.join('\r\n') + '\r\n';
+      }
+
+      const CRC32_TABLE = (function () {
+        const t = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let j = 0; j < 8; j++) {
+            c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          t[i] = c >>> 0;
+        }
+        return t;
+      })();
+
+      function computeCrc32(bytes) {
+        let crc = 0xffffffff;
+        for (let i = 0; i < bytes.length; i++) {
+          crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xffffffff) >>> 0;
+      }
+
+      function createZipArchive(files) {
+        const encoder = new TextEncoder();
+        const now = new Date();
+        const year = Math.max(1980, now.getFullYear());
+        const dosDate = ((year - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+        const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
+
+        const localParts = [];
+        const centralParts = [];
+        let offset = 0;
+
+        files.forEach((file) => {
+          const nameBytes = encoder.encode(file.name);
+          const dataBytes = encoder.encode(file.content);
+          const crc = computeCrc32(dataBytes);
+          const size = dataBytes.length;
+
+          // Local File Header
+          const lh = new ArrayBuffer(30 + nameBytes.length);
+          const lv = new DataView(lh);
+          lv.setUint32(0, 0x04034b50, true);
+          lv.setUint16(4, 20, true);
+          lv.setUint16(6, 0x0800, true); // UTF-8 filename flag (bit 11)
+          lv.setUint16(8, 0, true);      // STORE (no compression)
+          lv.setUint16(10, dosTime, true);
+          lv.setUint16(12, dosDate, true);
+          lv.setUint32(14, crc, true);
+          lv.setUint32(18, size, true);
+          lv.setUint32(22, size, true);
+          lv.setUint16(26, nameBytes.length, true);
+          lv.setUint16(28, 0, true);
+          new Uint8Array(lh, 30).set(nameBytes);
+
+          localParts.push(new Uint8Array(lh), dataBytes);
+
+          // Central Directory Header
+          const ch = new ArrayBuffer(46 + nameBytes.length);
+          const cv = new DataView(ch);
+          cv.setUint32(0, 0x02014b50, true);
+          cv.setUint16(4, 20, true);
+          cv.setUint16(6, 20, true);
+          cv.setUint16(8, 0x0800, true); // UTF-8 filename flag
+          cv.setUint16(10, 0, true);     // STORE
+          cv.setUint16(12, dosTime, true);
+          cv.setUint16(14, dosDate, true);
+          cv.setUint32(16, crc, true);
+          cv.setUint32(20, size, true);
+          cv.setUint32(24, size, true);
+          cv.setUint16(28, nameBytes.length, true);
+          cv.setUint16(30, 0, true);
+          cv.setUint16(32, 0, true);
+          cv.setUint16(34, 0, true);
+          cv.setUint16(36, 0, true);
+          cv.setUint32(38, 0, true);
+          cv.setUint32(42, offset, true);
+          new Uint8Array(ch, 46).set(nameBytes);
+
+          centralParts.push(new Uint8Array(ch));
+          offset += 30 + nameBytes.length + size;
+        });
+
+        const centralSize = centralParts.reduce((s, p) => s + p.length, 0);
+
+        // End of Central Directory Record
+        const eocd = new ArrayBuffer(22);
+        const ev = new DataView(eocd);
+        ev.setUint32(0, 0x06054b50, true);
+        ev.setUint16(4, 0, true);
+        ev.setUint16(6, 0, true);
+        ev.setUint16(8, files.length, true);
+        ev.setUint16(10, files.length, true);
+        ev.setUint32(12, centralSize, true);
+        ev.setUint32(16, offset, true);
+        ev.setUint16(20, 0, true);
+
+        const out = new Uint8Array(offset + centralSize + 22);
+        let pos = 0;
+        localParts.forEach((p) => { out.set(p, pos); pos += p.length; });
+        centralParts.forEach((p) => { out.set(p, pos); pos += p.length; });
+        out.set(new Uint8Array(eocd), pos);
+        return out;
+      }
+
+      function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function downloadSingleEml(idx) {
+        const item = state.renderedEmails[idx];
+        if (!item) return;
+        const eml = buildEmlContent(item, els.unsentCheckbox.checked);
+        const blob = new Blob([eml], { type: 'message/rfc822;charset=utf-8' });
+        triggerDownload(blob, item.filename);
+        showToast('已下載：' + item.filename);
+      }
+
+      function downloadAllZip() {
+        if (state.renderedEmails.length === 0) return;
+        try {
+          const unsent = els.unsentCheckbox.checked;
+          const files = state.renderedEmails.map((item) => ({
+            name: item.filename,
+            content: buildEmlContent(item, unsent)
+          }));
+          const zipBytes = createZipArchive(files);
+          const d = new Date();
+          const pad = (n) => String(n).padStart(2, '0');
+          const stamp = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+          const zipName = 'Outlook_草稿批次_' + stamp + '.zip';
+          triggerDownload(new Blob([zipBytes], { type: 'application/zip' }), zipName);
+          showToast('已打包下載 ' + files.length + ' 封草稿（' + zipName + '）');
+        } catch (err) {
+          console.error(err);
+          showToast('打包 ZIP 發生錯誤，請檢查資料內容');
+        }
+      }
+
+      /* =====================================================================
+         範本渲染與 UI 更新
+         ===================================================================== */
+      function applyTextTemplate(tpl, rowObj) {
+        return String(tpl || '').replace(/\{\{([^{}]+)\}\}/g, (m, k) => {
+          const key = k.trim();
+          return Object.prototype.hasOwnProperty.call(rowObj, key) ? rowObj[key] : m;
+        });
+      }
+
+      function applyHtmlTemplate(htmlTpl, rowObj) {
+        return String(htmlTpl || '').replace(/\{\{([^{}]+)\}\}/g, (m, k) => {
+          const key = k.trim();
+          if (!Object.prototype.hasOwnProperty.call(rowObj, key)) return m;
+          return escapeHtml(rowObj[key]).replace(/\r?\n/g, '<br>');
+        });
+      }
+
+      function renderParsedCompactTable() {
+        if (state.headers.length === 0 || state.rows.length === 0) {
+          els.parsedCompactWrap.style.display = 'none';
+          return;
+        }
+        els.parsedCompactWrap.style.display = 'block';
+
+        els.parsedCompactHead.innerHTML =
+          '<tr><th style="width: 44px;">#</th>' +
+          state.headers.map((h) => '<th>' + escapeHtml(h) + '</th>').join('') +
+          '</tr>';
+
+        els.parsedCompactBody.innerHTML = state.rows
+          .map((row, idx) => {
+            return (
+              '<tr><td>' +
+              (idx + 1) +
+              '</td>' +
+              state.headers
+                .map((h) => '<td title="' + escapeHtml(row[h]) + '">' + escapeHtml(row[h]) + '</td>')
+                .join('') +
+              '</tr>'
+            );
+          })
+          .join('');
+      }
+
+      function updateColumnSelectors(headers) {
+        const prevTo = els.toColumnSelect.value;
+        const prevCc = els.ccColumnSelect.value;
+
+        els.toColumnSelect.innerHTML = '';
+        els.ccColumnSelect.innerHTML = '';
+
+        if (headers.length === 0) {
+          els.toColumnSelect.innerHTML = '<option value="">-- 請先貼上資料 --</option>';
+          els.ccColumnSelect.innerHTML = '<option value="">（無）</option>';
+          return;
+        }
+
+        headers.forEach((h) => {
+          const opt = document.createElement('option');
+          opt.value = h;
+          opt.textContent = h;
+          els.toColumnSelect.appendChild(opt);
+        });
+
+        const noneOpt = document.createElement('option');
+        noneOpt.value = '';
+        noneOpt.textContent = '（無）';
+        els.ccColumnSelect.appendChild(noneOpt);
+
+        headers.forEach((h) => {
+          const opt = document.createElement('option');
+          opt.value = h;
+          opt.textContent = h;
+          els.ccColumnSelect.appendChild(opt);
+        });
+
+        if (prevTo && headers.includes(prevTo)) {
+          els.toColumnSelect.value = prevTo;
+        } else {
+          const autoTo =
+            headers.find((h) => /^e-?mail$/i.test(h)) ||
+            headers.find((h) => /mail|信箱|收件/i.test(h) && !/副本|cc/i.test(h)) ||
+            headers[0];
+          els.toColumnSelect.value = autoTo;
+        }
+
+        if (prevCc && headers.includes(prevCc)) {
+          els.ccColumnSelect.value = prevCc;
+        } else {
+          const autoCc = headers.find((h) => /副本|^cc$|cc[\s_-]?mail/i.test(h)) || '';
+          els.ccColumnSelect.value = autoCc;
+        }
+      }
+
+      function renderVariableChips(headers) {
+        els.variableChips.innerHTML = '';
+        if (headers.length === 0) {
+          els.variableChips.innerHTML =
+            '<span style="font-size: 0.83rem; color: var(--text-muted);">貼上資料後將自動產生可用變數</span>';
+          return;
+        }
+        headers.forEach((h) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'var-chip';
+          btn.textContent = '{{' + h + '}}';
+          btn.addEventListener('mousedown', (e) => e.preventDefault());
+          btn.addEventListener('click', () => insertVariableToken('{{' + h + '}}'));
+          els.variableChips.appendChild(btn);
+        });
+      }
+
+      function renderLivePreviewCard() {
+        const list = state.renderedEmails;
+        if (list.length === 0) {
+          els.previewRecordSelect.innerHTML = '<option value="">尚無資料</option>';
+          els.btnPrevRecord.disabled = true;
+          els.btnNextRecord.disabled = true;
+          els.btnDownloadCurrentPreview.disabled = true;
+          els.pvFilename.textContent = '—';
+          els.pvTo.textContent = '—';
+          els.pvCc.textContent = '—';
+          els.pvSubject.textContent = '—';
+          els.pvHtmlBody.innerHTML = '<span style="color: var(--text-muted);">請先於步驟一貼上 Excel 名單以檢視渲染效果。</span>';
+          return;
+        }
+
+        if (state.selectedPreviewIndex >= list.length) {
+          state.selectedPreviewIndex = list.length - 1;
+        }
+        if (state.selectedPreviewIndex < 0) {
+          state.selectedPreviewIndex = 0;
+        }
+
+        els.previewRecordSelect.innerHTML = list
+          .map((item, idx) => {
+            const label = '第 ' + (idx + 1) + ' 筆：' + item.filename.replace(/\.eml$/i, '');
+            return '<option value="' + idx + '">' + escapeHtml(label) + '</option>';
+          })
+          .join('');
+        els.previewRecordSelect.value = String(state.selectedPreviewIndex);
+
+        els.btnPrevRecord.disabled = state.selectedPreviewIndex <= 0;
+        els.btnNextRecord.disabled = state.selectedPreviewIndex >= list.length - 1;
+        els.btnDownloadCurrentPreview.disabled = false;
+
+        const cur = list[state.selectedPreviewIndex];
+        els.pvFilename.textContent = cur.filename;
+        els.pvTo.textContent = cur.to || '（未填寫）';
+        els.pvCc.textContent = cur.cc || '（無）';
+        els.pvSubject.textContent = cur.subject || '（無主旨）';
+        els.pvHtmlBody.innerHTML = cur.htmlBody;
+
+        // 同步高亮清單列
+        const trs = els.draftListBody.querySelectorAll('tr[data-row-idx]');
+        trs.forEach((tr) => {
+          tr.classList.toggle('active-row', Number(tr.getAttribute('data-row-idx')) === state.selectedPreviewIndex);
+        });
+      }
+
+      function updateAllPreviews() {
+        const toCol = els.toColumnSelect.value;
+        const ccCol = els.ccColumnSelect.value;
+        const fixedCc = els.fixedCcInput.value.trim();
+        const subjectTpl = els.subjectTemplate.value;
+        const filenameTpl = els.filenameTemplate.value;
+        const bodyHtmlTpl = getCurrentBodyHtml();
+
+        if (state.rows.length === 0) {
+          state.renderedEmails = [];
+          els.btnDownloadZip.disabled = true;
+          els.draftListBody.innerHTML =
+            '<tr><td colspan="6" class="empty-table-msg">尚無草稿資料，請先於步驟一貼上 Excel 名單。</td></tr>';
+          renderLivePreviewCard();
+          return;
+        }
+
+        const usedNames = new Map();
+        state.renderedEmails = state.rows.map((row, idx) => {
+          const to = normalizeEmailList([toCol ? row[toCol] : '']);
+          const cc = normalizeEmailList([ccCol ? row[ccCol] : '', fixedCc]);
+          const subject = applyTextTemplate(subjectTpl, row);
+          const htmlBody = applyHtmlTemplate(bodyHtmlTpl, row);
+
+          let fname = sanitizeFilename(applyTextTemplate(filenameTpl, row), idx);
+          const lower = fname.toLowerCase();
+          if (usedNames.has(lower)) {
+            const cnt = usedNames.get(lower) + 1;
+            usedNames.set(lower, cnt);
+            fname = fname.replace(/\.eml$/i, '') + '_' + cnt + '.eml';
+          } else {
+            usedNames.set(lower, 1);
+          }
+
+          return { index: idx, to, cc, subject, htmlBody, filename: fname };
+        });
+
+        els.btnDownloadZip.disabled = false;
+
+        const frag = document.createDocumentFragment();
+        state.renderedEmails.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.setAttribute('data-row-idx', String(idx));
+          if (idx === state.selectedPreviewIndex) tr.classList.add('active-row');
+
+          const toHtml = item.to ? escapeHtml(item.to) : '<span class="missing-badge">未填寫</span>';
+          const ccHtml = item.cc ? escapeHtml(item.cc) : '<span style="color: var(--text-muted);">—</span>';
+
+          tr.innerHTML =
+            '<td>' + (idx + 1) + '</td>' +
+            '<td class="cell-truncate" title="' + escapeHtml(item.to) + '">' + toHtml + '</td>' +
+            '<td class="cell-truncate" title="' + escapeHtml(item.cc) + '">' + ccHtml + '</td>' +
+            '<td class="cell-truncate" title="' + escapeHtml(item.subject) + '">' + escapeHtml(item.subject) + '</td>' +
+            '<td class="cell-truncate cell-mono" title="' + escapeHtml(item.filename) + '">' + escapeHtml(item.filename) + '</td>' +
+            '<td>' +
+              '<div class="row-actions">' +
+                '<button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="' + idx + '">預覽</button>' +
+                '<button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="' + idx + '">下載 .eml</button>' +
+              '</div>' +
+            '</td>';
+          frag.appendChild(tr);
+        });
+
+        els.draftListBody.innerHTML = '';
+        els.draftListBody.appendChild(frag);
+        renderLivePreviewCard();
+      }
+
+      function handleExcelDataChange() {
+        const parsed = parseDelimitedText(els.excelInput.value);
+        state.headers = parsed.headers;
+        state.rows = parsed.rows;
+
+        if (state.headers.length === 0) {
+          els.parseStatus.className = 'parse-status empty';
+          els.parseStatus.innerHTML = '<span>尚未輸入資料，請貼上 Excel 內容或點擊「載入範例資料」。</span>';
+        } else if (state.rows.length === 0) {
+          els.parseStatus.className = 'parse-status empty';
+          els.parseStatus.innerHTML =
+            '<span>已偵測到 ' + state.headers.length + ' 個欄位標題，但尚未貼上資料列。</span>';
+        } else {
+          els.parseStatus.className = 'parse-status ok';
+          els.parseStatus.innerHTML =
+            '<span>已成功解析 ' + state.rows.length + ' 筆資料，共 ' + state.headers.length + ' 個欄位</span>';
+        }
+
+        renderParsedCompactTable();
+        updateColumnSelectors(state.headers);
+        renderVariableChips(state.headers);
+        updateAllPreviews();
+      }
+
+      /* =====================================================================
+         雙模式切換（視覺編輯 <-> HTML 原始碼）
+         ===================================================================== */
+      function setEditorMode(mode) {
+        if (state.editorMode === mode) return;
+        if (mode === 'source') {
+          syncToSource();
+          els.wysiwygEditor.style.display = 'none';
+          els.wysiwygToolbar.style.display = 'none';
+          els.htmlSourceEditor.style.display = 'block';
+          els.tabWysiwyg.classList.remove('active');
+          els.tabSource.classList.add('active');
+          els.tabWysiwyg.setAttribute('aria-selected', 'false');
+          els.tabSource.setAttribute('aria-selected', 'true');
+          state.editorMode = 'source';
+          setActiveTarget('source', 'HTML 原始碼');
+          els.tablePopover.classList.remove('open');
+        } else {
+          syncToWysiwyg();
+          els.htmlSourceEditor.style.display = 'none';
+          els.wysiwygToolbar.style.display = 'flex';
+          els.wysiwygEditor.style.display = 'block';
+          els.tabSource.classList.remove('active');
+          els.tabWysiwyg.classList.add('active');
+          els.tabSource.setAttribute('aria-selected', 'false');
+          els.tabWysiwyg.setAttribute('aria-selected', 'true');
+          state.editorMode = 'wysiwyg';
+          setActiveTarget('wysiwyg', 'HTML 內文（視覺編輯）');
+        }
+        updateAllPreviews();
+      }
+
+      function setActiveTarget(targetKey, labelText) {
+        state.activeTarget = targetKey;
+        els.activeTargetHint.textContent = '目前游標目標：' + labelText;
+      }
+
+      /* =====================================================================
+         事件綁定
+         ===================================================================== */
+      els.excelInput.addEventListener('input', handleExcelDataChange);
+
+      els.btnLoadSample.addEventListener('click', () => {
+        els.excelInput.value = SAMPLE_TSV;
+        handleExcelDataChange();
+        showToast('已載入 5 筆範例資料');
+      });
+
+      els.btnClearData.addEventListener('click', () => {
+        els.excelInput.value = '';
+        els.fixedCcInput.value = '';
+        handleExcelDataChange();
+        showToast('已清空資料');
+      });
+
+      [els.toColumnSelect, els.ccColumnSelect, els.fixedCcInput, els.subjectTemplate, els.filenameTemplate].forEach(
+        (el) => {
+          el.addEventListener('input', updateAllPreviews);
+          el.addEventListener('change', updateAllPreviews);
+        }
+      );
+
+      // 追蹤各輸入框焦點以決定變數標籤插入目標
+      els.subjectTemplate.addEventListener('focus', () => setActiveTarget('subject', '主旨範本'));
+      els.filenameTemplate.addEventListener('focus', () => setActiveTarget('filename', '檔名範本'));
+      els.htmlSourceEditor.addEventListener('focus', () => setActiveTarget('source', 'HTML 原始碼'));
+      els.wysiwygEditor.addEventListener('focus', () => setActiveTarget('wysiwyg', 'HTML 內文（視覺編輯）'));
+
+      // WYSIWYG 編輯器輸入與選取追蹤
+      ['keyup', 'mouseup', 'blur'].forEach((evt) => {
+        els.wysiwygEditor.addEventListener(evt, saveWysiwygSelection);
+      });
+      els.wysiwygEditor.addEventListener('input', () => {
+        saveWysiwygSelection();
+        syncToSource();
+        updateAllPreviews();
+      });
+
+      // HTML 原始碼編輯器即時同步
+      els.htmlSourceEditor.addEventListener('input', () => {
+        syncToWysiwyg();
+        updateAllPreviews();
+      });
+
+      // 模式切換分頁
+      els.tabWysiwyg.addEventListener('click', () => setEditorMode('wysiwyg'));
+      els.tabSource.addEventListener('click', () => setEditorMode('source'));
+
+      // 工具列文字格式化按鈕（阻止 mousedown 搶走焦點）
+      els.wysiwygToolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        btn.addEventListener('click', () => {
+          restoreWysiwygSelection();
+          document.execCommand(btn.getAttribute('data-cmd'), false, null);
+          saveWysiwygSelection();
+          syncToSource();
+          updateAllPreviews();
+        });
+      });
+
+      // 文字顏色與底色醒目提示
+      els.foreColorPicker.addEventListener('input', (e) => {
+        restoreWysiwygSelection();
+        document.execCommand('foreColor', false, e.target.value);
+        saveWysiwygSelection();
+        syncToSource();
+        updateAllPreviews();
+      });
+
+      els.hiliteColorPicker.addEventListener('input', (e) => {
+        restoreWysiwygSelection();
+        const ok = document.execCommand('hiliteColor', false, e.target.value);
+        if (!ok) document.execCommand('backColor', false, e.target.value);
+        saveWysiwygSelection();
+        syncToSource();
+        updateAllPreviews();
+      });
+
+      // 插入表格 Popover 控制
+      els.btnToggleTablePopover.addEventListener('mousedown', (e) => e.preventDefault());
+      els.btnToggleTablePopover.addEventListener('click', () => {
+        saveWysiwygSelection();
+        els.tablePopover.classList.toggle('open');
+      });
+
+      els.btnCancelTable.addEventListener('click', () => {
+        els.tablePopover.classList.remove('open');
+      });
+
+      els.btnConfirmInsertTable.addEventListener('click', () => {
+        const html = buildOutlookTableHtml(
+          els.tblRowsInput.value,
+          els.tblColsInput.value,
+          els.tblHeaderCheck.checked
+        );
+        els.tablePopover.classList.remove('open');
+        insertHtmlAtWysiwygCursor(html);
+        showToast('已插入 Outlook 相容表格');
+      });
+
+      // 點擊外部關閉 Popover
+      document.addEventListener('click', (e) => {
+        if (
+          els.tablePopover.classList.contains('open') &&
+          !els.tablePopover.contains(e.target) &&
+          e.target !== els.btnToggleTablePopover
+        ) {
+          els.tablePopover.classList.remove('open');
+        }
+      });
+
+      // 一鍵插入範例表格（支援兩種模式）
+      els.btnInsertSampleTable.addEventListener('mousedown', (e) => e.preventDefault());
+      els.btnInsertSampleTable.addEventListener('click', () => {
+        if (state.editorMode === 'source') {
+          insertTextIntoInput(els.htmlSourceEditor, '\n' + SAMPLE_CASE_TABLE_HTML + '\n');
+          syncToWysiwyg();
+          updateAllPreviews();
+        } else {
+          insertHtmlAtWysiwygCursor(SAMPLE_CASE_TABLE_HTML + '<p><br></p>');
+        }
+        showToast('已插入案件資訊範例表格');
+      });
+
+      // 表格快捷操作按鈕
+      [els.btnAddRow, els.btnAddCol, els.btnDelRow, els.btnDelTable].forEach((b) => {
+        b.addEventListener('mousedown', (e) => e.preventDefault());
+      });
+      els.btnAddRow.addEventListener('click', tableAddRow);
+      els.btnAddCol.addEventListener('click', tableAddCol);
+      els.btnDelRow.addEventListener('click', tableDeleteRow);
+      els.btnDelTable.addEventListener('click', tableDeleteWhole);
+
+      // 即時預覽切換控制
+      els.previewRecordSelect.addEventListener('change', (e) => {
+        state.selectedPreviewIndex = Number(e.target.value) || 0;
+        renderLivePreviewCard();
+      });
+
+      els.btnPrevRecord.addEventListener('click', () => {
+        if (state.selectedPreviewIndex > 0) {
+          state.selectedPreviewIndex--;
+          renderLivePreviewCard();
+        }
+      });
+
+      els.btnNextRecord.addEventListener('click', () => {
+        if (state.selectedPreviewIndex < state.renderedEmails.length - 1) {
+          state.selectedPreviewIndex++;
+          renderLivePreviewCard();
+        }
+      });
+
+      els.btnDownloadCurrentPreview.addEventListener('click', () => {
+        downloadSingleEml(state.selectedPreviewIndex);
+      });
+
+      // 批次列表操作委派
+      els.draftListBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-idx'));
+        const action = btn.getAttribute('data-action');
+        if (action === 'preview') {
+          state.selectedPreviewIndex = idx;
+          renderLivePreviewCard();
+          document.getElementById('livePreviewBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else if (action === 'download') {
+          downloadSingleEml(idx);
+        }
+      });
+
+      els.btnDownloadZip.addEventListener('click', downloadAllZip);
+
+      /* =====================================================================
+         初始化預設內容
+         ===================================================================== */
+      els.wysiwygEditor.innerHTML = DEFAULT_BODY_HTML;
+      syncToSource();
+      els.excelInput.value = SAMPLE_TSV;
+      handleExcelDataChange();
+    })();
+  </script>
+
+</body></html>
