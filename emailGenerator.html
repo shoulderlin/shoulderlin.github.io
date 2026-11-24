@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-Hant"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outlook 草稿 (.eml) 批次產生工具 — 支援 HTML 表格編輯</title>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outlook .eml 草稿批次產生器（支援一對多合併與密件副本）</title>
   <style>
     /* =====================================================================
-       全域設計系統（100% 離線原生 CSS，無外部 CDN）
+       全域設計系統（100% 離線純原生 CSS，無任何外部 CDN 依賴）
        ===================================================================== */
     :root {
       --bg-page: #f1f5f9;
@@ -17,26 +18,29 @@
       --text-primary: #0f172a;
       --text-secondary: #475569;
       --text-muted: #64748b;
-      --indigo: #4f46e5;
-      --indigo-hover: #4338ca;
-      --indigo-light: #eef2ff;
-      --indigo-border: #c7d2fe;
-      --emerald: #059669;
-      --emerald-bg: #ecfdf5;
-      --emerald-border: #a7f3d0;
-      --amber-bg: #fffbeb;
-      --amber-border: #fde68a;
-      --amber-text: #92400e;
-      --danger: #dc2626;
-      --danger-bg: #fef2f2;
-      --danger-border: #fecaca;
+      --blue-600: #2563eb;
+      --blue-700: #1d4ed8;
+      --blue-50: #eff6ff;
+      --blue-200: #bfdbfe;
+      --indigo-600: #4f46e5;
+      --indigo-50: #eef2ff;
+      --indigo-200: #c7d2fe;
+      --emerald-600: #059669;
+      --emerald-50: #ecfdf5;
+      --emerald-200: #a7f3d0;
+      --amber-50: #fffbeb;
+      --amber-200: #fde68a;
+      --amber-800: #92400e;
+      --rose-600: #e11d48;
+      --rose-50: #fff1f2;
+      --rose-200: #fecdd3;
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
       --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
-      --shadow-lg: 0 12px 30px rgba(15, 23, 42, 0.14);
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans TC", sans-serif;
+      --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.16);
+      --font-sans: "Microsoft JhengHei", "微軟正黑體", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
@@ -56,12 +60,12 @@
     }
 
     /* =====================================================================
-       容器與頁首
+       版面容器與頁首
        ===================================================================== */
     .container {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 26px 18px 60px;
+      padding: 24px 18px 64px;
     }
 
     .app-header {
@@ -69,39 +73,60 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 14px;
+      margin-bottom: 22px;
     }
 
     .app-title-group h1 {
       margin: 0 0 4px;
-      font-size: 1.55rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--text-primary);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.015em;
     }
 
     .app-title-group p {
       margin: 0;
+      font-size: 0.92rem;
       color: var(--text-secondary);
-      font-size: 0.93rem;
     }
 
-    .offline-badge {
+    .header-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill-badge {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 6px 13px;
-      background-color: var(--emerald-bg);
-      color: var(--emerald);
-      border: 1px solid var(--emerald-border);
+      gap: 6px;
+      padding: 5px 12px;
       border-radius: 999px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
       white-space: nowrap;
     }
 
-    .offline-dot {
+    .pill-emerald {
+      background-color: var(--emerald-50);
+      color: var(--emerald-600);
+      border: 1px solid var(--emerald-200);
+    }
+
+    .pill-blue {
+      background-color: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-200);
+    }
+
+    .pill-amber {
+      background-color: var(--amber-50);
+      color: var(--amber-800);
+      border: 1px solid var(--amber-200);
+    }
+
+    .status-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
@@ -112,12 +137,12 @@
        卡片與步驟標題
        ===================================================================== */
     .card {
-      background: var(--bg-card);
+      background-color: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       padding: 22px 24px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
     }
 
     .step-header {
@@ -127,58 +152,58 @@
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 18px;
-      padding-bottom: 14px;
+      padding-bottom: 13px;
       border-bottom: 1px solid var(--border);
     }
 
     .step-title {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 11px;
     }
 
-    .step-badge {
+    .step-num {
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
       color: #ffffff;
-      font-weight: 800;
       font-size: 0.92rem;
+      font-weight: 800;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.28);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
 
     .step-title h2 {
       margin: 0;
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.12rem;
+      font-weight: 800;
       color: var(--text-primary);
     }
 
     .step-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
       align-items: center;
+      gap: 8px;
     }
 
     /* =====================================================================
-       表單與按鈕
+       表單元素與按鈕
        ===================================================================== */
     label.field-label {
       display: block;
+      font-size: 0.87rem;
       font-weight: 700;
-      font-size: 0.88rem;
       color: var(--text-primary);
       margin-bottom: 6px;
     }
 
     .field-hint {
-      font-size: 0.8rem;
+      font-size: 0.79rem;
       color: var(--text-muted);
       margin-top: 4px;
     }
@@ -189,13 +214,13 @@
     textarea {
       width: 100%;
       font-family: var(--font-sans);
-      font-size: 0.92rem;
+      font-size: 0.91rem;
       color: var(--text-primary);
       background-color: #ffffff;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
-      padding: 9px 12px;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      padding: 8px 11px;
+      transition: border-color 0.14s ease, box-shadow 0.14s ease;
     }
 
     input[type="text"]:focus,
@@ -203,17 +228,17 @@
     select:focus,
     textarea:focus {
       outline: none;
-      border-color: var(--indigo);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     }
 
-    textarea.code-input {
+    textarea.tsv-input {
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       line-height: 1.5;
-      resize: vertical;
       white-space: pre;
       overflow-x: auto;
+      resize: vertical;
     }
 
     .btn {
@@ -224,7 +249,7 @@
       padding: 8px 14px;
       font-family: var(--font-sans);
       font-size: 0.87rem;
-      font-weight: 600;
+      font-weight: 700;
       border-radius: var(--radius-sm);
       border: 1px solid transparent;
       cursor: pointer;
@@ -238,17 +263,26 @@
     }
 
     .btn:disabled {
-      opacity: 0.48;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
     .btn-primary {
-      background-color: var(--indigo);
+      background-color: var(--blue-600);
       color: #ffffff;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background-color: var(--indigo-hover);
+      background-color: var(--blue-700);
+    }
+
+    .btn-emerald {
+      background-color: var(--emerald-600);
+      color: #ffffff;
+    }
+
+    .btn-emerald:hover:not(:disabled) {
+      background-color: #047857;
     }
 
     .btn-secondary {
@@ -262,24 +296,24 @@
       border-color: #94a3b8;
     }
 
-    .btn-indigo-soft {
-      background-color: var(--indigo-light);
-      color: var(--indigo);
-      border-color: var(--indigo-border);
+    .btn-soft-blue {
+      background-color: var(--blue-50);
+      color: var(--blue-700);
+      border-color: var(--blue-200);
     }
 
-    .btn-indigo-soft:hover:not(:disabled) {
-      background-color: #e0e7ff;
+    .btn-soft-blue:hover:not(:disabled) {
+      background-color: #dbeafe;
     }
 
     .btn-danger-outline {
       background-color: #ffffff;
-      color: var(--danger);
-      border-color: var(--danger-border);
+      color: var(--rose-600);
+      border-color: var(--rose-200);
     }
 
     .btn-danger-outline:hover:not(:disabled) {
-      background-color: var(--danger-bg);
+      background-color: var(--rose-50);
     }
 
     .btn-sm {
@@ -293,19 +327,18 @@
     }
 
     /* =====================================================================
-       格線佈局
+       響應式格線
        ===================================================================== */
     .grid-4 {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
-      margin-top: 16px;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 14px;
     }
 
     @media (max-width: 960px) {
@@ -324,38 +357,32 @@
     }
 
     /* =====================================================================
-       解析狀態列與精簡表格預覽
+       步驟一：解析狀態與預覽表格
        ===================================================================== */
-    .parse-status {
+    .stats-bar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
       margin-top: 10px;
-      padding: 9px 14px;
+      padding: 9px 13px;
       border-radius: var(--radius-sm);
       background-color: var(--bg-subtle);
       border: 1px solid var(--border);
-      font-size: 0.87rem;
+      font-size: 0.86rem;
     }
 
-    .parse-status.ok {
-      background-color: var(--emerald-bg);
-      border-color: var(--emerald-border);
-      color: var(--emerald);
-      font-weight: 600;
-    }
-
-    .parse-status.empty {
-      background-color: var(--amber-bg);
-      border-color: var(--amber-border);
-      color: var(--amber-text);
+    .stats-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
     }
 
     .compact-table-wrap {
       margin-top: 12px;
-      max-height: 195px;
+      max-height: 200px;
       overflow: auto;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -383,7 +410,6 @@
     .compact-table td {
       padding: 6px 10px;
       border-bottom: 1px solid var(--border);
-      color: var(--text-primary);
       white-space: nowrap;
       max-width: 220px;
       overflow: hidden;
@@ -391,75 +417,245 @@
     }
 
     /* =====================================================================
-       變數標籤區 (Variable Pills)
+       步驟二：合併模式開關卡片 & 明細表格欄位設定
        ===================================================================== */
-    .chips-panel {
-      background-color: var(--bg-subtle);
-      border: 1px solid var(--border);
+    .merge-banner {
+      background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+      border: 1px solid var(--blue-200);
       border-radius: var(--radius-md);
-      padding: 12px 14px;
-      margin-bottom: 16px;
+      padding: 15px 18px;
+      margin-bottom: 18px;
     }
 
-    .chips-header {
+    .merge-top {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 0.83rem;
-      color: var(--text-secondary);
-      font-weight: 600;
+      gap: 12px;
     }
 
-    .target-pill {
+    .toggle-label {
       display: inline-flex;
       align-items: center;
-      padding: 2px 9px;
-      background-color: #e2e8f0;
-      color: #334155;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
+      gap: 11px;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .chips-list {
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background-color: #94a3b8;
+      border-radius: 999px;
+      transition: background-color 0.18s ease;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform 0.18s ease;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--blue-600);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+
+    .merge-title-text {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .merge-desc {
+      margin: 8px 0 0;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .merge-desc code {
+      background-color: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--blue-200);
+      color: var(--blue-700);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .sub-panel {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .sub-panel-header {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .sub-panel-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .col-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .col-check-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s ease;
+    }
+
+    .col-check-chip:hover {
+      border-color: var(--blue-600);
+    }
+
+    .col-check-chip input[type="checkbox"] {
+      accent-color: var(--blue-600);
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .col-check-chip.checked {
+      background-color: var(--blue-50);
+      border-color: var(--blue-600);
+      color: var(--blue-700);
+    }
+
+    .inline-check {
+      display: inline-flex;
+      align-items: center;
       gap: 7px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .inline-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue-600);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* =====================================================================
+       步驟三：主旨與雙模式 HTML 編輯器
+       ===================================================================== */
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chips-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-right: 2px;
     }
 
     .var-chip {
       display: inline-flex;
       align-items: center;
-      padding: 4px 10px;
-      background-color: var(--indigo-light);
-      color: var(--indigo);
-      border: 1px solid var(--indigo-border);
+      padding: 3px 10px;
+      background-color: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-200);
       border-radius: 999px;
       font-family: var(--font-mono);
-      font-size: 0.81rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.12s ease;
     }
 
     .var-chip:hover {
-      background-color: var(--indigo);
+      background-color: var(--blue-600);
       color: #ffffff;
-      border-color: var(--indigo);
+      border-color: var(--blue-600);
     }
 
-    /* =====================================================================
-       雙模式 HTML 內文編輯器（WYSIWYG + HTML 原始碼）
-       ===================================================================== */
+    .var-chip.special {
+      background-color: var(--indigo-50);
+      color: var(--indigo-600);
+      border-color: var(--indigo-200);
+    }
+
+    .var-chip.special:hover {
+      background-color: var(--indigo-600);
+      color: #ffffff;
+      border-color: var(--indigo-600);
+    }
+
+    .body-chips-box {
+      margin-top: 16px;
+      padding: 11px 14px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
     .editor-wrapper {
+      margin-top: 12px;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-md);
       overflow: hidden;
       background-color: #ffffff;
-      margin-top: 14px;
     }
 
     .editor-tabs-bar {
@@ -496,7 +692,7 @@
 
     .mode-tab.active {
       background-color: #ffffff;
-      color: var(--indigo);
+      color: var(--blue-700);
       box-shadow: var(--shadow-sm);
     }
 
@@ -508,7 +704,6 @@
       padding: 8px 10px;
       background-color: var(--bg-subtle);
       border-bottom: 1px solid var(--border);
-      position: relative;
     }
 
     .toolbar-group {
@@ -516,7 +711,7 @@
       align-items: center;
       gap: 3px;
       padding-right: 7px;
-      margin-right: 4px;
+      margin-right: 3px;
       border-right: 1px solid var(--border-strong);
     }
 
@@ -540,7 +735,7 @@
       color: var(--text-primary);
       font-family: var(--font-sans);
       font-size: 0.82rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.12s ease;
       white-space: nowrap;
@@ -551,32 +746,23 @@
     }
 
     .tb-btn.tb-accent {
-      background-color: var(--indigo-light);
-      color: var(--indigo);
-      border-color: var(--indigo-border);
+      background-color: var(--blue-50);
+      color: var(--blue-700);
+      border-color: var(--blue-200);
     }
 
     .tb-btn.tb-accent:hover {
+      background-color: #dbeafe;
+    }
+
+    .tb-btn.tb-indigo {
+      background-color: var(--indigo-50);
+      color: var(--indigo-600);
+      border-color: var(--indigo-200);
+    }
+
+    .tb-btn.tb-indigo:hover {
       background-color: #e0e7ff;
-    }
-
-    .tb-btn.tb-table-op {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      background-color: #ffffff;
-    }
-
-    .tb-btn.tb-table-op:hover {
-      border-color: var(--indigo);
-      color: var(--indigo);
-      background-color: var(--indigo-light);
-    }
-
-    .tb-btn.tb-table-del:hover {
-      border-color: var(--danger);
-      color: var(--danger);
-      background-color: var(--danger-bg);
     }
 
     .color-picker-wrap {
@@ -589,7 +775,7 @@
       border: 1px solid var(--border);
       background-color: #ffffff;
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-secondary);
       cursor: pointer;
     }
@@ -603,60 +789,98 @@
       cursor: pointer;
     }
 
-    .table-context-badge {
-      font-size: 0.75rem;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background-color: #e2e8f0;
+    /* 表格快捷操作列（游標位於表格內時啟用高亮） */
+    .table-quick-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background-color: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      transition: background-color 0.15s ease;
+    }
+
+    .table-quick-bar.inside {
+      background-color: var(--emerald-50);
+      border-bottom-color: var(--emerald-200);
+    }
+
+    .table-quick-status {
+      font-weight: 700;
       color: var(--text-muted);
-      font-weight: 600;
     }
 
-    .table-context-badge.inside {
-      background-color: var(--emerald-bg);
-      color: var(--emerald);
-      border: 1px solid var(--emerald-border);
+    .table-quick-bar.inside .table-quick-status {
+      color: var(--emerald-600);
     }
 
-    /* WYSIWYG 編輯區 */
+    .table-quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tb-op {
+      padding: 4px 9px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 5px;
+      border: 1px solid var(--border-strong);
+      background-color: #ffffff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .tb-op:hover:not(:disabled) {
+      border-color: var(--blue-600);
+      color: var(--blue-700);
+      background-color: var(--blue-50);
+    }
+
+    .tb-op.danger:hover:not(:disabled) {
+      border-color: var(--rose-600);
+      color: var(--rose-600);
+      background-color: var(--rose-50);
+    }
+
+    .tb-op:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
     .wysiwyg-area {
-      min-height: 290px;
-      max-height: 540px;
+      min-height: 240px;
+      max-height: 480px;
       overflow-y: auto;
-      padding: 18px 20px;
+      padding: 16px 20px;
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
-      font-size: 11pt;
-      line-height: 1.65;
+      font-size: 14px;
+      line-height: 1.6;
       color: #1e293b;
       outline: none;
-    }
-
-    .wysiwyg-area:focus {
-      background-color: #ffffff;
     }
 
     .wysiwyg-area p {
       margin: 0 0 10px;
     }
 
-    .wysiwyg-area table {
-      border-collapse: collapse;
-      max-width: 100%;
-    }
-
-    /* HTML 原始碼編輯區 */
     .source-area {
       width: 100%;
-      min-height: 290px;
-      max-height: 540px;
+      min-height: 240px;
+      max-height: 480px;
       padding: 14px 16px;
       border: none;
       border-radius: 0;
       font-family: var(--font-mono);
       font-size: 0.85rem;
       line-height: 1.55;
-      color: #0f172a;
       background-color: #f8fafc;
+      color: #0f172a;
       resize: vertical;
       display: none;
     }
@@ -667,256 +891,168 @@
       background-color: #ffffff;
     }
 
-    /* 插入表格 Popover */
-    .table-popover {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 10px;
-      z-index: 60;
-      width: 280px;
-      background-color: #ffffff;
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      padding: 14px 16px;
-      display: none;
-    }
-
-    .table-popover.open {
-      display: block;
-    }
-
-    .table-popover h4 {
-      margin: 0 0 10px;
-      font-size: 0.92rem;
-      color: var(--text-primary);
-    }
-
-    .popover-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .popover-check {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 0.84rem;
-      color: var(--text-primary);
-      margin-bottom: 12px;
-      cursor: pointer;
-    }
-
-    .popover-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      margin-top: 14px;
-      padding: 10px 13px;
-      background-color: var(--bg-subtle);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-
-    .checkbox-row input[type="checkbox"] {
-      width: 17px;
-      height: 17px;
-      accent-color: var(--indigo);
-      cursor: pointer;
-      margin: 0;
-    }
-
-    .checkbox-row label {
-      font-size: 0.89rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      cursor: pointer;
-      user-select: none;
-    }
-
     /* =====================================================================
-       即時渲染預覽面板
+       步驟四：即時渲染預覽與下載
        ===================================================================== */
-    .live-preview-box {
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      margin-bottom: 20px;
-      background-color: #ffffff;
-    }
-
-    .live-preview-bar {
+    .preview-nav-bar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 10px 14px;
+      gap: 12px;
+      padding: 11px 14px;
       background-color: #f1f5f9;
-      border-bottom: 1px solid var(--border-strong);
+      border: 1px solid var(--border-strong);
+      border-bottom: none;
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
     }
 
-    .preview-switcher {
+    .preview-nav-controls {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      flex: 1;
-      min-width: 240px;
-      max-width: 520px;
     }
 
-    .preview-switcher select {
+    .preview-nav-controls select {
+      width: auto;
+      min-width: 210px;
+      max-width: 340px;
       padding: 6px 10px;
       font-size: 0.86rem;
     }
 
-    .mail-meta-panel {
-      padding: 12px 16px;
+    .counter-text {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      padding: 0 4px;
+    }
+
+    .preview-card {
+      border: 1px solid var(--border-strong);
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      overflow: hidden;
+      background-color: #ffffff;
+    }
+
+    .mail-header-grid {
+      padding: 14px 18px;
       background-color: var(--bg-subtle);
       border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: 76px 1fr;
-      gap: 6px 10px;
+      grid-template-columns: 100px 1fr;
+      gap: 7px 12px;
       font-size: 0.88rem;
     }
 
-    .mail-meta-label {
+    .mh-label {
       font-weight: 700;
       color: var(--text-secondary);
     }
 
-    .mail-meta-value {
+    .mh-val {
       color: var(--text-primary);
       word-break: break-word;
     }
 
-    .live-preview-body {
-      padding: 18px 20px;
+    .mh-val.mono {
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      color: var(--blue-700);
+    }
+
+    .mh-val.muted {
+      color: var(--text-muted);
+    }
+
+    .mail-body-preview {
+      padding: 20px 22px;
       min-height: 180px;
       font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
-      font-size: 11pt;
-      line-height: 1.65;
+      font-size: 14px;
+      line-height: 1.6;
       color: #1e293b;
       background-color: #ffffff;
       overflow-x: auto;
     }
 
-    /* =====================================================================
-       批次清單表格
-       ===================================================================== */
-    .table-wrap {
-      width: 100%;
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-    }
-
-    table.list-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 740px;
-      font-size: 0.87rem;
-    }
-
-    table.list-table thead th {
-      background-color: var(--bg-subtle);
-      color: var(--text-secondary);
-      font-weight: 700;
-      text-align: left;
-      padding: 11px 12px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    table.list-table tbody td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    table.list-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    table.list-table tbody tr.active-row {
-      background-color: var(--indigo-light);
-    }
-
-    table.list-table tbody tr:hover:not(.active-row) {
-      background-color: #f8fafc;
-    }
-
-    .cell-truncate {
-      max-width: 230px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .cell-mono {
-      font-family: var(--font-mono);
-      font-size: 0.81rem;
-      color: var(--text-secondary);
-    }
-
-    .row-actions {
+    .download-actions-bar {
       display: flex;
-      gap: 6px;
-      white-space: nowrap;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
     }
 
-    .missing-badge {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background-color: var(--danger-bg);
-      color: var(--danger);
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
-    .empty-table-msg {
-      text-align: center;
-      padding: 28px 16px;
-      color: var(--text-muted);
-    }
-
-    /* =====================================================================
-       Outlook 使用提示與 Toast
-       ===================================================================== */
     .tip-box {
-      margin-top: 18px;
-      padding: 13px 16px;
-      background-color: var(--indigo-light);
-      border: 1px solid var(--indigo-border);
-      border-left: 4px solid var(--indigo);
+      margin-top: 16px;
+      padding: 12px 15px;
+      background-color: var(--blue-50);
+      border: 1px solid var(--blue-200);
+      border-left: 4px solid var(--blue-600);
       border-radius: var(--radius-sm);
-      font-size: 0.86rem;
-      color: #312e81;
+      font-size: 0.84rem;
+      color: #1e3a8a;
       line-height: 1.65;
     }
 
     .tip-box code {
-      background-color: rgba(255, 255, 255, 0.75);
+      background-color: rgba(255, 255, 255, 0.8);
       padding: 1px 5px;
       border-radius: 4px;
       font-family: var(--font-mono);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
+    }
+
+    /* =====================================================================
+       插入表格 Modal 與 Toast 通知
+       ===================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-dialog {
+      width: 100%;
+      max-width: 360px;
+      background-color: #ffffff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+    }
+
+    .modal-dialog h3 {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
     }
 
     .toast-container {
       position: fixed;
       bottom: 22px;
       right: 22px;
-      z-index: 1100;
+      z-index: 1200;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -929,10 +1065,10 @@
       padding: 10px 16px;
       border-radius: var(--radius-sm);
       box-shadow: var(--shadow-md);
-      font-size: 0.87rem;
-      font-weight: 500;
+      font-size: 0.86rem;
+      font-weight: 600;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
@@ -947,248 +1083,336 @@
     <!-- 頁首 -->
     <header class="app-header">
       <div class="app-title-group">
-        <h1>Outlook 草稿 (.eml) 批次產生工具</h1>
-        <p>貼上 Excel 名單、使用視覺化 HTML 表格編輯器設計內文，一鍵產出含動態副本與 <code>X-Unsent: 1</code> 的 Outlook 草稿。</p>
+        <h1>Outlook .eml 草稿批次產生器（支援一對多合併與密件副本）</h1>
+        <p>支援依收件者自動合併多筆產品明細表格、CC / BCC 整合去重複，一鍵產出含 <code>X-Unsent: 1</code> 的 Outlook 草稿。</p>
       </div>
-      <div class="offline-badge" title="100% 純瀏覽器端運算，無外部連線，資料不外洩">
-        <span class="offline-dot"></span>
-        100% 本機離線運作・支援 HTML 表格
+      <div class="header-badges">
+        <span class="pill-badge pill-emerald">
+          <span class="status-dot"></span>
+          100% 本機離線運作・零外部連線
+        </span>
       </div>
     </header>
 
     <!-- =================================================================
-         步驟一：貼上 Excel 資料與欄位對應
+         步驟 1：貼上 Excel 名單資料
          ================================================================= -->
-    <section class="card" aria-labelledby="step1-title">
+    <section class="card" aria-labelledby="step1-heading">
       <div class="step-header">
         <div class="step-title">
-          <span class="step-badge">1</span>
-          <h2 id="step1-title">貼上 Excel 資料與對應欄位</h2>
+          <span class="step-num">1</span>
+          <h2 id="step1-heading">貼上 Excel 名單資料</h2>
         </div>
         <div class="step-actions">
-          <button type="button" class="btn btn-secondary" id="btnLoadSample">載入範例資料</button>
+          <button type="button" class="btn btn-soft-blue" id="btnLoadSample">載入範例資料</button>
           <button type="button" class="btn btn-danger-outline" id="btnClearData">清空資料</button>
         </div>
       </div>
 
-      <label class="field-label" for="excelInput">從 Excel 複製儲存格直接貼上（第一列為欄位標題，支援 Tab 分隔 TSV 與 CSV）：</label>
-      <textarea id="excelInput" class="code-input" rows="6" placeholder="請貼上 Excel 資料，或點擊右上角「載入範例資料」..."></textarea>
+      <label class="field-label" for="excelInput">
+        直接從 Excel 複製儲存格貼上（第一列為欄位名稱，支援 Tab 分隔 TSV 與逗號分隔 CSV）：
+      </label>
+      <textarea
+        id="excelInput"
+        class="tsv-input"
+        rows="7"
+        placeholder="請貼上 Excel 資料，或點擊右上角「載入範例資料」..."
+      ></textarea>
 
-      <div id="parseStatus" class="parse-status ok"><span>已成功解析 5 筆資料，共 5 個欄位</span></div>
-
-      <!-- 解析後的資料精簡預覽表 -->
-      <div id="parsedCompactWrap" class="compact-table-wrap" style="display: block;">
-        <table class="compact-table">
-          <thead id="parsedCompactHead"><tr><th style="width: 44px;">#</th><th>委員姓名</th><th>email</th><th>副本email</th><th>業者名稱</th><th>產品名稱</th></tr></thead>
-          <tbody id="parsedCompactBody"><tr><td>1</td><td title="陳志明">陳志明</td><td title="chihming.chen@example.com">chihming.chen@example.com</td><td title="cc1@example.com">cc1@example.com</td><td title="康健生醫股份有限公司">康健生醫股份有限公司</td><td title="智慧型電子血壓計">智慧型電子血壓計</td></tr><tr><td>2</td><td title="林淑芬">林淑芬</td><td title="shufen.lin@example.com">shufen.lin@example.com</td><td title="cc1@example.com; cc2@example.com">cc1@example.com; cc2@example.com</td><td title="永安醫療器材有限公司">永安醫療器材有限公司</td><td title="拋棄式無菌手術手套">拋棄式無菌手術手套</td></tr><tr><td>3</td><td title="張家豪">張家豪</td><td title="chiahao.chang@example.com">chiahao.chang@example.com</td><td title=""></td><td title="台灣精準生技股份有限公司">台灣精準生技股份有限公司</td><td title="居家用血糖監測系統">居家用血糖監測系統</td></tr><tr><td>4</td><td title="黃雅婷">黃雅婷</td><td title="yating.huang@example.com">yating.huang@example.com</td><td title="cc2@example.com">cc2@example.com</td><td title="瑞泰醫材科技股份有限公司">瑞泰醫材科技股份有限公司</td><td title="紅外線額溫槍">紅外線額溫槍</td></tr><tr><td>5</td><td title="吳建宏">吳建宏</td><td title="chienhung.wu@example.com">chienhung.wu@example.com</td><td title="cc1@example.com">cc1@example.com</td><td title="博愛生技醫藥有限公司">博愛生技醫藥有限公司</td><td title="醫用級矽膠傷口敷料">醫用級矽膠傷口敷料</td></tr></tbody>
-        </table>
+      <div class="stats-bar">
+        <span id="parseStatusText" style="font-weight: 700; color: var(--text-secondary);">尚未解析資料</span>
+        <div class="stats-badges">
+          <span class="pill-badge pill-blue" id="badgeTotalRows">總筆數：0 筆</span>
+          <span class="pill-badge pill-emerald" id="badgeUniqueRecipients">不重複收件者：0 位</span>
+        </div>
       </div>
 
+      <div class="compact-table-wrap" id="parsedTableWrap" style="display: none;">
+        <table class="compact-table">
+          <thead id="parsedTableHead"></thead>
+          <tbody id="parsedTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         步驟 2：欄位對應、密件副本與合併設定
+         ================================================================= -->
+    <section class="card" aria-labelledby="step2-heading">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">2</span>
+          <h2 id="step2-heading">欄位對應、密件副本與合併設定</h2>
+        </div>
+      </div>
+
+      <!-- 一對多合併模式開關（預設開啟） -->
+      <div class="merge-banner">
+        <div class="merge-top">
+          <label class="toggle-label" for="mergeModeCheckbox">
+            <span class="toggle-switch">
+              <input type="checkbox" id="mergeModeCheckbox" checked />
+              <span class="toggle-slider"></span>
+            </span>
+            <span class="merge-title-text">依收件者 Email 合併成同一封信（一對多模式）</span>
+          </label>
+          <span class="pill-badge pill-blue" id="mergeStatusBadge">目前設定：尚未載入資料</span>
+        </div>
+        <p class="merge-desc">
+          同一收件者 Email 的多筆資料會自動合併為同一封信，副本（CC）與密件副本（BCC）將自動整合去重複，並可透過
+          <code>{{明細表格}}</code> 展開所有產品明細、透過 <code>{{案件數}}</code> 帶入該收件者的案件總數。
+        </p>
+      </div>
+
+      <!-- 欄位對應下拉選單 -->
       <div class="grid-4">
         <div>
-          <label class="field-label" for="toColumnSelect">收件者欄位 (To)</label>
-          <select id="toColumnSelect"><option value="委員姓名">委員姓名</option><option value="email">email</option><option value="副本email">副本email</option><option value="業者名稱">業者名稱</option><option value="產品名稱">產品名稱</option></select>
+          <label class="field-label" for="toColSelect">收件者 Email (To)</label>
+          <select id="toColSelect"></select>
         </div>
         <div>
-          <label class="field-label" for="ccColumnSelect">副本欄位 (CC)</label>
-          <select id="ccColumnSelect"><option value="">（無）</option><option value="委員姓名">委員姓名</option><option value="email">email</option><option value="副本email">副本email</option><option value="業者名稱">業者名稱</option><option value="產品名稱">產品名稱</option></select>
+          <label class="field-label" for="ccColSelect">副本 Email (CC)</label>
+          <select id="ccColSelect"></select>
         </div>
         <div>
-          <label class="field-label" for="fixedCcInput">固定額外副本 (選填)</label>
-          <input type="text" id="fixedCcInput" placeholder="例如：boss@example.com; team@example.com">
-          <div class="field-hint">支援逗號或分號分隔，自動合併並去重複</div>
+          <label class="field-label" for="bccColSelect">密件副本 Email (BCC)</label>
+          <select id="bccColSelect"></select>
         </div>
         <div>
-          <label class="field-label" for="filenameTemplate">檔名範本 (.eml)</label>
-          <input type="text" id="filenameTemplate" value="審查通知_{{委員姓名}}_{{業者名稱}}.eml">
-          <div class="field-hint">自動過濾 Windows 不合法字元</div>
+          <label class="field-label" for="nameColSelect">檔名識別欄位（用於 .eml 檔名）</label>
+          <select id="nameColSelect"></select>
+        </div>
+      </div>
+
+      <!-- 固定額外副本 & 固定額外密件副本 -->
+      <div class="grid-2" style="margin-top: 14px;">
+        <div>
+          <label class="field-label" for="fixedCcInput">固定額外副本 (CC)（選填）</label>
+          <input type="text" id="fixedCcInput" placeholder="例如：supervisor@example.com; team@example.com" />
+          <div class="field-hint">支援逗號或分號分隔多組 Email，與資料表 CC 自動合併去重複</div>
+        </div>
+        <div>
+          <label class="field-label" for="fixedBccInput">固定額外密件副本 (BCC)（選填）</label>
+          <input type="text" id="fixedBccInput" placeholder="例如：archive@example.com; audit@example.com" />
+          <div class="field-hint">支援逗號或分號分隔多組 Email，與資料表 BCC 自動合併去重複</div>
+        </div>
+      </div>
+
+      <!-- {{明細表格}} 欄位設定面板 -->
+      <div class="sub-panel">
+        <div class="sub-panel-header">
+          <span class="sub-panel-title"><code>{{明細表格}}</code> 顯示欄位設定</span>
+          <label class="inline-check" for="includeIndexColCheckbox">
+            <input type="checkbox" id="includeIndexColCheckbox" checked />
+            <span>自動加入「項次」編號欄</span>
+          </label>
+        </div>
+        <div id="detailColCheckboxes" class="col-checkboxes"></div>
+        <div class="field-hint" style="margin-top: 8px;">
+          勾選要展開於 <code>{{明細表格}}</code> 中的資料欄位（系統預設會自動勾選非 Email / 非姓名的產品明細欄位）。
         </div>
       </div>
     </section>
 
     <!-- =================================================================
-         步驟二：主旨與雙模式 HTML 內文編輯器（含表格支援）
+         步驟 3：主旨與 HTML 內文範本編輯器
          ================================================================= -->
-    <section class="card" aria-labelledby="step2-title">
+    <section class="card" aria-labelledby="step3-heading">
       <div class="step-header">
         <div class="step-title">
-          <span class="step-badge">2</span>
-          <h2 id="step2-title">設計主旨與 HTML 內文範本（支援表格）</h2>
+          <span class="step-num">3</span>
+          <h2 id="step3-heading">主旨與 HTML 內文範本編輯器</h2>
         </div>
       </div>
 
-      <!-- 動態變數標籤列 -->
-      <div class="chips-panel">
-        <div class="chips-header">
-          <span>點擊變數標籤，直接插入至目前游標位置（主旨、檔名、視覺編輯器或 HTML 原始碼皆可）：</span>
-          <span class="target-pill" id="activeTargetHint">目前游標目標：HTML 內文（視覺編輯）</span>
-        </div>
-        <div id="variableChips" class="chips-list"><button type="button" class="var-chip">{{委員姓名}}</button><button type="button" class="var-chip">{{email}}</button><button type="button" class="var-chip">{{副本email}}</button><button type="button" class="var-chip">{{業者名稱}}</button><button type="button" class="var-chip">{{產品名稱}}</button></div>
-      </div>
-
-      <!-- 主旨輸入框 -->
+      <!-- 主旨輸入與快捷變數列 -->
       <div>
-        <label class="field-label" for="subjectTemplate">信件主旨範本 (Subject)</label>
-        <input type="text" id="subjectTemplate" value="【審查通知】{{業者名稱}}「{{產品名稱}}」審查案件（{{委員姓名}} 委員）">
+        <label class="field-label" for="subjectInput">信件主旨範本 (Subject)</label>
+        <input
+          type="text"
+          id="subjectInput"
+          value="【審查通知】{{委員姓名}} 委員您好，敬請協助審查共 {{案件數}} 件產品"
+        />
+        <div class="chips-row" id="subjectVarChips"></div>
       </div>
 
-      <!-- 雙模式 HTML 內文編輯器 -->
+      <!-- 內文變數快捷插入列 -->
+      <div class="body-chips-box">
+        <div class="chips-row" style="margin-top: 0;" id="bodyVarChips"></div>
+      </div>
+
+      <!-- 雙模式 HTML 編輯器 -->
       <div class="editor-wrapper">
         <div class="editor-tabs-bar">
           <div class="mode-tabs" role="tablist">
-            <button type="button" class="mode-tab active" id="tabWysiwyg" role="tab" aria-selected="true">視覺編輯模式 (WYSIWYG)</button>
-            <button type="button" class="mode-tab" id="tabSource" role="tab" aria-selected="false">HTML 原始碼模式</button>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span class="table-context-badge" id="tableContextBadge">游標未在表格內</span>
-            <button type="button" class="btn btn-indigo-soft btn-sm" id="btnInsertSampleTable">
-              一鍵插入範例表格
+            <button type="button" class="mode-tab active" id="tabWysiwyg" role="tab" aria-selected="true">
+              視覺編輯模式 (WYSIWYG)
             </button>
+            <button type="button" class="mode-tab" id="tabSource" role="tab" aria-selected="false">
+              HTML 原始碼模式
+            </button>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
+            兩種模式雙向即時同步
           </div>
         </div>
 
-        <!-- 視覺編輯模式工具列 -->
+        <!-- WYSIWYG 工具列 -->
         <div class="editor-toolbar" id="wysiwygToolbar">
-          <!-- 文字樣式 -->
           <div class="toolbar-group">
             <button type="button" class="tb-btn" data-cmd="bold" title="粗體"><strong>B</strong></button>
             <button type="button" class="tb-btn" data-cmd="italic" title="斜體"><em>I</em></button>
             <button type="button" class="tb-btn" data-cmd="underline" title="底線"><u>U</u></button>
           </div>
-
-          <!-- 顏色與醒目提示 -->
           <div class="toolbar-group">
             <label class="color-picker-wrap" title="文字顏色">
               <span>字色</span>
-              <input type="color" id="foreColorPicker" value="#dc2626">
+              <input type="color" id="foreColorPicker" value="#dc2626" />
             </label>
-            <label class="color-picker-wrap" title="背景醒目提示">
+            <label class="color-picker-wrap" title="背景醒目提示色">
               <span>底色</span>
-              <input type="color" id="hiliteColorPicker" value="#fef08a">
+              <input type="color" id="hiliteColorPicker" value="#fef08a" />
             </label>
           </div>
-
-          <!-- 清單與對齊 -->
           <div class="toolbar-group">
-            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="項目符號">• 清單</button>
+            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="項目符號清單">• 清單</button>
             <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="編號清單">1. 編號</button>
+          </div>
+          <div class="toolbar-group">
             <button type="button" class="tb-btn" data-cmd="justifyLeft" title="靠左對齊">靠左</button>
             <button type="button" class="tb-btn" data-cmd="justifyCenter" title="置中對齊">置中</button>
             <button type="button" class="tb-btn" data-cmd="justifyRight" title="靠右對齊">靠右</button>
           </div>
-
-          <!-- 表格插入與快捷操作 -->
           <div class="toolbar-group">
-            <button type="button" class="tb-btn tb-accent" id="btnToggleTablePopover" title="自訂列數與欄數插入表格">
+            <button type="button" class="tb-btn tb-accent" id="btnOpenTableModal" title="插入自訂列數與欄數的表格">
               ＋ 插入表格
             </button>
-            <button type="button" class="tb-btn tb-table-op" id="btnAddRow" title="於目前儲存格下方新增一列">＋ 新增一列</button>
-            <button type="button" class="tb-btn tb-table-op" id="btnAddCol" title="於目前儲存格右側新增一欄">＋ 新增一欄</button>
-            <button type="button" class="tb-btn tb-table-op tb-table-del" id="btnDelRow" title="刪除游標所在的列">－ 刪除目前列</button>
-            <button type="button" class="tb-btn tb-table-op tb-table-del" id="btnDelTable" title="刪除整個表格">刪除表格</button>
-          </div>
-
-          <!-- 插入表格設定 Popover -->
-          <div class="table-popover" id="tablePopover" role="dialog" aria-label="插入表格設定">
-            <h4>插入 Outlook 相容表格</h4>
-            <div class="popover-grid">
-              <div>
-                <label class="field-label" for="tblRowsInput" style="font-size: 0.8rem;">列數 (Rows)</label>
-                <input type="number" id="tblRowsInput" min="1" max="20" value="3">
-              </div>
-              <div>
-                <label class="field-label" for="tblColsInput" style="font-size: 0.8rem;">欄數 (Cols)</label>
-                <input type="number" id="tblColsInput" min="1" max="10" value="2">
-              </div>
-            </div>
-            <label class="popover-check">
-              <input type="checkbox" id="tblHeaderCheck" checked="">
-              <span>包含標題列（淺灰底粗體表頭）</span>
-            </label>
-            <div class="popover-actions">
-              <button type="button" class="btn btn-secondary btn-sm" id="btnCancelTable">取消</button>
-              <button type="button" class="btn btn-primary btn-sm" id="btnConfirmInsertTable">插入表格</button>
-            </div>
+            <button type="button" class="tb-btn tb-indigo" id="btnQuickInsertDetailTable" title="於游標處插入 {{明細表格}}">
+              插入 {{明細表格}}
+            </button>
           </div>
         </div>
 
-        <!-- 視覺編輯區 (contenteditable) -->
-        <div id="wysiwygEditor" class="wysiwyg-area" contenteditable="true" spellcheck="false" aria-label="視覺化 HTML 內文編輯器"><p>{{委員姓名}} 委員 您好：</p><p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p><p><br></p><p><br></p><table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; font-size: 10.5pt;"><thead><tr><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{業者名稱}}</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{產品名稱}}</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{委員姓名}} 委員</td></tr></tbody></table><p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p><p>敬祝 順心<br>承辦單位 敬上</p></div>
+        <!-- 表格快捷操作列 -->
+        <div class="table-quick-bar" id="tableQuickBar">
+          <span class="table-quick-status" id="tableQuickStatus">表格快捷操作：將游標點進表格儲存格即可啟用</span>
+          <div class="table-quick-actions">
+            <button type="button" class="tb-op" id="btnAddRow" disabled>新增一列</button>
+            <button type="button" class="tb-op" id="btnAddCol" disabled>新增一欄</button>
+            <button type="button" class="tb-op danger" id="btnDelRow" disabled>刪除目前列</button>
+            <button type="button" class="tb-op danger" id="btnDelTable" disabled>刪除表格</button>
+          </div>
+        </div>
+
+        <!-- WYSIWYG 編輯區 -->
+        <div
+          id="wysiwygEditor"
+          class="wysiwyg-area"
+          contenteditable="true"
+          spellcheck="false"
+          aria-label="視覺化 HTML 內文編輯器"
+        ></div>
 
         <!-- HTML 原始碼編輯區 -->
-        <textarea id="htmlSourceEditor" class="source-area" spellcheck="false" aria-label="HTML 原始碼編輯器"></textarea>
-      </div>
-
-      <div class="checkbox-row">
-        <input type="checkbox" id="unsentCheckbox" checked="">
-        <label for="unsentCheckbox">啟用 Outlook 草稿模式（於檔頭加入 <code>X-Unsent: 1</code>，傳統版 Outlook 雙擊可直接編輯並寄出）</label>
+        <textarea
+          id="htmlSourceEditor"
+          class="source-area"
+          spellcheck="false"
+          aria-label="HTML 原始碼編輯器"
+        ></textarea>
       </div>
     </section>
 
     <!-- =================================================================
-         步驟三：即時渲染預覽與批次下載
+         步驟 4：即時渲染預覽與 .eml 下載
          ================================================================= -->
-    <section class="card" aria-labelledby="step3-title">
+    <section class="card" aria-labelledby="step4-heading">
       <div class="step-header">
         <div class="step-title">
-          <span class="step-badge">3</span>
-          <h2 id="step3-title">即時渲染預覽與下載草稿</h2>
+          <span class="step-num">4</span>
+          <h2 id="step4-heading">即時渲染預覽與 .eml 下載</h2>
         </div>
         <div class="step-actions">
-          <button type="button" class="btn btn-primary btn-lg" id="btnDownloadZip">
-            一鍵打包下載全部 (.zip)
-          </button>
+          <button type="button" class="btn btn-secondary" id="btnDownloadSingleTop">下載目前這封 .eml</button>
+          <button type="button" class="btn btn-primary" id="btnDownloadZipTop">一鍵打包下載全部 .eml (ZIP)</button>
         </div>
       </div>
 
-      <!-- 即時渲染預覽卡片 -->
-      <div class="live-preview-box" id="livePreviewBox">
-        <div class="live-preview-bar">
-          <div class="preview-switcher">
-            <button type="button" class="btn btn-secondary btn-sm" id="btnPrevRecord" title="上一筆" disabled="">◀</button>
-            <select id="previewRecordSelect" aria-label="選擇要預覽的資料筆數"><option value="0">第 1 筆：審查通知_陳志明_康健生醫股份有限公司</option><option value="1">第 2 筆：審查通知_林淑芬_永安醫療器材有限公司</option><option value="2">第 3 筆：審查通知_張家豪_台灣精準生技股份有限公司</option><option value="3">第 4 筆：審查通知_黃雅婷_瑞泰醫材科技股份有限公司</option><option value="4">第 5 筆：審查通知_吳建宏_博愛生技醫藥有限公司</option></select>
-            <button type="button" class="btn btn-secondary btn-sm" id="btnNextRecord" title="下一筆">▶</button>
-          </div>
-          <button type="button" class="btn btn-indigo-soft btn-sm" id="btnDownloadCurrentPreview">
-            下載此封 .eml
-          </button>
+      <!-- 預覽切換導覽列 -->
+      <div class="preview-nav-bar">
+        <div class="preview-nav-controls">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnPrevDraft">◀ 上一封</button>
+          <span class="counter-text" id="draftCounterText">第 0 / 0 封</span>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnNextDraft">下一封 ▶</button>
+          <select id="draftSelect" aria-label="選擇預覽草稿"></select>
         </div>
-        <div class="mail-meta-panel">
-          <div class="mail-meta-label">檔名：</div>
-          <div class="mail-meta-value cell-mono" id="pvFilename">審查通知_陳志明_康健生醫股份有限公司.eml</div>
-          <div class="mail-meta-label">收件者：</div>
-          <div class="mail-meta-value" id="pvTo">chihming.chen@example.com</div>
-          <div class="mail-meta-label">副本：</div>
-          <div class="mail-meta-value" id="pvCc">cc1@example.com</div>
-          <div class="mail-meta-label">主旨：</div>
-          <div class="mail-meta-value" id="pvSubject" style="font-weight: 700;">【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）</div>
-        </div>
-        <div class="live-preview-body" id="pvHtmlBody"><p>陳志明 委員 您好：</p><p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p><p><br></p><p><br></p><table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; font-size: 10.5pt;"><thead><tr><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th><th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">康健生醫股份有限公司</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">智慧型電子血壓計</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td><td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">陳志明 委員</td></tr></tbody></table><p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p><p>敬祝 順心<br>承辦單位 敬上</p></div>
+        <span class="pill-badge pill-amber" id="draftItemCountBadge">含 0 件</span>
       </div>
 
-      <!-- 全部草稿列表 -->
-      <div class="table-wrap">
-        <table class="list-table">
-          <thead>
-            <tr>
-              <th style="width: 56px;">序號</th>
-              <th>收件者 (To)</th>
-              <th>副本 (CC)</th>
-              <th>主旨</th>
-              <th>檔名</th>
-              <th style="width: 162px;">操作</th>
-            </tr>
-          </thead>
-          <tbody id="draftListBody"><tr data-row-idx="0" class="active-row"><td>1</td><td class="cell-truncate" title="chihming.chen@example.com">chihming.chen@example.com</td><td class="cell-truncate" title="cc1@example.com">cc1@example.com</td><td class="cell-truncate" title="【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）">【審查通知】康健生醫股份有限公司「智慧型電子血壓計」審查案件（陳志明 委員）</td><td class="cell-truncate cell-mono" title="審查通知_陳志明_康健生醫股份有限公司.eml">審查通知_陳志明_康健生醫股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="0">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="0">下載 .eml</button></div></td></tr><tr data-row-idx="1"><td>2</td><td class="cell-truncate" title="shufen.lin@example.com">shufen.lin@example.com</td><td class="cell-truncate" title="cc1@example.com, cc2@example.com">cc1@example.com, cc2@example.com</td><td class="cell-truncate" title="【審查通知】永安醫療器材有限公司「拋棄式無菌手術手套」審查案件（林淑芬 委員）">【審查通知】永安醫療器材有限公司「拋棄式無菌手術手套」審查案件（林淑芬 委員）</td><td class="cell-truncate cell-mono" title="審查通知_林淑芬_永安醫療器材有限公司.eml">審查通知_林淑芬_永安醫療器材有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="1">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="1">下載 .eml</button></div></td></tr><tr data-row-idx="2"><td>3</td><td class="cell-truncate" title="chiahao.chang@example.com">chiahao.chang@example.com</td><td class="cell-truncate" title=""><span style="color: var(--text-muted);">—</span></td><td class="cell-truncate" title="【審查通知】台灣精準生技股份有限公司「居家用血糖監測系統」審查案件（張家豪 委員）">【審查通知】台灣精準生技股份有限公司「居家用血糖監測系統」審查案件（張家豪 委員）</td><td class="cell-truncate cell-mono" title="審查通知_張家豪_台灣精準生技股份有限公司.eml">審查通知_張家豪_台灣精準生技股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="2">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="2">下載 .eml</button></div></td></tr><tr data-row-idx="3"><td>4</td><td class="cell-truncate" title="yating.huang@example.com">yating.huang@example.com</td><td class="cell-truncate" title="cc2@example.com">cc2@example.com</td><td class="cell-truncate" title="【審查通知】瑞泰醫材科技股份有限公司「紅外線額溫槍」審查案件（黃雅婷 委員）">【審查通知】瑞泰醫材科技股份有限公司「紅外線額溫槍」審查案件（黃雅婷 委員）</td><td class="cell-truncate cell-mono" title="審查通知_黃雅婷_瑞泰醫材科技股份有限公司.eml">審查通知_黃雅婷_瑞泰醫材科技股份有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="3">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="3">下載 .eml</button></div></td></tr><tr data-row-idx="4"><td>5</td><td class="cell-truncate" title="chienhung.wu@example.com">chienhung.wu@example.com</td><td class="cell-truncate" title="cc1@example.com">cc1@example.com</td><td class="cell-truncate" title="【審查通知】博愛生技醫藥有限公司「醫用級矽膠傷口敷料」審查案件（吳建宏 委員）">【審查通知】博愛生技醫藥有限公司「醫用級矽膠傷口敷料」審查案件（吳建宏 委員）</td><td class="cell-truncate cell-mono" title="審查通知_吳建宏_博愛生技醫藥有限公司.eml">審查通知_吳建宏_博愛生技醫藥有限公司.eml</td><td><div class="row-actions"><button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="4">預覽</button><button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="4">下載 .eml</button></div></td></tr></tbody>
-        </table>
+      <!-- 預覽卡片 -->
+      <div class="preview-card">
+        <div class="mail-header-grid">
+          <div class="mh-label">收件者 (To)：</div>
+          <div class="mh-val" id="pvTo">—</div>
+
+          <div class="mh-label" id="pvCcLabel">副本 (CC)：</div>
+          <div class="mh-val" id="pvCc">—</div>
+
+          <div class="mh-label" id="pvBccLabel">密件副本 (BCC)：</div>
+          <div class="mh-val" id="pvBcc">—</div>
+
+          <div class="mh-label">主旨 (Subject)：</div>
+          <div class="mh-val" id="pvSubject" style="font-weight: 800;">—</div>
+
+          <div class="mh-label">預計檔名：</div>
+          <div class="mh-val mono" id="pvFilename">—</div>
+        </div>
+        <div class="mail-body-preview" id="pvBodyHtml"></div>
+      </div>
+
+      <!-- 底部下載按鈕列 -->
+      <div class="download-actions-bar">
+        <button type="button" class="btn btn-secondary btn-lg" id="btnDownloadSingleBottom">
+          下載目前這封 .eml
+        </button>
+        <button type="button" class="btn btn-emerald btn-lg" id="btnDownloadZipBottom">
+          一鍵打包下載全部 .eml (ZIP)
+        </button>
       </div>
 
       <div class="tip-box">
-        <strong>Outlook 開啟與相容性提示：</strong><br>
-        1. 本工具產生的 <code>.eml</code> 已內建 <code>X-Unsent: 1</code> 並採用 UTF-8 Base64 編碼與行內樣式表格，解壓縮後於<strong>傳統版 Outlook (Classic Outlook)</strong> 雙擊即可直接進入可編輯的草稿視窗。<br>
-        2. 若 Windows 雙擊 <code>.eml</code> 未以 Outlook 開啟，請對檔案按右鍵 &gt;「開啟檔案」&gt;「選擇其他應用程式」&gt; 選擇 <strong>Outlook</strong> 並勾選「一律使用此應用程式開啟 .eml 檔案」。
+        <strong>Outlook 草稿開啟說明：</strong><br />
+        • 本工具產生的每個 <code>.eml</code> 檔皆內建 <code>X-Unsent: 1</code>、RFC 2047 UTF-8 Base64 主旨與嚴格 CRLF 換行，於<strong>傳統版 Outlook (Classic Outlook)</strong> 雙擊即可直接進入草稿編輯視窗並檢視 <code>To / Cc / Bcc</code> 與表格。<br />
+        • ZIP 壓縮檔採用 UTF-8 檔名標記（<code>0x0800</code>），於 Windows 與 macOS 解壓縮中文檔名皆不會亂碼。
       </div>
     </section>
+  </div>
+
+  <!-- 插入表格設定 Modal -->
+  <div class="modal-backdrop" id="tableModal" role="dialog" aria-modal="true" aria-labelledby="tableModalTitle">
+    <div class="modal-dialog">
+      <h3 id="tableModalTitle">插入 Outlook 相容表格</h3>
+      <div class="grid-2">
+        <div>
+          <label class="field-label" for="modalRowsInput">列數 (Rows)</label>
+          <input type="number" id="modalRowsInput" min="1" max="20" value="3" />
+        </div>
+        <div>
+          <label class="field-label" for="modalColsInput">欄數 (Cols)</label>
+          <input type="number" id="modalColsInput" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div style="margin-top: 12px;">
+        <label class="inline-check" for="modalHeaderCheck">
+          <input type="checkbox" id="modalHeaderCheck" checked />
+          <span>包含標題列（淺灰底粗體表頭）</span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnModalCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="btnModalConfirm">插入表格</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast 通知容器 -->
@@ -1199,113 +1423,108 @@
       'use strict';
 
       /* =====================================================================
-         預設範例資料（TSV 格式）與預設 HTML 範本（含 Outlook 相容表格）
+         1. 預設範例資料（6 筆資料、4 位不重複收件者，展示合併與 BCC 功能）
          ===================================================================== */
       const SAMPLE_TSV = [
-        '委員姓名\temail\t副本email\t業者名稱\t產品名稱',
-        '陳志明\tchihming.chen@example.com\tcc1@example.com\t康健生醫股份有限公司\t智慧型電子血壓計',
-        '林淑芬\tshufen.lin@example.com\tcc1@example.com; cc2@example.com\t永安醫療器材有限公司\t拋棄式無菌手術手套',
-        '張家豪\tchiahao.chang@example.com\t\t台灣精準生技股份有限公司\t居家用血糖監測系統',
-        '黃雅婷\tyating.huang@example.com\tcc2@example.com\t瑞泰醫材科技股份有限公司\t紅外線額溫槍',
-        '吳建宏\tchienhung.wu@example.com\tcc1@example.com\t博愛生技醫藥有限公司\t醫用級矽膠傷口敷料'
+        '委員姓名\temail\t副本email\t密件副本email\t業者名稱\t產品名稱',
+        '陳志明\tchihming.chen@example.com\tcc1@example.com\tbcc_admin@example.com\t康健生醫股份有限公司\t智慧型電子血壓計',
+        '陳志明\tchihming.chen@example.com\tcc2@example.com\tbcc_admin@example.com\t台灣精準生技股份有限公司\t居家用血糖監測系統',
+        '林淑芬\tshufen.lin@example.com\tcc1@example.com\tbcc_audit@example.com\t永安醫療器材有限公司\t拋棄式無菌手術手套',
+        '林淑芬\tshufen.lin@example.com\tcc1@example.com\t\t博愛生技醫藥有限公司\t醫用級矽膠傷口敷料',
+        '張家豪\tchiahao.chang@example.com\t\tbcc_admin@example.com\t瑞泰醫材科技股份有限公司\t紅外線額溫槍',
+        '黃雅婷\tyating.huang@example.com\tcc3@example.com\t\t聯安醫療科技股份有限公司\t連續式血氧濃度計'
       ].join('\n');
-
-      const SAMPLE_CASE_TABLE_HTML =
-        '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 10.5pt;">' +
-          '<thead>' +
-            '<tr>' +
-              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a; width: 28%;">審查項目</th>' +
-              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">案件詳細資訊</th>' +
-            '</tr>' +
-          '</thead>' +
-          '<tbody>' +
-            '<tr>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">申請業者名稱</td>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{業者名稱}}</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查產品名稱</td>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{產品名稱}}</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; font-weight: bold; color: #334155;">審查委員</td>' +
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">{{委員姓名}} 委員</td>' +
-            '</tr>' +
-          '</tbody>' +
-        '</table>';
 
       const DEFAULT_BODY_HTML =
         '<p>{{委員姓名}} 委員 您好：</p>' +
-        '<p>謹通知您協助審查下列醫療器材申請案件，案件摘要資訊如下表所示：</p>' +
-        SAMPLE_CASE_TABLE_HTML +
-        '<p>請委員撥冗檢視相關技術文件，並於期限內惠賜審查意見。若有任何疑問或需補充資料，歡迎隨時與承辦人員聯繫。</p>' +
-        '<p>敬祝 順心<br>承辦單位 敬上</p>';
+        '<p>敬請協助審查以下共 <strong>{{案件數}}</strong> 件醫療器材案件，明細如下表：</p>' +
+        '<p>{{明細表格}}</p>' +
+        '<p>如有任何疑問，請隨時與本單位聯繫，謝謝您的協助！</p>';
 
       /* =====================================================================
-         應用程式狀態與 DOM 參照
+         2. 應用程式狀態與 DOM 參照
          ===================================================================== */
       const state = {
         headers: [],
         rows: [],
-        renderedEmails: [],
+        selectedDetailCols: new Set(),
+        detailColsInitializedForHeaders: '',
+        drafts: [],
+        currentDraftIndex: 0,
         editorMode: 'wysiwyg', // 'wysiwyg' | 'source'
-        activeTarget: 'wysiwyg', // 'subject' | 'filename' | 'wysiwyg' | 'source'
-        savedRange: null,
-        selectedPreviewIndex: 0
+        savedRange: null
       };
 
       const els = {
         excelInput: document.getElementById('excelInput'),
         btnLoadSample: document.getElementById('btnLoadSample'),
         btnClearData: document.getElementById('btnClearData'),
-        parseStatus: document.getElementById('parseStatus'),
-        parsedCompactWrap: document.getElementById('parsedCompactWrap'),
-        parsedCompactHead: document.getElementById('parsedCompactHead'),
-        parsedCompactBody: document.getElementById('parsedCompactBody'),
-        toColumnSelect: document.getElementById('toColumnSelect'),
-        ccColumnSelect: document.getElementById('ccColumnSelect'),
+        parseStatusText: document.getElementById('parseStatusText'),
+        badgeTotalRows: document.getElementById('badgeTotalRows'),
+        badgeUniqueRecipients: document.getElementById('badgeUniqueRecipients'),
+        parsedTableWrap: document.getElementById('parsedTableWrap'),
+        parsedTableHead: document.getElementById('parsedTableHead'),
+        parsedTableBody: document.getElementById('parsedTableBody'),
+
+        mergeModeCheckbox: document.getElementById('mergeModeCheckbox'),
+        mergeStatusBadge: document.getElementById('mergeStatusBadge'),
+        toColSelect: document.getElementById('toColSelect'),
+        ccColSelect: document.getElementById('ccColSelect'),
+        bccColSelect: document.getElementById('bccColSelect'),
+        nameColSelect: document.getElementById('nameColSelect'),
         fixedCcInput: document.getElementById('fixedCcInput'),
-        filenameTemplate: document.getElementById('filenameTemplate'),
-        variableChips: document.getElementById('variableChips'),
-        activeTargetHint: document.getElementById('activeTargetHint'),
-        subjectTemplate: document.getElementById('subjectTemplate'),
+        fixedBccInput: document.getElementById('fixedBccInput'),
+        includeIndexColCheckbox: document.getElementById('includeIndexColCheckbox'),
+        detailColCheckboxes: document.getElementById('detailColCheckboxes'),
+
+        subjectInput: document.getElementById('subjectInput'),
+        subjectVarChips: document.getElementById('subjectVarChips'),
+        bodyVarChips: document.getElementById('bodyVarChips'),
         tabWysiwyg: document.getElementById('tabWysiwyg'),
         tabSource: document.getElementById('tabSource'),
         wysiwygToolbar: document.getElementById('wysiwygToolbar'),
+        tableQuickBar: document.getElementById('tableQuickBar'),
+        tableQuickStatus: document.getElementById('tableQuickStatus'),
         wysiwygEditor: document.getElementById('wysiwygEditor'),
         htmlSourceEditor: document.getElementById('htmlSourceEditor'),
-        tableContextBadge: document.getElementById('tableContextBadge'),
-        btnInsertSampleTable: document.getElementById('btnInsertSampleTable'),
         foreColorPicker: document.getElementById('foreColorPicker'),
         hiliteColorPicker: document.getElementById('hiliteColorPicker'),
-        btnToggleTablePopover: document.getElementById('btnToggleTablePopover'),
-        tablePopover: document.getElementById('tablePopover'),
-        tblRowsInput: document.getElementById('tblRowsInput'),
-        tblColsInput: document.getElementById('tblColsInput'),
-        tblHeaderCheck: document.getElementById('tblHeaderCheck'),
-        btnCancelTable: document.getElementById('btnCancelTable'),
-        btnConfirmInsertTable: document.getElementById('btnConfirmInsertTable'),
+        btnOpenTableModal: document.getElementById('btnOpenTableModal'),
+        btnQuickInsertDetailTable: document.getElementById('btnQuickInsertDetailTable'),
         btnAddRow: document.getElementById('btnAddRow'),
         btnAddCol: document.getElementById('btnAddCol'),
         btnDelRow: document.getElementById('btnDelRow'),
         btnDelTable: document.getElementById('btnDelTable'),
-        unsentCheckbox: document.getElementById('unsentCheckbox'),
-        btnDownloadZip: document.getElementById('btnDownloadZip'),
-        previewRecordSelect: document.getElementById('previewRecordSelect'),
-        btnPrevRecord: document.getElementById('btnPrevRecord'),
-        btnNextRecord: document.getElementById('btnNextRecord'),
-        btnDownloadCurrentPreview: document.getElementById('btnDownloadCurrentPreview'),
-        pvFilename: document.getElementById('pvFilename'),
+
+        btnPrevDraft: document.getElementById('btnPrevDraft'),
+        btnNextDraft: document.getElementById('btnNextDraft'),
+        draftCounterText: document.getElementById('draftCounterText'),
+        draftSelect: document.getElementById('draftSelect'),
+        draftItemCountBadge: document.getElementById('draftItemCountBadge'),
         pvTo: document.getElementById('pvTo'),
+        pvCcLabel: document.getElementById('pvCcLabel'),
         pvCc: document.getElementById('pvCc'),
+        pvBccLabel: document.getElementById('pvBccLabel'),
+        pvBcc: document.getElementById('pvBcc'),
         pvSubject: document.getElementById('pvSubject'),
-        pvHtmlBody: document.getElementById('pvHtmlBody'),
-        draftListBody: document.getElementById('draftListBody'),
+        pvFilename: document.getElementById('pvFilename'),
+        pvBodyHtml: document.getElementById('pvBodyHtml'),
+        btnDownloadSingleTop: document.getElementById('btnDownloadSingleTop'),
+        btnDownloadZipTop: document.getElementById('btnDownloadZipTop'),
+        btnDownloadSingleBottom: document.getElementById('btnDownloadSingleBottom'),
+        btnDownloadZipBottom: document.getElementById('btnDownloadZipBottom'),
+
+        tableModal: document.getElementById('tableModal'),
+        modalRowsInput: document.getElementById('modalRowsInput'),
+        modalColsInput: document.getElementById('modalColsInput'),
+        modalHeaderCheck: document.getElementById('modalHeaderCheck'),
+        btnModalCancel: document.getElementById('btnModalCancel'),
+        btnModalConfirm: document.getElementById('btnModalConfirm'),
         toastContainer: document.getElementById('toastContainer')
       };
 
       /* =====================================================================
-         基礎工具函式
+         3. 通用輔助函式
          ===================================================================== */
       function showToast(msg) {
         const div = document.createElement('div');
@@ -1320,12 +1539,43 @@
       }
 
       function escapeHtml(str) {
-        return String(str || '')
+        return String(str == null ? '' : str)
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
+      }
+
+      /**
+       * 分割並去重複 Email 清單（不區分大小寫，支援逗號、分號與全形標點）
+       */
+      function normalizeEmailList(rawValues) {
+        const seen = new Set();
+        const result = [];
+        rawValues.forEach((raw) => {
+          if (!raw) return;
+          String(raw)
+            .split(/[;,，；\n]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((email) => {
+              const lower = email.toLowerCase();
+              if (!seen.has(lower)) {
+                seen.add(lower);
+                result.push(email);
+              }
+            });
+        });
+        return result.join(', ');
+      }
+
+      function sanitizeFilenamePart(str) {
+        return String(str == null ? '' : str)
+          .replace(/[\\/:*?"<>|\r\n\t]/g, '_')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/^\.+|\.+$/g, '');
       }
 
       function uint8ToBase64(bytes) {
@@ -1348,7 +1598,7 @@
       }
 
       /**
-       * RFC 2047 UTF-8 Base64 主旨編碼（依字元切塊，不截斷多字節中文）
+       * RFC 2047 UTF-8 Base64 主旨編碼（依字元邊界切塊，確保中文永不截斷亂碼）
        */
       function encodeRfc2047Subject(subject) {
         if (!subject) return '';
@@ -1356,20 +1606,20 @@
           return subject;
         }
         const encoder = new TextEncoder();
-        const maxBytes = 42;
+        const maxChunkBytes = 42;
         const chunks = [];
         let curStr = '';
         let curBytes = 0;
 
         for (const ch of subject) {
-          const len = encoder.encode(ch).length;
-          if (curBytes + len > maxBytes && curStr.length > 0) {
+          const charLen = encoder.encode(ch).length;
+          if (curBytes + charLen > maxChunkBytes && curStr.length > 0) {
             chunks.push('=?UTF-8?B?' + uint8ToBase64(encoder.encode(curStr)) + '?=');
             curStr = ch;
-            curBytes = len;
+            curBytes = charLen;
           } else {
             curStr += ch;
-            curBytes += len;
+            curBytes += charLen;
           }
         }
         if (curStr.length > 0) {
@@ -1378,39 +1628,8 @@
         return chunks.join('\r\n ');
       }
 
-      function normalizeEmailList(values) {
-        const seen = new Set();
-        const out = [];
-        values.forEach((raw) => {
-          if (!raw) return;
-          String(raw)
-            .split(/[;,，；\n]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .forEach((addr) => {
-              const key = addr.toLowerCase();
-              if (!seen.has(key)) {
-                seen.add(key);
-                out.push(addr);
-              }
-            });
-        });
-        return out.join(', ');
-      }
-
-      function sanitizeFilename(name, idx) {
-        let cleaned = String(name || '')
-          .replace(/[\\/:*?"<>|\r\n\t]/g, '_')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .replace(/\.+$/, '');
-        if (!cleaned) cleaned = '草稿_' + (idx + 1);
-        if (!cleaned.toLowerCase().endsWith('.eml')) cleaned += '.eml';
-        return cleaned;
-      }
-
       /* =====================================================================
-         TSV / CSV 解析器（支援雙引號與儲存格內換行）
+         4. TSV / CSV 資料解析器
          ===================================================================== */
       function parseDelimitedText(rawText) {
         const text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
@@ -1474,9 +1693,139 @@
       }
 
       /* =====================================================================
-         WYSIWYG 選取範圍追蹤、格式化與表格編輯引擎
+         5. 欄位對應與 {{明細表格}} 欄位設定
          ===================================================================== */
-      function getCurrentBodyHtml() {
+      function populateSelect(selectEl, headers, includeNoneOption) {
+        selectEl.innerHTML = '';
+        if (includeNoneOption) {
+          const noneOpt = document.createElement('option');
+          noneOpt.value = '';
+          noneOpt.textContent = '不使用';
+          selectEl.appendChild(noneOpt);
+        }
+        headers.forEach((h) => {
+          const opt = document.createElement('option');
+          opt.value = h;
+          opt.textContent = h;
+          selectEl.appendChild(opt);
+        });
+      }
+
+      function autoDetectColumnMappings(headers) {
+        const prevTo = els.toColSelect.value;
+        const prevCc = els.ccColSelect.value;
+        const prevBcc = els.bccColSelect.value;
+        const prevName = els.nameColSelect.value;
+
+        populateSelect(els.toColSelect, headers, false);
+        populateSelect(els.ccColSelect, headers, true);
+        populateSelect(els.bccColSelect, headers, true);
+        populateSelect(els.nameColSelect, headers, true);
+
+        if (headers.length === 0) {
+          els.toColSelect.innerHTML = '<option value="">-- 請先貼上資料 --</option>';
+          return;
+        }
+
+        // 收件者 To（排除副本/CC/密件/BCC）
+        if (prevTo && headers.includes(prevTo)) {
+          els.toColSelect.value = prevTo;
+        } else {
+          const matchTo =
+            headers.find((h) => /^e-?mail$/i.test(h)) ||
+            headers.find((h) => /(email|信箱|收件|^to$)/i.test(h) && !/(副本|cc|密件|bcc)/i.test(h)) ||
+            headers[0];
+          els.toColSelect.value = matchTo;
+        }
+
+        // 密件副本 BCC
+        if (prevBcc && headers.includes(prevBcc)) {
+          els.bccColSelect.value = prevBcc;
+        } else {
+          const matchBcc = headers.find((h) => /(密件副本|密件|^bcc$|bcc)/i.test(h)) || '';
+          els.bccColSelect.value = matchBcc;
+        }
+
+        // 副本 CC（排除密件/BCC）
+        if (prevCc && headers.includes(prevCc)) {
+          els.ccColSelect.value = prevCc;
+        } else {
+          const matchCc =
+            headers.find((h) => /(副本|^cc$|cc)/i.test(h) && !/(密件|bcc)/i.test(h)) || '';
+          els.ccColSelect.value = matchCc;
+        }
+
+        // 檔名識別欄位（委員姓名 / 姓名 / name）
+        if (prevName && headers.includes(prevName)) {
+          els.nameColSelect.value = prevName;
+        } else {
+          const matchName =
+            headers.find((h) => /(委員姓名|姓名|收件人|name)/i.test(h)) || headers[0];
+          els.nameColSelect.value = matchName;
+        }
+      }
+
+      function initOrRenderDetailColCheckboxes(headers) {
+        const headerSig = headers.join('\u0001');
+        if (state.detailColsInitializedForHeaders !== headerSig) {
+          state.detailColsInitializedForHeaders = headerSig;
+          state.selectedDetailCols.clear();
+
+          const mappedMeta = new Set([
+            els.toColSelect.value,
+            els.ccColSelect.value,
+            els.bccColSelect.value,
+            els.nameColSelect.value
+          ].filter(Boolean));
+
+          // 預設自動勾選非收件人/副本/密件副本/姓名之內容明細欄位（如業者名稱、產品名稱）
+          headers.forEach((h) => {
+            if (!mappedMeta.has(h)) {
+              state.selectedDetailCols.add(h);
+            }
+          });
+          // 若全部欄位都被對應完，至少勾選所有欄位避免空白表格
+          if (state.selectedDetailCols.size === 0) {
+            headers.forEach((h) => state.selectedDetailCols.add(h));
+          }
+        }
+
+        els.detailColCheckboxes.innerHTML = '';
+        if (headers.length === 0) {
+          els.detailColCheckboxes.innerHTML =
+            '<span style="font-size:0.83rem;color:var(--text-muted);">貼上資料後即可勾選要顯示於明細表格的欄位。</span>';
+          return;
+        }
+
+        headers.forEach((h) => {
+          const isChecked = state.selectedDetailCols.has(h);
+          const lbl = document.createElement('label');
+          lbl.className = 'col-check-chip' + (isChecked ? ' checked' : '');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = isChecked;
+          cb.addEventListener('change', () => {
+            if (cb.checked) {
+              state.selectedDetailCols.add(h);
+              lbl.classList.add('checked');
+            } else {
+              state.selectedDetailCols.delete(h);
+              lbl.classList.remove('checked');
+            }
+            rebuildDraftsAndPreview();
+          });
+          const span = document.createElement('span');
+          span.textContent = h;
+          lbl.appendChild(cb);
+          lbl.appendChild(span);
+          els.detailColCheckboxes.appendChild(lbl);
+        });
+      }
+
+      /* =====================================================================
+         6. 變數標籤列與雙模式 HTML 編輯器（WYSIWYG <-> HTML 原始碼）
+         ===================================================================== */
+      function getCurrentBodyTemplateHtml() {
         return state.editorMode === 'wysiwyg'
           ? els.wysiwygEditor.innerHTML
           : els.htmlSourceEditor.value;
@@ -1490,13 +1839,22 @@
         els.wysiwygEditor.innerHTML = els.htmlSourceEditor.value;
       }
 
+      function insertTextAtInputCursor(inputEl, text) {
+        const start = inputEl.selectionStart != null ? inputEl.selectionStart : inputEl.value.length;
+        const end = inputEl.selectionEnd != null ? inputEl.selectionEnd : inputEl.value.length;
+        inputEl.value = inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
+        const pos = start + text.length;
+        inputEl.focus();
+        inputEl.setSelectionRange(pos, pos);
+      }
+
       function saveWysiwygSelection() {
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0) return;
         const range = sel.getRangeAt(0);
         if (els.wysiwygEditor.contains(range.commonAncestorContainer)) {
           state.savedRange = range.cloneRange();
-          updateTableContextIndicator();
+          updateTableQuickBarState();
         }
       }
 
@@ -1515,71 +1873,31 @@
         }
       }
 
-      function findActiveTableCell() {
-        let node = null;
+      function insertTokenIntoBodyEditor(token) {
+        if (state.editorMode === 'source') {
+          insertTextAtInputCursor(els.htmlSourceEditor, token);
+          syncToWysiwyg();
+          rebuildDraftsAndPreview();
+          return;
+        }
+        restoreWysiwygSelection();
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0 && els.wysiwygEditor.contains(sel.anchorNode)) {
-          node = sel.anchorNode;
-        } else if (state.savedRange && els.wysiwygEditor.contains(state.savedRange.commonAncestorContainer)) {
-          node = state.savedRange.commonAncestorContainer;
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const textNode = document.createTextNode(token);
+          range.insertNode(textNode);
+          range.setStartAfter(textNode);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          state.savedRange = range.cloneRange();
         }
-        if (!node) return null;
-        const el = node.nodeType === 1 ? node : node.parentElement;
-        if (!el) return null;
-        const cell = el.closest('td, th');
-        return cell && els.wysiwygEditor.contains(cell) ? cell : null;
+        syncToSource();
+        rebuildDraftsAndPreview();
       }
 
-      function updateTableContextIndicator() {
-        const cell = findActiveTableCell();
-        if (cell) {
-          els.tableContextBadge.textContent = '游標位於表格內（可使用表格操作）';
-          els.tableContextBadge.classList.add('inside');
-        } else {
-          els.tableContextBadge.textContent = '游標未在表格內';
-          els.tableContextBadge.classList.remove('inside');
-        }
-      }
-
-      function buildOutlookTableHtml(rowsCount, colsCount, includeHeader) {
-        const r = Math.max(1, Math.min(20, parseInt(rowsCount, 10) || 3));
-        const c = Math.max(1, Math.min(10, parseInt(colsCount, 10) || 2));
-
-        let html =
-          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 12px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 10.5pt;">';
-
-        let startRow = 0;
-        if (includeHeader) {
-          html += '<thead><tr>';
-          for (let j = 0; j < c; j++) {
-            html +=
-              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;">標題 ' +
-              (j + 1) +
-              '</th>';
-          }
-          html += '</tr></thead>';
-          startRow = 1;
-        }
-
-        html += '<tbody>';
-        const bodyRows = Math.max(1, includeHeader ? r - 1 : r);
-        for (let i = 0; i < bodyRows; i++) {
-          html += '<tr>';
-          for (let j = 0; j < c; j++) {
-            html +=
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;">內容 ' +
-              (i + 1) +
-              '-' +
-              (j + 1) +
-              '</td>';
-          }
-          html += '</tr>';
-        }
-        html += '</tbody></table><p><br></p>';
-        return html;
-      }
-
-      function insertHtmlAtWysiwygCursor(htmlString) {
+      function insertHtmlIntoWysiwyg(htmlString) {
         restoreWysiwygSelection();
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0) return;
@@ -1604,62 +1922,117 @@
           state.savedRange = newRange.cloneRange();
         }
         syncToSource();
-        updateAllPreviews();
-        updateTableContextIndicator();
+        rebuildDraftsAndPreview();
+        updateTableQuickBarState();
       }
 
-      function insertTextIntoInput(inputEl, text) {
-        const start = inputEl.selectionStart != null ? inputEl.selectionStart : inputEl.value.length;
-        const end = inputEl.selectionEnd != null ? inputEl.selectionEnd : inputEl.value.length;
-        inputEl.value = inputEl.value.slice(0, start) + text + inputEl.value.slice(end);
-        const pos = start + text.length;
-        inputEl.focus();
-        inputEl.setSelectionRange(pos, pos);
+      function renderVariableChips(headers) {
+        // 主旨變數列
+        els.subjectVarChips.innerHTML = '<span class="chips-label">點擊插入主旨：</span>';
+        const subjectTokens = headers.map((h) => ({ text: '{{' + h + '}}', special: false }));
+        subjectTokens.push({ text: '{{案件數}}', special: true });
+
+        subjectTokens.forEach((item) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'var-chip' + (item.special ? ' special' : '');
+          btn.textContent = item.text;
+          btn.addEventListener('mousedown', (e) => e.preventDefault());
+          btn.addEventListener('click', () => {
+            insertTextAtInputCursor(els.subjectInput, item.text);
+            rebuildDraftsAndPreview();
+          });
+          els.subjectVarChips.appendChild(btn);
+        });
+
+        // 內文變數列
+        els.bodyVarChips.innerHTML = '<span class="chips-label">點擊插入內文游標處：</span>';
+        const bodyTokens = headers.map((h) => ({ text: '{{' + h + '}}', special: false }));
+        bodyTokens.push({ text: '{{案件數}}', special: true });
+        bodyTokens.push({ text: '{{明細表格}}', special: true });
+
+        bodyTokens.forEach((item) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'var-chip' + (item.special ? ' special' : '');
+          btn.textContent = item.text;
+          btn.addEventListener('mousedown', (e) => e.preventDefault());
+          btn.addEventListener('click', () => insertTokenIntoBodyEditor(item.text));
+          els.bodyVarChips.appendChild(btn);
+        });
       }
 
-      function insertVariableToken(token) {
-        if (state.activeTarget === 'subject') {
-          insertTextIntoInput(els.subjectTemplate, token);
-          updateAllPreviews();
-        } else if (state.activeTarget === 'filename') {
-          insertTextIntoInput(els.filenameTemplate, token);
-          updateAllPreviews();
-        } else if (state.editorMode === 'source' || state.activeTarget === 'source') {
-          insertTextIntoInput(els.htmlSourceEditor, token);
-          syncToWysiwyg();
-          updateAllPreviews();
-        } else {
-          restoreWysiwygSelection();
-          const sel = window.getSelection();
-          if (sel && sel.rangeCount > 0) {
-            const range = sel.getRangeAt(0);
-            range.deleteContents();
-            const textNode = document.createTextNode(token);
-            range.insertNode(textNode);
-            range.setStartAfter(textNode);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            state.savedRange = range.cloneRange();
-          }
-          syncToSource();
-          updateAllPreviews();
+      function findActiveTableCell() {
+        let node = null;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && els.wysiwygEditor.contains(sel.anchorNode)) {
+          node = sel.anchorNode;
+        } else if (state.savedRange && els.wysiwygEditor.contains(state.savedRange.commonAncestorContainer)) {
+          node = state.savedRange.commonAncestorContainer;
         }
+        if (!node) return null;
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (!el) return null;
+        const cell = el.closest('td, th');
+        return cell && els.wysiwygEditor.contains(cell) ? cell : null;
       }
 
-      /* 表格快捷操作：新增列、新增欄、刪除列、刪除表格 */
+      function updateTableQuickBarState() {
+        const inside = Boolean(findActiveTableCell());
+        els.tableQuickBar.classList.toggle('inside', inside);
+        els.tableQuickStatus.textContent = inside
+          ? '游標位於表格內：可直接執行表格增刪操作'
+          : '表格快捷操作：將游標點進表格儲存格即可啟用';
+        [els.btnAddRow, els.btnAddCol, els.btnDelRow, els.btnDelTable].forEach((b) => {
+          b.disabled = !inside;
+        });
+      }
+
+      function buildCustomOutlookTableHtml(rowsCount, colsCount, includeHeader) {
+        const r = Math.max(1, Math.min(20, parseInt(rowsCount, 10) || 3));
+        const c = Math.max(1, Math.min(10, parseInt(colsCount, 10) || 3));
+
+        let html =
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">';
+
+        if (includeHeader) {
+          html += '<thead><tr>';
+          for (let j = 0; j < c; j++) {
+            html +=
+              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;">標題 ' +
+              (j + 1) +
+              '</th>';
+          }
+          html += '</tr></thead>';
+        }
+
+        html += '<tbody>';
+        const bodyRows = Math.max(1, includeHeader ? r - 1 : r);
+        for (let i = 0; i < bodyRows; i++) {
+          html += '<tr>';
+          for (let j = 0; j < c; j++) {
+            html +=
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;">內容 ' +
+              (i + 1) +
+              '-' +
+              (j + 1) +
+              '</td>';
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table><p><br></p>';
+        return html;
+      }
+
       function tableAddRow() {
         const cell = findActiveTableCell();
-        if (!cell) {
-          showToast('請先將游標點進表格內的任一儲存格');
-          return;
-        }
+        if (!cell) return;
         const tr = cell.closest('tr');
         const colCount = tr.children.length;
         const newTr = document.createElement('tr');
         for (let i = 0; i < colCount; i++) {
           const td = document.createElement('td');
-          td.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;');
+          td.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;');
           td.innerHTML = '&nbsp;';
           newTr.appendChild(td);
         }
@@ -1675,121 +2048,397 @@
           tr.parentElement.insertBefore(newTr, tr.nextSibling);
         }
         syncToSource();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
         showToast('已新增一列');
       }
 
       function tableAddCol() {
         const cell = findActiveTableCell();
-        if (!cell) {
-          showToast('請先將游標點進表格內的任一儲存格');
-          return;
-        }
+        if (!cell) return;
         const tr = cell.closest('tr');
         const table = cell.closest('table');
         const colIdx = Array.from(tr.children).indexOf(cell);
 
-        const allRows = table.querySelectorAll('tr');
-        allRows.forEach((row) => {
+        table.querySelectorAll('tr').forEach((row) => {
           const isHeaderRow = row.querySelector('th') !== null;
           const newCell = document.createElement(isHeaderRow ? 'th' : 'td');
           if (isHeaderRow) {
             newCell.setAttribute(
               'style',
-              'background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-weight: bold; color: #0f172a;'
+              'background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;'
             );
             newCell.textContent = '新標題';
           } else {
-            newCell.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 12px; color: #1e293b;');
+            newCell.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;');
             newCell.innerHTML = '&nbsp;';
           }
           const refCell = row.children[colIdx + 1] || null;
           row.insertBefore(newCell, refCell);
         });
-
         syncToSource();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
         showToast('已新增一欄');
       }
 
       function tableDeleteRow() {
         const cell = findActiveTableCell();
-        if (!cell) {
-          showToast('請先將游標點進表格內的任一儲存格');
-          return;
-        }
+        if (!cell) return;
         const tr = cell.closest('tr');
         const table = cell.closest('table');
         if (table.querySelectorAll('tr').length <= 1) {
           table.remove();
-          showToast('已移除最後一列與表格');
+          showToast('已移除表格');
         } else {
           tr.remove();
           showToast('已刪除目前列');
         }
         syncToSource();
-        updateAllPreviews();
-        updateTableContextIndicator();
+        rebuildDraftsAndPreview();
+        updateTableQuickBarState();
       }
 
       function tableDeleteWhole() {
         const cell = findActiveTableCell();
-        if (!cell) {
-          showToast('請先將游標點進表格內的任一儲存格');
-          return;
-        }
+        if (!cell) return;
         const table = cell.closest('table');
         if (table) table.remove();
         syncToSource();
-        updateAllPreviews();
-        updateTableContextIndicator();
+        rebuildDraftsAndPreview();
+        updateTableQuickBarState();
         showToast('已刪除整個表格');
       }
 
-      /* =====================================================================
-         EML 產生與純前端零依賴 ZIP 打包（STORE + CRC32 + UTF-8 0x0800）
-         ===================================================================== */
-      function buildEmlContent(emailObj, enableUnsent) {
-        const lines = [];
-        if (enableUnsent) {
-          lines.push('X-Unsent: 1');
+      function setEditorMode(mode) {
+        if (state.editorMode === mode) return;
+        if (mode === 'source') {
+          syncToSource();
+          els.wysiwygToolbar.style.display = 'none';
+          els.tableQuickBar.style.display = 'none';
+          els.wysiwygEditor.style.display = 'none';
+          els.htmlSourceEditor.style.display = 'block';
+          els.tabWysiwyg.classList.remove('active');
+          els.tabSource.classList.add('active');
+          els.tabWysiwyg.setAttribute('aria-selected', 'false');
+          els.tabSource.setAttribute('aria-selected', 'true');
+          state.editorMode = 'source';
+        } else {
+          syncToWysiwyg();
+          els.htmlSourceEditor.style.display = 'none';
+          els.wysiwygToolbar.style.display = 'flex';
+          els.tableQuickBar.style.display = 'flex';
+          els.wysiwygEditor.style.display = 'block';
+          els.tabSource.classList.remove('active');
+          els.tabWysiwyg.classList.add('active');
+          els.tabSource.setAttribute('aria-selected', 'false');
+          els.tabWysiwyg.setAttribute('aria-selected', 'true');
+          state.editorMode = 'wysiwyg';
+          updateTableQuickBarState();
         }
-        lines.push('MIME-Version: 1.0');
-        lines.push('To: ' + emailObj.to);
-        if (emailObj.cc) {
-          lines.push('Cc: ' + emailObj.cc);
-        }
-        lines.push('Subject: ' + encodeRfc2047Subject(emailObj.subject));
-        lines.push('Content-Type: text/html; charset="utf-8"');
-        lines.push('Content-Transfer-Encoding: base64');
-        lines.push('');
+        rebuildDraftsAndPreview();
+      }
 
-        const fullHtml =
+      /* =====================================================================
+         7. 一對多分組引擎與 {{明細表格}} 渲染
+         ===================================================================== */
+      function buildDetailTableHtml(groupRows) {
+        const cols = state.headers.filter((h) => state.selectedDetailCols.has(h));
+        const includeIdx = els.includeIndexColCheckbox.checked;
+
+        if (cols.length === 0 && !includeIdx) {
+          return '<p style="color:#64748b;font-size:13px;">（尚未勾選任何明細表格顯示欄位）</p>';
+        }
+
+        let html =
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">' +
+          '<thead><tr>';
+
+        if (includeIdx) {
+          html +=
+            '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; font-weight: bold; color: #0f172a; width: 64px;">項次</th>';
+        }
+
+        cols.forEach((colName) => {
+          html +=
+            '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;">' +
+            escapeHtml(colName) +
+            '</th>';
+        });
+
+        html += '</tr></thead><tbody>';
+
+        groupRows.forEach((rowObj, idx) => {
+          html += '<tr>';
+          if (includeIdx) {
+            html +=
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; color: #334155;">' +
+              (idx + 1) +
+              '</td>';
+          }
+          cols.forEach((colName) => {
+            const val = escapeHtml(rowObj[colName] || '').replace(/\r?\n/g, '<br>');
+            html +=
+              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;">' +
+              (val || '&nbsp;') +
+              '</td>';
+          });
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        return html;
+      }
+
+      function renderSubjectTemplate(tpl, firstRow, itemCount) {
+        return String(tpl || '').replace(/\{\{([^{}]+)\}\}/g, (match, rawKey) => {
+          const key = rawKey.trim();
+          if (key === '案件數') return String(itemCount);
+          if (Object.prototype.hasOwnProperty.call(firstRow, key)) {
+            return firstRow[key];
+          }
+          return match;
+        });
+      }
+
+      function renderBodyHtmlTemplate(htmlTpl, groupRows) {
+        const firstRow = groupRows[0] || {};
+        const itemCount = groupRows.length;
+        const detailTableHtml = buildDetailTableHtml(groupRows);
+
+        // 先將獨立段落中的 <p>{{明細表格}}</p> 乾淨替換為表格本身，避免產生非法巢狀 <p><table>
+        let output = String(htmlTpl || '').replace(
+          /<p[^>]*>\s*\{\{\s*明細表格\s*\}\}\s*<\/p>/gi,
+          () => detailTableHtml
+        );
+
+        // 替換其餘 {{明細表格}}、{{案件數}} 與各欄位變數
+        output = output.replace(/\{\{([^{}]+)\}\}/g, (match, rawKey) => {
+          const key = rawKey.trim();
+          if (key === '明細表格') return detailTableHtml;
+          if (key === '案件數') return String(itemCount);
+          if (Object.prototype.hasOwnProperty.call(firstRow, key)) {
+            return escapeHtml(firstRow[key]).replace(/\r?\n/g, '<br>');
+          }
+          return match;
+        });
+
+        return output;
+      }
+
+      function computeUniqueRecipientCount() {
+        const toCol = els.toColSelect.value;
+        if (!toCol || state.rows.length === 0) return 0;
+        const set = new Set();
+        state.rows.forEach((row, idx) => {
+          const norm = normalizeEmailList([row[toCol]]).toLowerCase();
+          set.add(norm || '__empty_' + idx);
+        });
+        return set.size;
+      }
+
+      function rebuildDraftsAndPreview() {
+        const toCol = els.toColSelect.value;
+        const ccCol = els.ccColSelect.value;
+        const bccCol = els.bccColSelect.value;
+        const nameCol = els.nameColSelect.value;
+        const fixedCc = els.fixedCcInput.value.trim();
+        const fixedBcc = els.fixedBccInput.value.trim();
+        const mergeEnabled = els.mergeModeCheckbox.checked;
+        const subjectTpl = els.subjectInput.value;
+        const bodyHtmlTpl = getCurrentBodyTemplateHtml();
+
+        // 更新不重複收件者徽章
+        const uniqueCount = computeUniqueRecipientCount();
+        els.badgeTotalRows.textContent = '總筆數：' + state.rows.length + ' 筆';
+        els.badgeUniqueRecipients.textContent = '不重複收件者：' + uniqueCount + ' 位';
+
+        if (state.rows.length === 0) {
+          state.drafts = [];
+          els.mergeStatusBadge.textContent = '目前設定：尚未載入資料';
+          renderStep4Preview();
+          return;
+        }
+
+        // 建立分組（合併模式 vs 逐筆模式）
+        const groups = [];
+        if (mergeEnabled) {
+          const groupMap = new Map();
+          state.rows.forEach((row, idx) => {
+            const toNormalized = normalizeEmailList([toCol ? row[toCol] : '']);
+            const key = toNormalized ? toNormalized.toLowerCase() : '__empty_' + idx;
+            if (!groupMap.has(key)) {
+              const g = { to: toNormalized, rows: [] };
+              groupMap.set(key, g);
+              groups.push(g);
+            }
+            groupMap.get(key).rows.push(row);
+          });
+        } else {
+          state.rows.forEach((row) => {
+            const toNormalized = normalizeEmailList([toCol ? row[toCol] : '']);
+            groups.push({ to: toNormalized, rows: [row] });
+          });
+        }
+
+        // 更新合併狀態徽章
+        if (mergeEnabled) {
+          els.mergeStatusBadge.textContent =
+            '目前設定：將 ' + state.rows.length + ' 筆資料合併產出為 ' + groups.length + ' 封草稿';
+        } else {
+          els.mergeStatusBadge.textContent =
+            '目前設定：將 ' + state.rows.length + ' 筆資料逐筆產出為 ' + groups.length + ' 封草稿';
+        }
+
+        // 產出每封草稿物件
+        const usedFilenames = new Map();
+        const padWidth = Math.max(2, String(groups.length).length);
+
+        state.drafts = groups.map((group, idx) => {
+          const firstRow = group.rows[0];
+          const ccValues = group.rows.map((r) => (ccCol ? r[ccCol] : ''));
+          if (fixedCc) ccValues.push(fixedCc);
+          const cc = normalizeEmailList(ccValues);
+
+          const bccValues = group.rows.map((r) => (bccCol ? r[bccCol] : ''));
+          if (fixedBcc) bccValues.push(fixedBcc);
+          const bcc = normalizeEmailList(bccValues);
+
+          const subject = renderSubjectTemplate(subjectTpl, firstRow, group.rows.length);
+          const htmlBody = renderBodyHtmlTemplate(bodyHtmlTpl, group.rows);
+
+          const numPrefix = String(idx + 1).padStart(padWidth, '0');
+          const rawIdName = (nameCol && firstRow[nameCol]) ? firstRow[nameCol] : (group.to ? group.to.split('@')[0] : '草稿');
+          const safeId = sanitizeFilenamePart(rawIdName) || '草稿';
+          let filename = numPrefix + '_' + safeId + '.eml';
+
+          const lowerName = filename.toLowerCase();
+          if (usedFilenames.has(lowerName)) {
+            const cnt = usedFilenames.get(lowerName) + 1;
+            usedFilenames.set(lowerName, cnt);
+            filename = numPrefix + '_' + safeId + '_' + cnt + '.eml';
+          } else {
+            usedFilenames.set(lowerName, 1);
+          }
+
+          return {
+            index: idx,
+            to: group.to,
+            cc,
+            bcc,
+            subject,
+            htmlBody,
+            filename,
+            itemCount: group.rows.length
+          };
+        });
+
+        if (state.currentDraftIndex >= state.drafts.length) {
+          state.currentDraftIndex = Math.max(0, state.drafts.length - 1);
+        }
+
+        renderStep4Preview();
+      }
+
+      function renderStep4Preview() {
+        const total = state.drafts.length;
+        const hasDrafts = total > 0;
+
+        els.btnDownloadSingleTop.disabled = !hasDrafts;
+        els.btnDownloadZipTop.disabled = !hasDrafts;
+        els.btnDownloadSingleBottom.disabled = !hasDrafts;
+        els.btnDownloadZipBottom.disabled = !hasDrafts;
+
+        if (!hasDrafts) {
+          els.btnPrevDraft.disabled = true;
+          els.btnNextDraft.disabled = true;
+          els.draftCounterText.textContent = '第 0 / 0 封';
+          els.draftSelect.innerHTML = '<option value="">尚無草稿</option>';
+          els.draftItemCountBadge.textContent = '含 0 件';
+          els.pvTo.textContent = '—';
+          els.pvCc.textContent = '—';
+          els.pvBcc.textContent = '—';
+          els.pvSubject.textContent = '—';
+          els.pvFilename.textContent = '—';
+          els.pvBodyHtml.innerHTML =
+            '<span style="color:var(--text-muted);">請先於步驟 1 貼上 Excel 名單資料，即可即時預覽每封草稿。</span>';
+          return;
+        }
+
+        const idx = state.currentDraftIndex;
+        const draft = state.drafts[idx];
+
+        els.btnPrevDraft.disabled = idx <= 0;
+        els.btnNextDraft.disabled = idx >= total - 1;
+        els.draftCounterText.textContent = '第 ' + (idx + 1) + ' / ' + total + ' 封';
+        els.draftItemCountBadge.textContent = '含 ' + draft.itemCount + ' 件';
+
+        els.draftSelect.innerHTML = state.drafts
+          .map((d, i) => {
+            const label = d.filename.replace(/\.eml$/i, '') + '（含 ' + d.itemCount + ' 件）';
+            return '<option value="' + i + '">' + escapeHtml(label) + '</option>';
+          })
+          .join('');
+        els.draftSelect.value = String(idx);
+
+        els.pvTo.textContent = draft.to || '（未填寫收件者）';
+        els.pvTo.className = 'mh-val' + (draft.to ? '' : ' muted');
+
+        els.pvCc.textContent = draft.cc || '（無）';
+        els.pvCc.className = 'mh-val' + (draft.cc ? '' : ' muted');
+
+        els.pvBcc.textContent = draft.bcc || '（無）';
+        els.pvBcc.className = 'mh-val' + (draft.bcc ? '' : ' muted');
+
+        els.pvSubject.textContent = draft.subject || '（無主旨）';
+        els.pvFilename.textContent = draft.filename;
+        els.pvBodyHtml.innerHTML = draft.htmlBody;
+      }
+
+      /* =====================================================================
+         8. 嚴格 RFC 5322 .eml 產生器與純 JS UTF-8 ZIP 打包器
+         ===================================================================== */
+      function buildEmlContent(draft) {
+        const headers = [];
+        headers.push('X-Unsent: 1');
+        headers.push('MIME-Version: 1.0');
+        headers.push('To: ' + (draft.to || ''));
+        if (draft.cc) {
+          headers.push('Cc: ' + draft.cc);
+        }
+        if (draft.bcc) {
+          headers.push('Bcc: ' + draft.bcc);
+        }
+        headers.push('Subject: ' + encodeRfc2047Subject(draft.subject || ''));
+        headers.push('Content-Type: text/html; charset="UTF-8"');
+        headers.push('Content-Transfer-Encoding: base64');
+        headers.push('');
+
+        const wrappedHtml =
           '<!DOCTYPE html>\r\n' +
           '<html>\r\n' +
-          '<head><meta charset="utf-8"></head>\r\n' +
-          '<body style="margin: 0; padding: 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 11pt; line-height: 1.65; color: #1e293b;">\r\n' +
-          emailObj.htmlBody +
+          '<head><meta charset="UTF-8"></head>\r\n' +
+          '<body style="font-family:\'Microsoft JhengHei\',\'微軟正黑體\',sans-serif;font-size:14px;line-height:1.6;color:#1e293b;">\r\n' +
+          draft.htmlBody +
           '\r\n</body>\r\n' +
           '</html>';
 
-        lines.push(encodeUtf8Base64Wrapped(fullHtml));
-        return lines.join('\r\n') + '\r\n';
+        headers.push(encodeUtf8Base64Wrapped(wrappedHtml));
+        return headers.join('\r\n') + '\r\n';
       }
 
+      // 標準 CRC-32 查詢表
       const CRC32_TABLE = (function () {
-        const t = new Uint32Array(256);
+        const table = new Uint32Array(256);
         for (let i = 0; i < 256; i++) {
           let c = i;
           for (let j = 0; j < 8; j++) {
             c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
           }
-          t[i] = c >>> 0;
+          table[i] = c >>> 0;
         }
-        return t;
+        return table;
       })();
 
-      function computeCrc32(bytes) {
+      function crc32(bytes) {
         let crc = 0xffffffff;
         for (let i = 0; i < bytes.length; i++) {
           crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
@@ -1797,52 +2446,55 @@
         return (crc ^ 0xffffffff) >>> 0;
       }
 
-      function createZipArchive(files) {
+      /**
+       * 純 JS STORE (Method 0) ZIP 打包器，設定 UTF-8 Flag 0x0800 確保繁體中文檔名不亂碼
+       */
+      function buildUtf8Zip(files) {
         const encoder = new TextEncoder();
         const now = new Date();
         const year = Math.max(1980, now.getFullYear());
         const dosDate = ((year - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
         const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
 
-        const localParts = [];
-        const centralParts = [];
+        const localChunks = [];
+        const centralChunks = [];
         let offset = 0;
 
         files.forEach((file) => {
           const nameBytes = encoder.encode(file.name);
           const dataBytes = encoder.encode(file.content);
-          const crc = computeCrc32(dataBytes);
+          const checksum = crc32(dataBytes);
           const size = dataBytes.length;
 
-          // Local File Header
-          const lh = new ArrayBuffer(30 + nameBytes.length);
-          const lv = new DataView(lh);
+          // Local File Header (30 bytes + filename)
+          const lhBuf = new ArrayBuffer(30 + nameBytes.length);
+          const lv = new DataView(lhBuf);
           lv.setUint32(0, 0x04034b50, true);
           lv.setUint16(4, 20, true);
-          lv.setUint16(6, 0x0800, true); // UTF-8 filename flag (bit 11)
-          lv.setUint16(8, 0, true);      // STORE (no compression)
+          lv.setUint16(6, 0x0800, true); // Bit 11: UTF-8 filename encoding
+          lv.setUint16(8, 0, true);      // Method 0: STORE
           lv.setUint16(10, dosTime, true);
           lv.setUint16(12, dosDate, true);
-          lv.setUint32(14, crc, true);
+          lv.setUint32(14, checksum, true);
           lv.setUint32(18, size, true);
           lv.setUint32(22, size, true);
           lv.setUint16(26, nameBytes.length, true);
           lv.setUint16(28, 0, true);
-          new Uint8Array(lh, 30).set(nameBytes);
+          new Uint8Array(lhBuf, 30).set(nameBytes);
 
-          localParts.push(new Uint8Array(lh), dataBytes);
+          localChunks.push(new Uint8Array(lhBuf), dataBytes);
 
-          // Central Directory Header
-          const ch = new ArrayBuffer(46 + nameBytes.length);
-          const cv = new DataView(ch);
+          // Central Directory Header (46 bytes + filename)
+          const chBuf = new ArrayBuffer(46 + nameBytes.length);
+          const cv = new DataView(chBuf);
           cv.setUint32(0, 0x02014b50, true);
           cv.setUint16(4, 20, true);
           cv.setUint16(6, 20, true);
-          cv.setUint16(8, 0x0800, true); // UTF-8 filename flag
-          cv.setUint16(10, 0, true);     // STORE
+          cv.setUint16(8, 0x0800, true); // Bit 11: UTF-8 filename encoding
+          cv.setUint16(10, 0, true);     // Method 0: STORE
           cv.setUint16(12, dosTime, true);
           cv.setUint16(14, dosDate, true);
-          cv.setUint32(16, crc, true);
+          cv.setUint32(16, checksum, true);
           cv.setUint32(20, size, true);
           cv.setUint32(24, size, true);
           cv.setUint16(28, nameBytes.length, true);
@@ -1852,17 +2504,17 @@
           cv.setUint16(36, 0, true);
           cv.setUint32(38, 0, true);
           cv.setUint32(42, offset, true);
-          new Uint8Array(ch, 46).set(nameBytes);
+          new Uint8Array(chBuf, 46).set(nameBytes);
 
-          centralParts.push(new Uint8Array(ch));
+          centralChunks.push(new Uint8Array(chBuf));
           offset += 30 + nameBytes.length + size;
         });
 
-        const centralSize = centralParts.reduce((s, p) => s + p.length, 0);
+        const centralSize = centralChunks.reduce((sum, c) => sum + c.length, 0);
 
-        // End of Central Directory Record
-        const eocd = new ArrayBuffer(22);
-        const ev = new DataView(eocd);
+        // End of Central Directory Record (22 bytes)
+        const eocdBuf = new ArrayBuffer(22);
+        const ev = new DataView(eocdBuf);
         ev.setUint32(0, 0x06054b50, true);
         ev.setUint16(4, 0, true);
         ev.setUint16(6, 0, true);
@@ -1872,12 +2524,12 @@
         ev.setUint32(16, offset, true);
         ev.setUint16(20, 0, true);
 
-        const out = new Uint8Array(offset + centralSize + 22);
+        const totalBytes = new Uint8Array(offset + centralSize + 22);
         let pos = 0;
-        localParts.forEach((p) => { out.set(p, pos); pos += p.length; });
-        centralParts.forEach((p) => { out.set(p, pos); pos += p.length; });
-        out.set(new Uint8Array(eocd), pos);
-        return out;
+        localChunks.forEach((c) => { totalBytes.set(c, pos); pos += c.length; });
+        centralChunks.forEach((c) => { totalBytes.set(c, pos); pos += c.length; });
+        totalBytes.set(new Uint8Array(eocdBuf), pos);
+        return totalBytes;
       }
 
       function triggerDownload(blob, filename) {
@@ -1891,67 +2543,56 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      function downloadSingleEml(idx) {
-        const item = state.renderedEmails[idx];
-        if (!item) return;
-        const eml = buildEmlContent(item, els.unsentCheckbox.checked);
+      function downloadCurrentDraft() {
+        const draft = state.drafts[state.currentDraftIndex];
+        if (!draft) return;
+        const eml = buildEmlContent(draft);
         const blob = new Blob([eml], { type: 'message/rfc822;charset=utf-8' });
-        triggerDownload(blob, item.filename);
-        showToast('已下載：' + item.filename);
+        triggerDownload(blob, draft.filename);
+        showToast('已下載：' + draft.filename);
       }
 
       function downloadAllZip() {
-        if (state.renderedEmails.length === 0) return;
+        if (state.drafts.length === 0) return;
         try {
-          const unsent = els.unsentCheckbox.checked;
-          const files = state.renderedEmails.map((item) => ({
-            name: item.filename,
-            content: buildEmlContent(item, unsent)
+          const files = state.drafts.map((d) => ({
+            name: d.filename,
+            content: buildEmlContent(d)
           }));
-          const zipBytes = createZipArchive(files);
-          const d = new Date();
+          const zipBytes = buildUtf8Zip(files);
+          const now = new Date();
           const pad = (n) => String(n).padStart(2, '0');
-          const stamp = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
-          const zipName = 'Outlook_草稿批次_' + stamp + '.zip';
-          triggerDownload(new Blob([zipBytes], { type: 'application/zip' }), zipName);
-          showToast('已打包下載 ' + files.length + ' 封草稿（' + zipName + '）');
+          const stamp =
+            now.getFullYear() +
+            pad(now.getMonth() + 1) +
+            pad(now.getDate()) +
+            '_' +
+            pad(now.getHours()) +
+            pad(now.getMinutes());
+          const zipFilename = 'Outlook_草稿批次_' + stamp + '.zip';
+          triggerDownload(new Blob([zipBytes], { type: 'application/zip' }), zipFilename);
+          showToast('已打包下載 ' + files.length + ' 封草稿（' + zipFilename + '）');
         } catch (err) {
           console.error(err);
-          showToast('打包 ZIP 發生錯誤，請檢查資料內容');
+          showToast('打包 ZIP 發生錯誤，請檢查資料格式');
         }
       }
 
       /* =====================================================================
-         範本渲染與 UI 更新
+         9. 資料表解析與 UI 更新主流程
          ===================================================================== */
-      function applyTextTemplate(tpl, rowObj) {
-        return String(tpl || '').replace(/\{\{([^{}]+)\}\}/g, (m, k) => {
-          const key = k.trim();
-          return Object.prototype.hasOwnProperty.call(rowObj, key) ? rowObj[key] : m;
-        });
-      }
-
-      function applyHtmlTemplate(htmlTpl, rowObj) {
-        return String(htmlTpl || '').replace(/\{\{([^{}]+)\}\}/g, (m, k) => {
-          const key = k.trim();
-          if (!Object.prototype.hasOwnProperty.call(rowObj, key)) return m;
-          return escapeHtml(rowObj[key]).replace(/\r?\n/g, '<br>');
-        });
-      }
-
-      function renderParsedCompactTable() {
+      function renderParsedPreviewTable() {
         if (state.headers.length === 0 || state.rows.length === 0) {
-          els.parsedCompactWrap.style.display = 'none';
+          els.parsedTableWrap.style.display = 'none';
           return;
         }
-        els.parsedCompactWrap.style.display = 'block';
-
-        els.parsedCompactHead.innerHTML =
-          '<tr><th style="width: 44px;">#</th>' +
+        els.parsedTableWrap.style.display = 'block';
+        els.parsedTableHead.innerHTML =
+          '<tr><th style="width:42px;">#</th>' +
           state.headers.map((h) => '<th>' + escapeHtml(h) + '</th>').join('') +
           '</tr>';
 
-        els.parsedCompactBody.innerHTML = state.rows
+        els.parsedTableBody.innerHTML = state.rows
           .map((row, idx) => {
             return (
               '<tr><td>' +
@@ -1966,303 +2607,87 @@
           .join('');
       }
 
-      function updateColumnSelectors(headers) {
-        const prevTo = els.toColumnSelect.value;
-        const prevCc = els.ccColumnSelect.value;
-
-        els.toColumnSelect.innerHTML = '';
-        els.ccColumnSelect.innerHTML = '';
-
-        if (headers.length === 0) {
-          els.toColumnSelect.innerHTML = '<option value="">-- 請先貼上資料 --</option>';
-          els.ccColumnSelect.innerHTML = '<option value="">（無）</option>';
-          return;
-        }
-
-        headers.forEach((h) => {
-          const opt = document.createElement('option');
-          opt.value = h;
-          opt.textContent = h;
-          els.toColumnSelect.appendChild(opt);
-        });
-
-        const noneOpt = document.createElement('option');
-        noneOpt.value = '';
-        noneOpt.textContent = '（無）';
-        els.ccColumnSelect.appendChild(noneOpt);
-
-        headers.forEach((h) => {
-          const opt = document.createElement('option');
-          opt.value = h;
-          opt.textContent = h;
-          els.ccColumnSelect.appendChild(opt);
-        });
-
-        if (prevTo && headers.includes(prevTo)) {
-          els.toColumnSelect.value = prevTo;
-        } else {
-          const autoTo =
-            headers.find((h) => /^e-?mail$/i.test(h)) ||
-            headers.find((h) => /mail|信箱|收件/i.test(h) && !/副本|cc/i.test(h)) ||
-            headers[0];
-          els.toColumnSelect.value = autoTo;
-        }
-
-        if (prevCc && headers.includes(prevCc)) {
-          els.ccColumnSelect.value = prevCc;
-        } else {
-          const autoCc = headers.find((h) => /副本|^cc$|cc[\s_-]?mail/i.test(h)) || '';
-          els.ccColumnSelect.value = autoCc;
-        }
-      }
-
-      function renderVariableChips(headers) {
-        els.variableChips.innerHTML = '';
-        if (headers.length === 0) {
-          els.variableChips.innerHTML =
-            '<span style="font-size: 0.83rem; color: var(--text-muted);">貼上資料後將自動產生可用變數</span>';
-          return;
-        }
-        headers.forEach((h) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'var-chip';
-          btn.textContent = '{{' + h + '}}';
-          btn.addEventListener('mousedown', (e) => e.preventDefault());
-          btn.addEventListener('click', () => insertVariableToken('{{' + h + '}}'));
-          els.variableChips.appendChild(btn);
-        });
-      }
-
-      function renderLivePreviewCard() {
-        const list = state.renderedEmails;
-        if (list.length === 0) {
-          els.previewRecordSelect.innerHTML = '<option value="">尚無資料</option>';
-          els.btnPrevRecord.disabled = true;
-          els.btnNextRecord.disabled = true;
-          els.btnDownloadCurrentPreview.disabled = true;
-          els.pvFilename.textContent = '—';
-          els.pvTo.textContent = '—';
-          els.pvCc.textContent = '—';
-          els.pvSubject.textContent = '—';
-          els.pvHtmlBody.innerHTML = '<span style="color: var(--text-muted);">請先於步驟一貼上 Excel 名單以檢視渲染效果。</span>';
-          return;
-        }
-
-        if (state.selectedPreviewIndex >= list.length) {
-          state.selectedPreviewIndex = list.length - 1;
-        }
-        if (state.selectedPreviewIndex < 0) {
-          state.selectedPreviewIndex = 0;
-        }
-
-        els.previewRecordSelect.innerHTML = list
-          .map((item, idx) => {
-            const label = '第 ' + (idx + 1) + ' 筆：' + item.filename.replace(/\.eml$/i, '');
-            return '<option value="' + idx + '">' + escapeHtml(label) + '</option>';
-          })
-          .join('');
-        els.previewRecordSelect.value = String(state.selectedPreviewIndex);
-
-        els.btnPrevRecord.disabled = state.selectedPreviewIndex <= 0;
-        els.btnNextRecord.disabled = state.selectedPreviewIndex >= list.length - 1;
-        els.btnDownloadCurrentPreview.disabled = false;
-
-        const cur = list[state.selectedPreviewIndex];
-        els.pvFilename.textContent = cur.filename;
-        els.pvTo.textContent = cur.to || '（未填寫）';
-        els.pvCc.textContent = cur.cc || '（無）';
-        els.pvSubject.textContent = cur.subject || '（無主旨）';
-        els.pvHtmlBody.innerHTML = cur.htmlBody;
-
-        // 同步高亮清單列
-        const trs = els.draftListBody.querySelectorAll('tr[data-row-idx]');
-        trs.forEach((tr) => {
-          tr.classList.toggle('active-row', Number(tr.getAttribute('data-row-idx')) === state.selectedPreviewIndex);
-        });
-      }
-
-      function updateAllPreviews() {
-        const toCol = els.toColumnSelect.value;
-        const ccCol = els.ccColumnSelect.value;
-        const fixedCc = els.fixedCcInput.value.trim();
-        const subjectTpl = els.subjectTemplate.value;
-        const filenameTpl = els.filenameTemplate.value;
-        const bodyHtmlTpl = getCurrentBodyHtml();
-
-        if (state.rows.length === 0) {
-          state.renderedEmails = [];
-          els.btnDownloadZip.disabled = true;
-          els.draftListBody.innerHTML =
-            '<tr><td colspan="6" class="empty-table-msg">尚無草稿資料，請先於步驟一貼上 Excel 名單。</td></tr>';
-          renderLivePreviewCard();
-          return;
-        }
-
-        const usedNames = new Map();
-        state.renderedEmails = state.rows.map((row, idx) => {
-          const to = normalizeEmailList([toCol ? row[toCol] : '']);
-          const cc = normalizeEmailList([ccCol ? row[ccCol] : '', fixedCc]);
-          const subject = applyTextTemplate(subjectTpl, row);
-          const htmlBody = applyHtmlTemplate(bodyHtmlTpl, row);
-
-          let fname = sanitizeFilename(applyTextTemplate(filenameTpl, row), idx);
-          const lower = fname.toLowerCase();
-          if (usedNames.has(lower)) {
-            const cnt = usedNames.get(lower) + 1;
-            usedNames.set(lower, cnt);
-            fname = fname.replace(/\.eml$/i, '') + '_' + cnt + '.eml';
-          } else {
-            usedNames.set(lower, 1);
-          }
-
-          return { index: idx, to, cc, subject, htmlBody, filename: fname };
-        });
-
-        els.btnDownloadZip.disabled = false;
-
-        const frag = document.createDocumentFragment();
-        state.renderedEmails.forEach((item, idx) => {
-          const tr = document.createElement('tr');
-          tr.setAttribute('data-row-idx', String(idx));
-          if (idx === state.selectedPreviewIndex) tr.classList.add('active-row');
-
-          const toHtml = item.to ? escapeHtml(item.to) : '<span class="missing-badge">未填寫</span>';
-          const ccHtml = item.cc ? escapeHtml(item.cc) : '<span style="color: var(--text-muted);">—</span>';
-
-          tr.innerHTML =
-            '<td>' + (idx + 1) + '</td>' +
-            '<td class="cell-truncate" title="' + escapeHtml(item.to) + '">' + toHtml + '</td>' +
-            '<td class="cell-truncate" title="' + escapeHtml(item.cc) + '">' + ccHtml + '</td>' +
-            '<td class="cell-truncate" title="' + escapeHtml(item.subject) + '">' + escapeHtml(item.subject) + '</td>' +
-            '<td class="cell-truncate cell-mono" title="' + escapeHtml(item.filename) + '">' + escapeHtml(item.filename) + '</td>' +
-            '<td>' +
-              '<div class="row-actions">' +
-                '<button type="button" class="btn btn-secondary btn-sm" data-action="preview" data-idx="' + idx + '">預覽</button>' +
-                '<button type="button" class="btn btn-primary btn-sm" data-action="download" data-idx="' + idx + '">下載 .eml</button>' +
-              '</div>' +
-            '</td>';
-          frag.appendChild(tr);
-        });
-
-        els.draftListBody.innerHTML = '';
-        els.draftListBody.appendChild(frag);
-        renderLivePreviewCard();
-      }
-
-      function handleExcelDataChange() {
+      function handleExcelInput() {
         const parsed = parseDelimitedText(els.excelInput.value);
         state.headers = parsed.headers;
         state.rows = parsed.rows;
 
         if (state.headers.length === 0) {
-          els.parseStatus.className = 'parse-status empty';
-          els.parseStatus.innerHTML = '<span>尚未輸入資料，請貼上 Excel 內容或點擊「載入範例資料」。</span>';
+          els.parseStatusText.textContent = '尚未輸入資料，請貼上 Excel 名單或點擊「載入範例資料」';
+          els.parseStatusText.style.color = 'var(--amber-800)';
         } else if (state.rows.length === 0) {
-          els.parseStatus.className = 'parse-status empty';
-          els.parseStatus.innerHTML =
-            '<span>已偵測到 ' + state.headers.length + ' 個欄位標題，但尚未貼上資料列。</span>';
+          els.parseStatusText.textContent = '已偵測到 ' + state.headers.length + ' 個欄位標題，請貼上資料列';
+          els.parseStatusText.style.color = 'var(--amber-800)';
         } else {
-          els.parseStatus.className = 'parse-status ok';
-          els.parseStatus.innerHTML =
-            '<span>已成功解析 ' + state.rows.length + ' 筆資料，共 ' + state.headers.length + ' 個欄位</span>';
+          els.parseStatusText.textContent =
+            '解析成功：共 ' + state.headers.length + ' 個欄位、' + state.rows.length + ' 筆資料';
+          els.parseStatusText.style.color = 'var(--emerald-600)';
         }
 
-        renderParsedCompactTable();
-        updateColumnSelectors(state.headers);
+        renderParsedPreviewTable();
+        autoDetectColumnMappings(state.headers);
+        initOrRenderDetailColCheckboxes(state.headers);
         renderVariableChips(state.headers);
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
       }
 
       /* =====================================================================
-         雙模式切換（視覺編輯 <-> HTML 原始碼）
+         10. 事件監聽綁定
          ===================================================================== */
-      function setEditorMode(mode) {
-        if (state.editorMode === mode) return;
-        if (mode === 'source') {
-          syncToSource();
-          els.wysiwygEditor.style.display = 'none';
-          els.wysiwygToolbar.style.display = 'none';
-          els.htmlSourceEditor.style.display = 'block';
-          els.tabWysiwyg.classList.remove('active');
-          els.tabSource.classList.add('active');
-          els.tabWysiwyg.setAttribute('aria-selected', 'false');
-          els.tabSource.setAttribute('aria-selected', 'true');
-          state.editorMode = 'source';
-          setActiveTarget('source', 'HTML 原始碼');
-          els.tablePopover.classList.remove('open');
-        } else {
-          syncToWysiwyg();
-          els.htmlSourceEditor.style.display = 'none';
-          els.wysiwygToolbar.style.display = 'flex';
-          els.wysiwygEditor.style.display = 'block';
-          els.tabSource.classList.remove('active');
-          els.tabWysiwyg.classList.add('active');
-          els.tabSource.setAttribute('aria-selected', 'false');
-          els.tabWysiwyg.setAttribute('aria-selected', 'true');
-          state.editorMode = 'wysiwyg';
-          setActiveTarget('wysiwyg', 'HTML 內文（視覺編輯）');
-        }
-        updateAllPreviews();
-      }
-
-      function setActiveTarget(targetKey, labelText) {
-        state.activeTarget = targetKey;
-        els.activeTargetHint.textContent = '目前游標目標：' + labelText;
-      }
-
-      /* =====================================================================
-         事件綁定
-         ===================================================================== */
-      els.excelInput.addEventListener('input', handleExcelDataChange);
+      els.excelInput.addEventListener('input', handleExcelInput);
 
       els.btnLoadSample.addEventListener('click', () => {
         els.excelInput.value = SAMPLE_TSV;
-        handleExcelDataChange();
-        showToast('已載入 5 筆範例資料');
+        state.detailColsInitializedForHeaders = '';
+        handleExcelInput();
+        showToast('已載入 6 筆範例資料（含 4 位收件者與密件副本）');
       });
 
       els.btnClearData.addEventListener('click', () => {
         els.excelInput.value = '';
         els.fixedCcInput.value = '';
-        handleExcelDataChange();
-        showToast('已清空資料');
+        els.fixedBccInput.value = '';
+        state.detailColsInitializedForHeaders = '';
+        handleExcelInput();
+        showToast('已清空名單與固定副本設定');
       });
 
-      [els.toColumnSelect, els.ccColumnSelect, els.fixedCcInput, els.subjectTemplate, els.filenameTemplate].forEach(
-        (el) => {
-          el.addEventListener('input', updateAllPreviews);
-          el.addEventListener('change', updateAllPreviews);
-        }
-      );
+      [
+        els.mergeModeCheckbox,
+        els.toColSelect,
+        els.ccColSelect,
+        els.bccColSelect,
+        els.nameColSelect,
+        els.fixedCcInput,
+        els.fixedBccInput,
+        els.includeIndexColCheckbox,
+        els.subjectInput
+      ].forEach((el) => {
+        el.addEventListener('input', rebuildDraftsAndPreview);
+        el.addEventListener('change', rebuildDraftsAndPreview);
+      });
 
-      // 追蹤各輸入框焦點以決定變數標籤插入目標
-      els.subjectTemplate.addEventListener('focus', () => setActiveTarget('subject', '主旨範本'));
-      els.filenameTemplate.addEventListener('focus', () => setActiveTarget('filename', '檔名範本'));
-      els.htmlSourceEditor.addEventListener('focus', () => setActiveTarget('source', 'HTML 原始碼'));
-      els.wysiwygEditor.addEventListener('focus', () => setActiveTarget('wysiwyg', 'HTML 內文（視覺編輯）'));
-
-      // WYSIWYG 編輯器輸入與選取追蹤
+      // WYSIWYG 編輯器事件
       ['keyup', 'mouseup', 'blur'].forEach((evt) => {
         els.wysiwygEditor.addEventListener(evt, saveWysiwygSelection);
       });
       els.wysiwygEditor.addEventListener('input', () => {
         saveWysiwygSelection();
         syncToSource();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
       });
 
-      // HTML 原始碼編輯器即時同步
+      // HTML 原始碼編輯器事件
       els.htmlSourceEditor.addEventListener('input', () => {
         syncToWysiwyg();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
       });
 
-      // 模式切換分頁
+      // 雙模式分頁切換
       els.tabWysiwyg.addEventListener('click', () => setEditorMode('wysiwyg'));
       els.tabSource.addEventListener('click', () => setEditorMode('source'));
 
-      // 工具列文字格式化按鈕（阻止 mousedown 搶走焦點）
+      // 工具列基本格式命令
       els.wysiwygToolbar.querySelectorAll('button[data-cmd]').forEach((btn) => {
         btn.addEventListener('mousedown', (e) => e.preventDefault());
         btn.addEventListener('click', () => {
@@ -2270,17 +2695,16 @@
           document.execCommand(btn.getAttribute('data-cmd'), false, null);
           saveWysiwygSelection();
           syncToSource();
-          updateAllPreviews();
+          rebuildDraftsAndPreview();
         });
       });
 
-      // 文字顏色與底色醒目提示
       els.foreColorPicker.addEventListener('input', (e) => {
         restoreWysiwygSelection();
         document.execCommand('foreColor', false, e.target.value);
         saveWysiwygSelection();
         syncToSource();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
       });
 
       els.hiliteColorPicker.addEventListener('input', (e) => {
@@ -2289,56 +2713,40 @@
         if (!ok) document.execCommand('backColor', false, e.target.value);
         saveWysiwygSelection();
         syncToSource();
-        updateAllPreviews();
+        rebuildDraftsAndPreview();
       });
 
-      // 插入表格 Popover 控制
-      els.btnToggleTablePopover.addEventListener('mousedown', (e) => e.preventDefault());
-      els.btnToggleTablePopover.addEventListener('click', () => {
+      // 插入 {{明細表格}} 快捷鈕
+      els.btnQuickInsertDetailTable.addEventListener('mousedown', (e) => e.preventDefault());
+      els.btnQuickInsertDetailTable.addEventListener('click', () => {
+        insertTokenIntoBodyEditor('{{明細表格}}');
+        showToast('已插入 {{明細表格}}');
+      });
+
+      // 插入表格 Modal
+      els.btnOpenTableModal.addEventListener('mousedown', (e) => e.preventDefault());
+      els.btnOpenTableModal.addEventListener('click', () => {
         saveWysiwygSelection();
-        els.tablePopover.classList.toggle('open');
+        els.tableModal.classList.add('open');
       });
-
-      els.btnCancelTable.addEventListener('click', () => {
-        els.tablePopover.classList.remove('open');
+      els.btnModalCancel.addEventListener('click', () => {
+        els.tableModal.classList.remove('open');
       });
-
-      els.btnConfirmInsertTable.addEventListener('click', () => {
-        const html = buildOutlookTableHtml(
-          els.tblRowsInput.value,
-          els.tblColsInput.value,
-          els.tblHeaderCheck.checked
+      els.tableModal.addEventListener('click', (e) => {
+        if (e.target === els.tableModal) els.tableModal.classList.remove('open');
+      });
+      els.btnModalConfirm.addEventListener('click', () => {
+        const html = buildCustomOutlookTableHtml(
+          els.modalRowsInput.value,
+          els.modalColsInput.value,
+          els.modalHeaderCheck.checked
         );
-        els.tablePopover.classList.remove('open');
-        insertHtmlAtWysiwygCursor(html);
+        els.tableModal.classList.remove('open');
+        insertHtmlIntoWysiwyg(html);
         showToast('已插入 Outlook 相容表格');
       });
 
-      // 點擊外部關閉 Popover
-      document.addEventListener('click', (e) => {
-        if (
-          els.tablePopover.classList.contains('open') &&
-          !els.tablePopover.contains(e.target) &&
-          e.target !== els.btnToggleTablePopover
-        ) {
-          els.tablePopover.classList.remove('open');
-        }
-      });
-
-      // 一鍵插入範例表格（支援兩種模式）
-      els.btnInsertSampleTable.addEventListener('mousedown', (e) => e.preventDefault());
-      els.btnInsertSampleTable.addEventListener('click', () => {
-        if (state.editorMode === 'source') {
-          insertTextIntoInput(els.htmlSourceEditor, '\n' + SAMPLE_CASE_TABLE_HTML + '\n');
-          syncToWysiwyg();
-          updateAllPreviews();
-        } else {
-          insertHtmlAtWysiwygCursor(SAMPLE_CASE_TABLE_HTML + '<p><br></p>');
-        }
-        showToast('已插入案件資訊範例表格');
-      });
-
-      // 表格快捷操作按鈕
+      // 表格快捷操作列
       [els.btnAddRow, els.btnAddCol, els.btnDelRow, els.btnDelTable].forEach((b) => {
         b.addEventListener('mousedown', (e) => e.preventDefault());
       });
@@ -2347,55 +2755,37 @@
       els.btnDelRow.addEventListener('click', tableDeleteRow);
       els.btnDelTable.addEventListener('click', tableDeleteWhole);
 
-      // 即時預覽切換控制
-      els.previewRecordSelect.addEventListener('change', (e) => {
-        state.selectedPreviewIndex = Number(e.target.value) || 0;
-        renderLivePreviewCard();
-      });
-
-      els.btnPrevRecord.addEventListener('click', () => {
-        if (state.selectedPreviewIndex > 0) {
-          state.selectedPreviewIndex--;
-          renderLivePreviewCard();
+      // 預覽導覽與下載
+      els.btnPrevDraft.addEventListener('click', () => {
+        if (state.currentDraftIndex > 0) {
+          state.currentDraftIndex--;
+          renderStep4Preview();
         }
       });
-
-      els.btnNextRecord.addEventListener('click', () => {
-        if (state.selectedPreviewIndex < state.renderedEmails.length - 1) {
-          state.selectedPreviewIndex++;
-          renderLivePreviewCard();
+      els.btnNextDraft.addEventListener('click', () => {
+        if (state.currentDraftIndex < state.drafts.length - 1) {
+          state.currentDraftIndex++;
+          renderStep4Preview();
         }
       });
-
-      els.btnDownloadCurrentPreview.addEventListener('click', () => {
-        downloadSingleEml(state.selectedPreviewIndex);
+      els.draftSelect.addEventListener('change', (e) => {
+        state.currentDraftIndex = Number(e.target.value) || 0;
+        renderStep4Preview();
       });
 
-      // 批次列表操作委派
-      els.draftListBody.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-action]');
-        if (!btn) return;
-        const idx = Number(btn.getAttribute('data-idx'));
-        const action = btn.getAttribute('data-action');
-        if (action === 'preview') {
-          state.selectedPreviewIndex = idx;
-          renderLivePreviewCard();
-          document.getElementById('livePreviewBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else if (action === 'download') {
-          downloadSingleEml(idx);
-        }
-      });
-
-      els.btnDownloadZip.addEventListener('click', downloadAllZip);
+      els.btnDownloadSingleTop.addEventListener('click', downloadCurrentDraft);
+      els.btnDownloadSingleBottom.addEventListener('click', downloadCurrentDraft);
+      els.btnDownloadZipTop.addEventListener('click', downloadAllZip);
+      els.btnDownloadZipBottom.addEventListener('click', downloadAllZip);
 
       /* =====================================================================
-         初始化預設內容
+         11. 初始化：自動載入預設範本與 6 筆範例資料
          ===================================================================== */
       els.wysiwygEditor.innerHTML = DEFAULT_BODY_HTML;
       syncToSource();
       els.excelInput.value = SAMPLE_TSV;
-      handleExcelDataChange();
+      handleExcelInput();
     })();
   </script>
-
-</body></html>
+</body>
+</html>
