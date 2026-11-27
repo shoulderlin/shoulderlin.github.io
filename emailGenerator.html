@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Outlook .eml 草稿批次產生器（支援一對多合併與密件副本）</title>
+  <title>Outlook .eml 草稿批次產生器（含 5 組常用套稿）</title>
   <style>
     /* =====================================================================
        全域設計系統（100% 離線純原生 CSS，無任何外部 CDN 依賴）
@@ -1076,6 +1076,191 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* =====================================================================
+       步驟 2：5 組常用套稿槽位卡片
+       ===================================================================== */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 1024px) {
+      .slots-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .slots-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .slot-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px;
+      background-color: var(--bg-subtle);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    .slot-card.filled {
+      background-color: #ffffff;
+      border-style: solid;
+      border-color: var(--blue-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .slot-card.active-slot {
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .slot-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      background-color: #e2e8f0;
+      color: var(--text-secondary);
+    }
+
+    .slot-card.filled .slot-badge {
+      background-color: var(--blue-50);
+      color: var(--blue-700);
+    }
+
+    .slot-name {
+      font-size: 0.93rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .slot-card:not(.filled) .slot-name {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .slot-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      min-height: 18px;
+    }
+
+    .slot-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .slot-actions .btn {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 0.77rem;
+    }
+
+    .storage-warn {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 13px;
+      background-color: var(--amber-50);
+      border: 1px solid var(--amber-200);
+      border-radius: var(--radius-sm);
+      color: var(--amber-800);
+      font-size: 0.83rem;
+      font-weight: 600;
+    }
+
+    /* =====================================================================
+       步驟 3：變數目標狀態標籤 & 步驟 4：產出清單表格
+       ===================================================================== */
+    .target-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background-color: var(--emerald-50);
+      color: var(--emerald-600);
+      border: 1px solid var(--emerald-200);
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .output-list-section {
+      margin-top: 20px;
+    }
+
+    .output-list-title {
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 0 0 10px;
+    }
+
+    .output-table-wrap {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      background-color: #ffffff;
+    }
+
+    .output-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .output-table th {
+      background-color: #f1f5f9;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+    }
+
+    .output-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .output-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .output-table tr.active-row {
+      background-color: var(--blue-50);
+    }
+
+    .output-table td.mono-cell {
+      font-family: var(--font-mono);
+      font-size: 0.81rem;
+      color: var(--blue-700);
+    }
   </style>
 </head>
 <body>
@@ -1083,8 +1268,8 @@
     <!-- 頁首 -->
     <header class="app-header">
       <div class="app-title-group">
-        <h1>Outlook .eml 草稿批次產生器（支援一對多合併與密件副本）</h1>
-        <p>支援依收件者自動合併多筆產品明細表格、CC / BCC 整合去重複，一鍵產出含 <code>X-Unsent: 1</code> 的 Outlook 草稿。</p>
+        <h1>Outlook .eml 草稿批次產生器（含 5 組常用套稿）</h1>
+        <p>支援依收件者自動合併多筆產品明細表格、CC / BCC 整合去重複、5 組常用套稿管理，一鍵產出含 <code>X-Unsent: 1</code> 的 Outlook 草稿。</p>
       </div>
       <div class="header-badges">
         <span class="pill-badge pill-emerald">
@@ -1095,13 +1280,13 @@
     </header>
 
     <!-- =================================================================
-         步驟 1：貼上 Excel 名單資料
+         步驟 1：貼上 Excel 名單與欄位設定
          ================================================================= -->
     <section class="card" aria-labelledby="step1-heading">
       <div class="step-header">
         <div class="step-title">
           <span class="step-num">1</span>
-          <h2 id="step1-heading">貼上 Excel 名單資料</h2>
+          <h2 id="step1-heading">貼上 Excel 名單與欄位設定</h2>
         </div>
         <div class="step-actions">
           <button type="button" class="btn btn-soft-blue" id="btnLoadSample">載入範例資料</button>
@@ -1133,21 +1318,9 @@
           <tbody id="parsedTableBody"></tbody>
         </table>
       </div>
-    </section>
-
-    <!-- =================================================================
-         步驟 2：欄位對應、密件副本與合併設定
-         ================================================================= -->
-    <section class="card" aria-labelledby="step2-heading">
-      <div class="step-header">
-        <div class="step-title">
-          <span class="step-num">2</span>
-          <h2 id="step2-heading">欄位對應、密件副本與合併設定</h2>
-        </div>
-      </div>
 
       <!-- 一對多合併模式開關（預設開啟） -->
-      <div class="merge-banner">
+      <div class="merge-banner" style="margin-top: 18px; margin-bottom: 16px;">
         <div class="merge-top">
           <label class="toggle-label" for="mergeModeCheckbox">
             <span class="toggle-switch">
@@ -1159,23 +1332,23 @@
           <span class="pill-badge pill-blue" id="mergeStatusBadge">目前設定：尚未載入資料</span>
         </div>
         <p class="merge-desc">
-          同一收件者 Email 的多筆資料會自動合併為同一封信，副本（CC）與密件副本（BCC）將自動整合去重複，並可透過
-          <code>{{明細表格}}</code> 展開所有產品明細、透過 <code>{{案件數}}</code> 帶入該收件者的案件總數。
+          開啟時，相同收件者 Email 的多筆資料會自動合併為 1 封信，並整合去重複所有 CC 與 BCC（含固定額外 CC / BCC），透過
+          <code>{{明細表格}}</code> 展開全部案件明細、透過 <code>{{案件數}}</code> 帶入件數。
         </p>
       </div>
 
       <!-- 欄位對應下拉選單 -->
       <div class="grid-4">
         <div>
-          <label class="field-label" for="toColSelect">收件者 Email (To)</label>
+          <label class="field-label" for="toColSelect">收件者 Email (To)（必填）</label>
           <select id="toColSelect"></select>
         </div>
         <div>
-          <label class="field-label" for="ccColSelect">副本 Email (CC)</label>
+          <label class="field-label" for="ccColSelect">副本 Email (CC)（選填）</label>
           <select id="ccColSelect"></select>
         </div>
         <div>
-          <label class="field-label" for="bccColSelect">密件副本 Email (BCC)</label>
+          <label class="field-label" for="bccColSelect">密件副本 Email (BCC)（選填）</label>
           <select id="bccColSelect"></select>
         </div>
         <div>
@@ -1189,43 +1362,59 @@
         <div>
           <label class="field-label" for="fixedCcInput">固定額外副本 (CC)（選填）</label>
           <input type="text" id="fixedCcInput" placeholder="例如：supervisor@example.com; team@example.com" />
-          <div class="field-hint">支援逗號或分號分隔多組 Email，與資料表 CC 自動合併去重複</div>
+          <div class="field-hint">支援分號或逗號分隔多組 Email，與資料表 CC 自動合併去重複</div>
         </div>
         <div>
           <label class="field-label" for="fixedBccInput">固定額外密件副本 (BCC)（選填）</label>
           <input type="text" id="fixedBccInput" placeholder="例如：archive@example.com; audit@example.com" />
-          <div class="field-hint">支援逗號或分號分隔多組 Email，與資料表 BCC 自動合併去重複</div>
-        </div>
-      </div>
-
-      <!-- {{明細表格}} 欄位設定面板 -->
-      <div class="sub-panel">
-        <div class="sub-panel-header">
-          <span class="sub-panel-title"><code>{{明細表格}}</code> 顯示欄位設定</span>
-          <label class="inline-check" for="includeIndexColCheckbox">
-            <input type="checkbox" id="includeIndexColCheckbox" checked />
-            <span>自動加入「項次」編號欄</span>
-          </label>
-        </div>
-        <div id="detailColCheckboxes" class="col-checkboxes"></div>
-        <div class="field-hint" style="margin-top: 8px;">
-          勾選要展開於 <code>{{明細表格}}</code> 中的資料欄位（系統預設會自動勾選非 Email / 非姓名的產品明細欄位）。
+          <div class="field-hint">支援分號或逗號分隔多組 Email，與資料表 BCC 自動合併去重複</div>
         </div>
       </div>
     </section>
 
     <!-- =================================================================
-         步驟 3：主旨與 HTML 內文範本編輯器
+         步驟 2：5 組常用套稿管理
+         ================================================================= -->
+    <section class="card" aria-labelledby="step2-heading">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-num">2</span>
+          <h2 id="step2-heading">常用套稿管理（5 組 Slot）</h2>
+        </div>
+        <div class="step-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnExportSlots">匯出全部套稿 (.json)</button>
+          <button type="button" class="btn btn-soft-blue btn-sm" id="btnImportSlots">匯入套稿 (.json)</button>
+          <input type="file" id="importSlotsInput" accept=".json,application/json" style="display: none;" />
+        </div>
+      </div>
+
+      <div id="storageWarnBanner" class="storage-warn">
+        提示：目前瀏覽器環境限制了 localStorage 寫入（例如部分無痕或嚴格本機安全設定），套稿將暫存於本次頁面工作階段，建議使用右上角「匯出全部套稿 (.json)」進行永久備份。
+      </div>
+
+      <div class="slots-grid" id="slotsGrid"></div>
+      <div class="field-hint" style="margin-top: 10px;">
+        每組槽位會完整保存：主旨範本、HTML 內文範本、固定額外 CC、固定額外 BCC、一對多合併開關狀態、明細表格勾選欄位與「項次」欄開關。
+      </div>
+    </section>
+
+    <!-- =================================================================
+         步驟 3：自訂主旨與 HTML 內文範本
          ================================================================= -->
     <section class="card" aria-labelledby="step3-heading">
       <div class="step-header">
         <div class="step-title">
           <span class="step-num">3</span>
-          <h2 id="step3-heading">主旨與 HTML 內文範本編輯器</h2>
+          <h2 id="step3-heading">自訂主旨與 HTML 內文範本</h2>
         </div>
       </div>
 
-      <!-- 主旨輸入與快捷變數列 -->
+      <!-- 統一變數膠囊列：自動插入至最後聚焦的輸入框（主旨或內文游標位置） -->
+      <div class="body-chips-box" style="margin-top: 0; margin-bottom: 16px;">
+        <div class="chips-row" style="margin-top: 0;" id="unifiedVarChips"></div>
+      </div>
+
+      <!-- 主旨輸入 -->
       <div>
         <label class="field-label" for="subjectInput">信件主旨範本 (Subject)</label>
         <input
@@ -1233,16 +1422,25 @@
           id="subjectInput"
           value="【審查通知】{{委員姓名}} 委員您好，敬請協助審查共 {{案件數}} 件產品"
         />
-        <div class="chips-row" id="subjectVarChips"></div>
       </div>
 
-      <!-- 內文變數快捷插入列 -->
-      <div class="body-chips-box">
-        <div class="chips-row" style="margin-top: 0;" id="bodyVarChips"></div>
+      <!-- {{明細表格}} 欄位設定面板 -->
+      <div class="sub-panel">
+        <div class="sub-panel-header">
+          <span class="sub-panel-title"><code>{{明細表格}}</code> 欄位設定</span>
+          <label class="inline-check" for="includeIndexColCheckbox">
+            <input type="checkbox" id="includeIndexColCheckbox" checked />
+            <span>自動加入「項次」編號欄</span>
+          </label>
+        </div>
+        <div id="detailColCheckboxes" class="col-checkboxes"></div>
+        <div class="field-hint" style="margin-top: 8px;">
+          勾選要在自動展開的 <code>{{明細表格}}</code> 中顯示的欄位。
+        </div>
       </div>
 
       <!-- 雙模式 HTML 編輯器 -->
-      <div class="editor-wrapper">
+      <div class="editor-wrapper" style="margin-top: 16px;">
         <div class="editor-tabs-bar">
           <div class="mode-tabs" role="tablist">
             <button type="button" class="mode-tab active" id="tabWysiwyg" role="tab" aria-selected="true">
@@ -1269,23 +1467,27 @@
               <span>字色</span>
               <input type="color" id="foreColorPicker" value="#dc2626" />
             </label>
-            <label class="color-picker-wrap" title="背景醒目提示色">
+            <label class="color-picker-wrap" title="背景色">
               <span>底色</span>
               <input type="color" id="hiliteColorPicker" value="#fef08a" />
             </label>
           </div>
           <div class="toolbar-group">
-            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="項目符號清單">• 清單</button>
+            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="項目清單">• 清單</button>
             <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="編號清單">1. 編號</button>
           </div>
           <div class="toolbar-group">
             <button type="button" class="tb-btn" data-cmd="justifyLeft" title="靠左對齊">靠左</button>
             <button type="button" class="tb-btn" data-cmd="justifyCenter" title="置中對齊">置中</button>
             <button type="button" class="tb-btn" data-cmd="justifyRight" title="靠右對齊">靠右</button>
+            <button type="button" class="tb-btn" data-cmd="removeFormat" title="清除選取文字格式">清除格式</button>
           </div>
           <div class="toolbar-group">
             <button type="button" class="tb-btn tb-accent" id="btnOpenTableModal" title="插入自訂列數與欄數的表格">
               ＋ 插入表格
+            </button>
+            <button type="button" class="tb-btn" id="btnInsertSampleTable" title="插入 Outlook 相容範例表格">
+              插入範例表格
             </button>
             <button type="button" class="tb-btn tb-indigo" id="btnQuickInsertDetailTable" title="於游標處插入 {{明細表格}}">
               插入 {{明細表格}}
@@ -1297,8 +1499,10 @@
         <div class="table-quick-bar" id="tableQuickBar">
           <span class="table-quick-status" id="tableQuickStatus">表格快捷操作：將游標點進表格儲存格即可啟用</span>
           <div class="table-quick-actions">
-            <button type="button" class="tb-op" id="btnAddRow" disabled>新增一列</button>
-            <button type="button" class="tb-op" id="btnAddCol" disabled>新增一欄</button>
+            <button type="button" class="tb-op" id="btnAddRowAbove" disabled>上方新增列</button>
+            <button type="button" class="tb-op" id="btnAddRowBelow" disabled>下方新增列</button>
+            <button type="button" class="tb-op" id="btnAddColLeft" disabled>左側新增欄</button>
+            <button type="button" class="tb-op" id="btnAddColRight" disabled>右側新增欄</button>
             <button type="button" class="tb-op danger" id="btnDelRow" disabled>刪除目前列</button>
             <button type="button" class="tb-op danger" id="btnDelTable" disabled>刪除表格</button>
           </div>
@@ -1324,17 +1528,17 @@
     </section>
 
     <!-- =================================================================
-         步驟 4：即時渲染預覽與 .eml 下載
+         步驟 4：即時預覽與批次下載 .eml 草稿
          ================================================================= -->
     <section class="card" aria-labelledby="step4-heading">
       <div class="step-header">
         <div class="step-title">
           <span class="step-num">4</span>
-          <h2 id="step4-heading">即時渲染預覽與 .eml 下載</h2>
+          <h2 id="step4-heading">即時預覽與批次下載 .eml 草稿</h2>
         </div>
         <div class="step-actions">
           <button type="button" class="btn btn-secondary" id="btnDownloadSingleTop">下載目前這封 .eml</button>
-          <button type="button" class="btn btn-primary" id="btnDownloadZipTop">一鍵打包下載全部 .eml (ZIP)</button>
+          <button type="button" class="btn btn-primary" id="btnDownloadZipTop">批次下載全部 (.zip)</button>
         </div>
       </div>
 
@@ -1370,13 +1574,32 @@
         <div class="mail-body-preview" id="pvBodyHtml"></div>
       </div>
 
+      <!-- 產出清單表格 -->
+      <div class="output-list-section">
+        <h3 class="output-list-title">產出草稿清單（點擊列可切換預覽，或直接單封下載）</h3>
+        <div class="output-table-wrap">
+          <table class="output-table">
+            <thead>
+              <tr>
+                <th style="width: 48px;">#</th>
+                <th>預計檔名</th>
+                <th>收件者 (To)</th>
+                <th style="width: 90px; text-align: center;">案件數</th>
+                <th style="width: 135px; text-align: right;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="outputListBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- 底部下載按鈕列 -->
       <div class="download-actions-bar">
         <button type="button" class="btn btn-secondary btn-lg" id="btnDownloadSingleBottom">
           下載目前這封 .eml
         </button>
         <button type="button" class="btn btn-emerald btn-lg" id="btnDownloadZipBottom">
-          一鍵打包下載全部 .eml (ZIP)
+          批次下載全部 (.zip)
         </button>
       </div>
 
@@ -1415,6 +1638,34 @@
     </div>
   </div>
 
+  <!-- 儲存常用套稿命名 Modal -->
+  <div class="modal-backdrop" id="slotSaveModal" role="dialog" aria-modal="true" aria-labelledby="slotSaveModalTitle">
+    <div class="modal-dialog">
+      <h3 id="slotSaveModalTitle">儲存至常用套稿</h3>
+      <div>
+        <label class="field-label" for="slotNameInput">套稿名稱（例如：審查通知、補件提醒）</label>
+        <input type="text" id="slotNameInput" maxlength="40" placeholder="請輸入套稿名稱..." />
+        <div class="field-hint">將同步儲存目前主旨、HTML 內文、固定 CC/BCC、合併開關與明細表格設定。</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnSlotSaveCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="btnSlotSaveConfirm">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 清除常用套稿確認 Modal -->
+  <div class="modal-backdrop" id="slotClearModal" role="dialog" aria-modal="true" aria-labelledby="slotClearModalTitle">
+    <div class="modal-dialog">
+      <h3 id="slotClearModalTitle">確認清除套稿槽位</h3>
+      <p id="slotClearModalDesc" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnSlotClearCancel">取消</button>
+        <button type="button" class="btn btn-danger-outline" id="btnSlotClearConfirm" style="background:var(--rose-600);color:#fff;border-color:var(--rose-600);">確認清除</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast 通知容器 -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -1423,8 +1674,11 @@
       'use strict';
 
       /* =====================================================================
-         1. 預設範例資料（6 筆資料、4 位不重複收件者，展示合併與 BCC 功能）
+         1. 預設範例資料與常用套稿常數
          ===================================================================== */
+      const SLOTS_STORAGE_KEY = 'outlook_eml_generator_preset_slots_v1';
+      const SLOT_COUNT = 5;
+
       const SAMPLE_TSV = [
         '委員姓名\temail\t副本email\t密件副本email\t業者名稱\t產品名稱',
         '陳志明\tchihming.chen@example.com\tcc1@example.com\tbcc_admin@example.com\t康健生醫股份有限公司\t智慧型電子血壓計',
@@ -1452,7 +1706,12 @@
         drafts: [],
         currentDraftIndex: 0,
         editorMode: 'wysiwyg', // 'wysiwyg' | 'source'
-        savedRange: null
+        lastFocusedTarget: 'body', // 'subject' | 'body'
+        savedRange: null,
+        slots: new Array(SLOT_COUNT).fill(null),
+        activeSlotIndex: -1,
+        pendingSlotIndex: -1,
+        storageAvailable: true
       };
 
       const els = {
@@ -1477,9 +1736,14 @@
         includeIndexColCheckbox: document.getElementById('includeIndexColCheckbox'),
         detailColCheckboxes: document.getElementById('detailColCheckboxes'),
 
+        slotsGrid: document.getElementById('slotsGrid'),
+        storageWarnBanner: document.getElementById('storageWarnBanner'),
+        btnExportSlots: document.getElementById('btnExportSlots'),
+        btnImportSlots: document.getElementById('btnImportSlots'),
+        importSlotsInput: document.getElementById('importSlotsInput'),
+
         subjectInput: document.getElementById('subjectInput'),
-        subjectVarChips: document.getElementById('subjectVarChips'),
-        bodyVarChips: document.getElementById('bodyVarChips'),
+        unifiedVarChips: document.getElementById('unifiedVarChips'),
         tabWysiwyg: document.getElementById('tabWysiwyg'),
         tabSource: document.getElementById('tabSource'),
         wysiwygToolbar: document.getElementById('wysiwygToolbar'),
@@ -1490,9 +1754,12 @@
         foreColorPicker: document.getElementById('foreColorPicker'),
         hiliteColorPicker: document.getElementById('hiliteColorPicker'),
         btnOpenTableModal: document.getElementById('btnOpenTableModal'),
+        btnInsertSampleTable: document.getElementById('btnInsertSampleTable'),
         btnQuickInsertDetailTable: document.getElementById('btnQuickInsertDetailTable'),
-        btnAddRow: document.getElementById('btnAddRow'),
-        btnAddCol: document.getElementById('btnAddCol'),
+        btnAddRowAbove: document.getElementById('btnAddRowAbove'),
+        btnAddRowBelow: document.getElementById('btnAddRowBelow'),
+        btnAddColLeft: document.getElementById('btnAddColLeft'),
+        btnAddColRight: document.getElementById('btnAddColRight'),
         btnDelRow: document.getElementById('btnDelRow'),
         btnDelTable: document.getElementById('btnDelTable'),
 
@@ -1509,6 +1776,7 @@
         pvSubject: document.getElementById('pvSubject'),
         pvFilename: document.getElementById('pvFilename'),
         pvBodyHtml: document.getElementById('pvBodyHtml'),
+        outputListBody: document.getElementById('outputListBody'),
         btnDownloadSingleTop: document.getElementById('btnDownloadSingleTop'),
         btnDownloadZipTop: document.getElementById('btnDownloadZipTop'),
         btnDownloadSingleBottom: document.getElementById('btnDownloadSingleBottom'),
@@ -1520,12 +1788,36 @@
         modalHeaderCheck: document.getElementById('modalHeaderCheck'),
         btnModalCancel: document.getElementById('btnModalCancel'),
         btnModalConfirm: document.getElementById('btnModalConfirm'),
+
+        slotSaveModal: document.getElementById('slotSaveModal'),
+        slotSaveModalTitle: document.getElementById('slotSaveModalTitle'),
+        slotNameInput: document.getElementById('slotNameInput'),
+        btnSlotSaveCancel: document.getElementById('btnSlotSaveCancel'),
+        btnSlotSaveConfirm: document.getElementById('btnSlotSaveConfirm'),
+
+        slotClearModal: document.getElementById('slotClearModal'),
+        slotClearModalDesc: document.getElementById('slotClearModalDesc'),
+        btnSlotClearCancel: document.getElementById('btnSlotClearCancel'),
+        btnSlotClearConfirm: document.getElementById('btnSlotClearConfirm'),
+
         toastContainer: document.getElementById('toastContainer')
       };
 
       /* =====================================================================
          3. 通用輔助函式
          ===================================================================== */
+      function formatDateTime(dateObj) {
+        const d = dateObj || new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return (
+          d.getFullYear() + '/' +
+          pad(d.getMonth() + 1) + '/' +
+          pad(d.getDate()) + ' ' +
+          pad(d.getHours()) + ':' +
+          pad(d.getMinutes())
+        );
+      }
+
       function showToast(msg) {
         const div = document.createElement('div');
         div.className = 'toast';
@@ -1629,17 +1921,19 @@
       }
 
       /* =====================================================================
-         4. TSV / CSV 資料解析器
+         4. TSV / CSV 資料表解析器（支援 Excel 貼上與含換行的雙引號儲存格）
          ===================================================================== */
       function parseDelimitedText(rawText) {
-        const text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-        if (!text) return { headers: [], rows: [] };
+        const text = String(rawText || '').replace(/^\uFEFF/, '');
+        if (!text.trim()) {
+          return { headers: [], rows: [], delimiter: '\t' };
+        }
 
-        const firstNl = text.indexOf('\n');
-        const firstLine = firstNl === -1 ? text : text.slice(0, firstNl);
-        const delimiter = firstLine.includes('\t') ? '\t' : ',';
+        // 依第一行非空資料自動偵測分隔符號（優先 TSV，否則 CSV）
+        const firstLine = text.split(/\r?\n/).find((line) => line.trim().length > 0) || '';
+        const delimiter = firstLine.indexOf('\t') !== -1 ? '\t' : ',';
 
-        const records = [];
+        const grid = [];
         let row = [];
         let cell = '';
         let inQuotes = false;
@@ -1649,25 +1943,29 @@
           const next = text[i + 1];
 
           if (inQuotes) {
-            if (ch === '"') {
-              if (next === '"') {
-                cell += '"';
-                i++;
-              } else {
-                inQuotes = false;
-              }
+            if (ch === '"' && next === '"') {
+              cell += '"';
+              i++;
+            } else if (ch === '"') {
+              inQuotes = false;
             } else {
               cell += ch;
             }
           } else {
-            if (ch === '"' && cell === '') {
+            if (ch === '"' && cell.length === 0) {
               inQuotes = true;
             } else if (ch === delimiter) {
-              row.push(cell.trim());
+              row.push(cell);
               cell = '';
-            } else if (ch === '\n') {
-              row.push(cell.trim());
-              if (row.some((c) => c !== '')) records.push(row);
+            } else if (ch === '\r' && next === '\n') {
+              row.push(cell);
+              grid.push(row);
+              row = [];
+              cell = '';
+              i++;
+            } else if (ch === '\n' || ch === '\r') {
+              row.push(cell);
+              grid.push(row);
               row = [];
               cell = '';
             } else {
@@ -1675,151 +1973,359 @@
             }
           }
         }
-        row.push(cell.trim());
-        if (row.some((c) => c !== '')) records.push(row);
+        if (cell.length > 0 || row.length > 0) {
+          row.push(cell);
+          grid.push(row);
+        }
 
-        if (records.length === 0) return { headers: [], rows: [] };
+        // 過濾完全空白的列
+        const nonEmptyGrid = grid.filter((r) => r.some((c) => c.trim() !== ''));
+        if (nonEmptyGrid.length === 0) {
+          return { headers: [], rows: [], delimiter };
+        }
 
-        const headers = records[0].map((h, i) => h || '欄位' + (i + 1));
-        const rows = records.slice(1).map((cols) => {
+        // 第一列作為欄位名稱，並處理重複或空白欄名
+        const rawHeaders = nonEmptyGrid[0].map((h, idx) => h.trim() || ('欄位' + (idx + 1)));
+        const headerCount = new Map();
+        const headers = rawHeaders.map((h) => {
+          const count = headerCount.get(h) || 0;
+          headerCount.set(h, count + 1);
+          return count === 0 ? h : (h + '_' + (count + 1));
+        });
+
+        const rows = nonEmptyGrid.slice(1).map((r) => {
           const obj = {};
-          headers.forEach((h, i) => {
-            obj[h] = cols[i] !== undefined ? cols[i] : '';
+          headers.forEach((h, idx) => {
+            obj[h] = r[idx] != null ? r[idx].trim() : '';
           });
           return obj;
         });
 
-        return { headers, rows };
+        return { headers, rows, delimiter };
       }
 
       /* =====================================================================
-         5. 欄位對應與 {{明細表格}} 欄位設定
+         5. 欄位對應下拉選單與 {{明細表格}} 欄位勾選初始化
          ===================================================================== */
-      function populateSelect(selectEl, headers, includeNoneOption) {
-        selectEl.innerHTML = '';
-        if (includeNoneOption) {
-          const noneOpt = document.createElement('option');
-          noneOpt.value = '';
-          noneOpt.textContent = '不使用';
-          selectEl.appendChild(noneOpt);
-        }
-        headers.forEach((h) => {
-          const opt = document.createElement('option');
-          opt.value = h;
-          opt.textContent = h;
-          selectEl.appendChild(opt);
-        });
-      }
-
-      function autoDetectColumnMappings(headers) {
+      function populateColumnSelectors(headers) {
         const prevTo = els.toColSelect.value;
         const prevCc = els.ccColSelect.value;
         const prevBcc = els.bccColSelect.value;
         const prevName = els.nameColSelect.value;
 
-        populateSelect(els.toColSelect, headers, false);
-        populateSelect(els.ccColSelect, headers, true);
-        populateSelect(els.bccColSelect, headers, true);
-        populateSelect(els.nameColSelect, headers, true);
+        const buildOptions = (allowEmpty, emptyLabel) => {
+          const opts = [];
+          if (allowEmpty) {
+            opts.push('<option value="">' + escapeHtml(emptyLabel) + '</option>');
+          }
+          headers.forEach((h) => {
+            opts.push('<option value="' + escapeHtml(h) + '">' + escapeHtml(h) + '</option>');
+          });
+          return opts.join('');
+        };
 
-        if (headers.length === 0) {
-          els.toColSelect.innerHTML = '<option value="">-- 請先貼上資料 --</option>';
-          return;
-        }
+        els.toColSelect.innerHTML = headers.length
+          ? buildOptions(false, '')
+          : '<option value="">（尚無欄位）</option>';
+        els.ccColSelect.innerHTML = buildOptions(true, '（不使用副本欄位）');
+        els.bccColSelect.innerHTML = buildOptions(true, '（不使用密件副本欄位）');
+        els.nameColSelect.innerHTML = buildOptions(true, '（自動依收件者帳號）');
 
-        // 收件者 To（排除副本/CC/密件/BCC）
-        if (prevTo && headers.includes(prevTo)) {
-          els.toColSelect.value = prevTo;
-        } else {
-          const matchTo =
-            headers.find((h) => /^e-?mail$/i.test(h)) ||
-            headers.find((h) => /(email|信箱|收件|^to$)/i.test(h) && !/(副本|cc|密件|bcc)/i.test(h)) ||
-            headers[0];
-          els.toColSelect.value = matchTo;
-        }
+        if (headers.length === 0) return;
 
-        // 密件副本 BCC
-        if (prevBcc && headers.includes(prevBcc)) {
-          els.bccColSelect.value = prevBcc;
-        } else {
-          const matchBcc = headers.find((h) => /(密件副本|密件|^bcc$|bcc)/i.test(h)) || '';
-          els.bccColSelect.value = matchBcc;
-        }
+        const has = (v) => v && headers.includes(v);
 
-        // 副本 CC（排除密件/BCC）
-        if (prevCc && headers.includes(prevCc)) {
-          els.ccColSelect.value = prevCc;
-        } else {
-          const matchCc =
-            headers.find((h) => /(副本|^cc$|cc)/i.test(h) && !/(密件|bcc)/i.test(h)) || '';
-          els.ccColSelect.value = matchCc;
-        }
+        // 自動偵測 BCC / CC / To / 檔名識別欄位
+        const autoBcc = headers.find((h) => /bcc|密件/i.test(h)) || '';
+        const autoCc = headers.find((h) => !/bcc|密件/i.test(h) && (/\bcc\b|副本/i.test(h))) || '';
+        const autoTo =
+          headers.find((h) => !/bcc|密件|\bcc\b|副本/i.test(h) && /email|e-mail|mail|信箱|收件/i.test(h)) ||
+          headers[0];
+        const autoName =
+          headers.find((h) => !/email|e-mail|mail|cc|bcc|副本|密件/i.test(h) && /姓名|委員|名稱|name/i.test(h)) ||
+          headers[0];
 
-        // 檔名識別欄位（委員姓名 / 姓名 / name）
-        if (prevName && headers.includes(prevName)) {
-          els.nameColSelect.value = prevName;
-        } else {
-          const matchName =
-            headers.find((h) => /(委員姓名|姓名|收件人|name)/i.test(h)) || headers[0];
-          els.nameColSelect.value = matchName;
-        }
+        els.toColSelect.value = has(prevTo) ? prevTo : autoTo;
+        els.ccColSelect.value = has(prevCc) ? prevCc : autoCc;
+        els.bccColSelect.value = has(prevBcc) ? prevBcc : autoBcc;
+        els.nameColSelect.value = has(prevName) ? prevName : autoName;
       }
 
       function initOrRenderDetailColCheckboxes(headers) {
-        const headerSig = headers.join('\u0001');
-        if (state.detailColsInitializedForHeaders !== headerSig) {
-          state.detailColsInitializedForHeaders = headerSig;
-          state.selectedDetailCols.clear();
+        const signature = headers.join('\u0001');
+        if (state.detailColsInitializedForHeaders !== signature) {
+          state.detailColsInitializedForHeaders = signature;
+          state.selectedDetailCols = new Set();
 
-          const mappedMeta = new Set([
-            els.toColSelect.value,
-            els.ccColSelect.value,
-            els.bccColSelect.value,
-            els.nameColSelect.value
-          ].filter(Boolean));
-
-          // 預設自動勾選非收件人/副本/密件副本/姓名之內容明細欄位（如業者名稱、產品名稱）
-          headers.forEach((h) => {
-            if (!mappedMeta.has(h)) {
-              state.selectedDetailCols.add(h);
-            }
-          });
-          // 若全部欄位都被對應完，至少勾選所有欄位避免空白表格
-          if (state.selectedDetailCols.size === 0) {
-            headers.forEach((h) => state.selectedDetailCols.add(h));
-          }
+          // 預設勾選非 Email、非姓名（通常為業者名稱、產品名稱等案件明細欄位）
+          const defaultCols = headers.filter(
+            (h) => !/email|e-mail|mail|cc|bcc|副本|密件|姓名|委員/i.test(h)
+          );
+          const picks = defaultCols.length > 0 ? defaultCols : headers.filter((h) => !/email|mail|cc|bcc/i.test(h));
+          (picks.length > 0 ? picks : headers).forEach((h) => state.selectedDetailCols.add(h));
         }
 
         els.detailColCheckboxes.innerHTML = '';
         if (headers.length === 0) {
           els.detailColCheckboxes.innerHTML =
-            '<span style="font-size:0.83rem;color:var(--text-muted);">貼上資料後即可勾選要顯示於明細表格的欄位。</span>';
+            '<span style="font-size:0.83rem;color:var(--text-muted);">尚未解析資料欄位</span>';
           return;
         }
 
         headers.forEach((h) => {
           const isChecked = state.selectedDetailCols.has(h);
-          const lbl = document.createElement('label');
-          lbl.className = 'col-check-chip' + (isChecked ? ' checked' : '');
+          const label = document.createElement('label');
+          label.className = 'col-check-chip' + (isChecked ? ' checked' : '');
+
           const cb = document.createElement('input');
           cb.type = 'checkbox';
           cb.checked = isChecked;
           cb.addEventListener('change', () => {
             if (cb.checked) {
               state.selectedDetailCols.add(h);
-              lbl.classList.add('checked');
+              label.classList.add('checked');
             } else {
               state.selectedDetailCols.delete(h);
-              lbl.classList.remove('checked');
+              label.classList.remove('checked');
             }
             rebuildDraftsAndPreview();
           });
+
           const span = document.createElement('span');
           span.textContent = h;
-          lbl.appendChild(cb);
-          lbl.appendChild(span);
-          els.detailColCheckboxes.appendChild(lbl);
+
+          label.appendChild(cb);
+          label.appendChild(span);
+          els.detailColCheckboxes.appendChild(label);
         });
+      }
+
+      /* =====================================================================
+         5.5 5 組常用套稿管理（localStorage 永久保存 + JSON 匯出／匯入）
+         ===================================================================== */
+      function loadSlotsFromStorage() {
+        try {
+          const raw = window.localStorage.getItem(SLOTS_STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              for (let i = 0; i < SLOT_COUNT; i++) {
+                state.slots[i] = parsed[i] && typeof parsed[i] === 'object' ? parsed[i] : null;
+              }
+            }
+          }
+          state.storageAvailable = true;
+          els.storageWarnBanner.style.display = 'none';
+        } catch (err) {
+          state.storageAvailable = false;
+          els.storageWarnBanner.style.display = 'block';
+        }
+      }
+
+      function saveSlotsToStorage() {
+        try {
+          window.localStorage.setItem(SLOTS_STORAGE_KEY, JSON.stringify(state.slots));
+          state.storageAvailable = true;
+          els.storageWarnBanner.style.display = 'none';
+          return true;
+        } catch (err) {
+          state.storageAvailable = false;
+          els.storageWarnBanner.style.display = 'block';
+          return false;
+        }
+      }
+
+      function openSaveSlotModal(slotIndex) {
+        state.pendingSlotIndex = slotIndex;
+        const existing = state.slots[slotIndex];
+        els.slotSaveModalTitle.textContent = '儲存至 Slot ' + (slotIndex + 1);
+        els.slotNameInput.value = existing && existing.name ? existing.name : '常用套稿 ' + (slotIndex + 1);
+        els.slotSaveModal.classList.add('open');
+        setTimeout(() => {
+          els.slotNameInput.focus();
+          els.slotNameInput.select();
+        }, 30);
+      }
+
+      function confirmSaveSlot() {
+        const idx = state.pendingSlotIndex;
+        if (idx < 0 || idx >= SLOT_COUNT) return;
+        const name = els.slotNameInput.value.trim() || ('常用套稿 ' + (idx + 1));
+
+        const payload = {
+          name: name,
+          savedAt: formatDateTime(new Date()),
+          subject: els.subjectInput.value,
+          bodyHtml: getCurrentBodyTemplateHtml(),
+          fixedCc: els.fixedCcInput.value.trim(),
+          fixedBcc: els.fixedBccInput.value.trim(),
+          mergeEnabled: els.mergeModeCheckbox.checked,
+          detailCols: Array.from(state.selectedDetailCols),
+          includeIndexCol: els.includeIndexColCheckbox.checked
+        };
+
+        state.slots[idx] = payload;
+        state.activeSlotIndex = idx;
+        const persisted = saveSlotsToStorage();
+        els.slotSaveModal.classList.remove('open');
+        renderSlotsGrid();
+        showToast(
+          persisted
+            ? '已儲存至 Slot ' + (idx + 1) + '：' + name
+            : '已暫存至 Slot ' + (idx + 1) + '（無法寫入本機空間，建議匯出 JSON）'
+        );
+      }
+
+      function loadSlot(slotIndex) {
+        const slot = state.slots[slotIndex];
+        if (!slot) return;
+
+        els.subjectInput.value = typeof slot.subject === 'string' ? slot.subject : '';
+        const bodyHtml = typeof slot.bodyHtml === 'string' ? slot.bodyHtml : '';
+        els.wysiwygEditor.innerHTML = bodyHtml;
+        els.htmlSourceEditor.value = bodyHtml;
+
+        els.fixedCcInput.value = typeof slot.fixedCc === 'string' ? slot.fixedCc : '';
+        els.fixedBccInput.value = typeof slot.fixedBcc === 'string' ? slot.fixedBcc : '';
+        els.mergeModeCheckbox.checked = slot.mergeEnabled !== false;
+        els.includeIndexColCheckbox.checked = slot.includeIndexCol !== false;
+
+        if (Array.isArray(slot.detailCols)) {
+          state.selectedDetailCols = new Set(slot.detailCols);
+          state.detailColsInitializedForHeaders = state.headers.join('\u0001');
+          initOrRenderDetailColCheckboxes(state.headers);
+        }
+
+        state.activeSlotIndex = slotIndex;
+        renderSlotsGrid();
+        rebuildDraftsAndPreview();
+        showToast('已載入 Slot ' + (slotIndex + 1) + '：' + slot.name);
+      }
+
+      function openClearSlotModal(slotIndex) {
+        const slot = state.slots[slotIndex];
+        if (!slot) return;
+        state.pendingSlotIndex = slotIndex;
+        els.slotClearModalDesc.textContent =
+          '確定要清除 Slot ' + (slotIndex + 1) + '「' + slot.name + '」的套稿設定嗎？此操作無法復原。';
+        els.slotClearModal.classList.add('open');
+      }
+
+      function confirmClearSlot() {
+        const idx = state.pendingSlotIndex;
+        if (idx < 0 || idx >= SLOT_COUNT) return;
+        state.slots[idx] = null;
+        if (state.activeSlotIndex === idx) state.activeSlotIndex = -1;
+        saveSlotsToStorage();
+        els.slotClearModal.classList.remove('open');
+        renderSlotsGrid();
+        showToast('已清除 Slot ' + (idx + 1));
+      }
+
+      function renderSlotsGrid() {
+        els.slotsGrid.innerHTML = '';
+        for (let i = 0; i < SLOT_COUNT; i++) {
+          const slot = state.slots[i];
+          const card = document.createElement('div');
+          card.className =
+            'slot-card' +
+            (slot ? ' filled' : '') +
+            (state.activeSlotIndex === i && slot ? ' active-slot' : '');
+
+          const topDiv = document.createElement('div');
+          topDiv.innerHTML =
+            '<div class="slot-top">' +
+            '<span class="slot-badge">Slot ' + (i + 1) + '</span>' +
+            '</div>' +
+            '<div class="slot-name" title="' + escapeHtml(slot ? slot.name : '空槽位') + '">' +
+            escapeHtml(slot ? slot.name : '空槽位') +
+            '</div>' +
+            '<div class="slot-time">' +
+            (slot && slot.savedAt ? '儲存：' + escapeHtml(slot.savedAt) : '尚未儲存套稿') +
+            '</div>';
+
+          const actionsDiv = document.createElement('div');
+          actionsDiv.className = 'slot-actions';
+
+          const btnSave = document.createElement('button');
+          btnSave.type = 'button';
+          btnSave.className = 'btn btn-soft-blue';
+          btnSave.textContent = '儲存';
+          btnSave.addEventListener('click', () => openSaveSlotModal(i));
+
+          const btnLoad = document.createElement('button');
+          btnLoad.type = 'button';
+          btnLoad.className = 'btn btn-primary';
+          btnLoad.textContent = '載入';
+          btnLoad.disabled = !slot;
+          btnLoad.addEventListener('click', () => loadSlot(i));
+
+          const btnClear = document.createElement('button');
+          btnClear.type = 'button';
+          btnClear.className = 'btn btn-danger-outline';
+          btnClear.textContent = '清除';
+          btnClear.disabled = !slot;
+          btnClear.addEventListener('click', () => openClearSlotModal(i));
+
+          actionsDiv.appendChild(btnSave);
+          actionsDiv.appendChild(btnLoad);
+          actionsDiv.appendChild(btnClear);
+
+          card.appendChild(topDiv);
+          card.appendChild(actionsDiv);
+          els.slotsGrid.appendChild(card);
+        }
+      }
+
+      function exportSlotsToJson() {
+        const payload = {
+          version: 1,
+          exportedAt: formatDateTime(new Date()),
+          slots: state.slots
+        };
+        const jsonStr = JSON.stringify(payload, null, 2);
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const fname =
+          'outlook_eml_slots_' +
+          now.getFullYear() +
+          pad(now.getMonth() + 1) +
+          pad(now.getDate()) +
+          '.json';
+        triggerDownload(new Blob([jsonStr], { type: 'application/json;charset=utf-8' }), fname);
+        showToast('已匯出全部套稿備份：' + fname);
+      }
+
+      function handleImportSlotsFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+          try {
+            const parsed = JSON.parse(String(reader.result || ''));
+            const incoming = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.slots) ? parsed.slots : null);
+            if (!incoming) {
+              showToast('匯入失敗：JSON 格式不正確');
+              return;
+            }
+            let importedCount = 0;
+            for (let i = 0; i < SLOT_COUNT; i++) {
+              const item = incoming[i];
+              if (item && typeof item === 'object' && typeof item.name === 'string') {
+                state.slots[i] = item;
+                importedCount++;
+              } else {
+                state.slots[i] = null;
+              }
+            }
+            state.activeSlotIndex = -1;
+            saveSlotsToStorage();
+            renderSlotsGrid();
+            showToast('已成功匯入 ' + importedCount + ' 組套稿');
+          } catch (err) {
+            showToast('匯入失敗：無法解析 JSON 檔案');
+          }
+        };
+        reader.readAsText(file, 'utf-8');
       }
 
       /* =====================================================================
@@ -1926,40 +2432,45 @@
         updateTableQuickBarState();
       }
 
+      function insertTokenIntoLastFocused(token) {
+        if (state.lastFocusedTarget === 'subject') {
+          insertTextAtInputCursor(els.subjectInput, token);
+          rebuildDraftsAndPreview();
+        } else {
+          insertTokenIntoBodyEditor(token);
+        }
+      }
+
+      function updateFocusTargetIndicator() {
+        const pill = document.getElementById('focusTargetPill');
+        if (!pill) return;
+        pill.textContent =
+          state.lastFocusedTarget === 'subject'
+            ? '目前插入目標：信件主旨'
+            : '目前插入目標：HTML 內文游標處';
+      }
+
       function renderVariableChips(headers) {
-        // 主旨變數列
-        els.subjectVarChips.innerHTML = '<span class="chips-label">點擊插入主旨：</span>';
-        const subjectTokens = headers.map((h) => ({ text: '{{' + h + '}}', special: false }));
-        subjectTokens.push({ text: '{{案件數}}', special: true });
+        els.unifiedVarChips.innerHTML = '<span class="chips-label">點擊插入變數：</span>';
+        const tokens = headers.map((h) => ({ text: '{{' + h + '}}', special: false }));
+        tokens.push({ text: '{{案件數}}', special: true });
+        tokens.push({ text: '{{明細表格}}', special: true });
 
-        subjectTokens.forEach((item) => {
+        tokens.forEach((item) => {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'var-chip' + (item.special ? ' special' : '');
           btn.textContent = item.text;
           btn.addEventListener('mousedown', (e) => e.preventDefault());
-          btn.addEventListener('click', () => {
-            insertTextAtInputCursor(els.subjectInput, item.text);
-            rebuildDraftsAndPreview();
-          });
-          els.subjectVarChips.appendChild(btn);
+          btn.addEventListener('click', () => insertTokenIntoLastFocused(item.text));
+          els.unifiedVarChips.appendChild(btn);
         });
 
-        // 內文變數列
-        els.bodyVarChips.innerHTML = '<span class="chips-label">點擊插入內文游標處：</span>';
-        const bodyTokens = headers.map((h) => ({ text: '{{' + h + '}}', special: false }));
-        bodyTokens.push({ text: '{{案件數}}', special: true });
-        bodyTokens.push({ text: '{{明細表格}}', special: true });
-
-        bodyTokens.forEach((item) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'var-chip' + (item.special ? ' special' : '');
-          btn.textContent = item.text;
-          btn.addEventListener('mousedown', (e) => e.preventDefault());
-          btn.addEventListener('click', () => insertTokenIntoBodyEditor(item.text));
-          els.bodyVarChips.appendChild(btn);
-        });
+        const pill = document.createElement('span');
+        pill.id = 'focusTargetPill';
+        pill.className = 'target-pill';
+        els.unifiedVarChips.appendChild(pill);
+        updateFocusTargetIndicator();
       }
 
       function findActiveTableCell() {
@@ -1983,7 +2494,14 @@
         els.tableQuickStatus.textContent = inside
           ? '游標位於表格內：可直接執行表格增刪操作'
           : '表格快捷操作：將游標點進表格儲存格即可啟用';
-        [els.btnAddRow, els.btnAddCol, els.btnDelRow, els.btnDelTable].forEach((b) => {
+        [
+          els.btnAddRowAbove,
+          els.btnAddRowBelow,
+          els.btnAddColLeft,
+          els.btnAddColRight,
+          els.btnDelRow,
+          els.btnDelTable
+        ].forEach((b) => {
           b.disabled = !inside;
         });
       }
@@ -1993,13 +2511,13 @@
         const c = Math.max(1, Math.min(10, parseInt(colsCount, 10) || 3));
 
         let html =
-          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">';
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cccccc; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">';
 
         if (includeHeader) {
           html += '<thead><tr>';
           for (let j = 0; j < c; j++) {
             html +=
-              '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;">標題 ' +
+              '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;">標題 ' +
               (j + 1) +
               '</th>';
           }
@@ -2012,7 +2530,7 @@
           html += '<tr>';
           for (let j = 0; j < c; j++) {
             html +=
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;">內容 ' +
+              '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">內容 ' +
               (i + 1) +
               '-' +
               (j + 1) +
@@ -2024,7 +2542,27 @@
         return html;
       }
 
-      function tableAddRow() {
+      function buildSampleOutlookTableHtml() {
+        return (
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cccccc; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">' +
+          '<thead><tr>' +
+          '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;">項目</th>' +
+          '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;">內容說明</th>' +
+          '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;">備註</th>' +
+          '</tr></thead><tbody>' +
+          '<tr>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">審查委員</td>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">{{委員姓名}}</td>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">共 {{案件數}} 件</td>' +
+          '</tr><tr>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">審查期限</td>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">請於 7 個工作日內回覆</td>' +
+          '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">可自由修改內容</td>' +
+          '</tr></tbody></table><p><br></p>'
+        );
+      }
+
+      function tableInsertRow(position) {
         const cell = findActiveTableCell();
         if (!cell) return;
         const tr = cell.closest('tr');
@@ -2032,27 +2570,36 @@
         const newTr = document.createElement('tr');
         for (let i = 0; i < colCount; i++) {
           const td = document.createElement('td');
-          td.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;');
+          td.setAttribute('style', 'border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;');
           td.innerHTML = '&nbsp;';
           newTr.appendChild(td);
         }
-        if (tr.parentElement && tr.parentElement.tagName === 'THEAD') {
-          const table = tr.closest('table');
-          let tbody = table.querySelector('tbody');
-          if (!tbody) {
-            tbody = document.createElement('tbody');
-            table.appendChild(tbody);
+        if (position === 'above') {
+          if (tr.parentElement && tr.parentElement.tagName === 'THEAD') {
+            tr.parentElement.insertBefore(newTr, tr);
+          } else {
+            tr.parentElement.insertBefore(newTr, tr);
           }
-          tbody.insertBefore(newTr, tbody.firstChild);
+          showToast('已於上方新增一列');
         } else {
-          tr.parentElement.insertBefore(newTr, tr.nextSibling);
+          if (tr.parentElement && tr.parentElement.tagName === 'THEAD') {
+            const table = tr.closest('table');
+            let tbody = table.querySelector('tbody');
+            if (!tbody) {
+              tbody = document.createElement('tbody');
+              table.appendChild(tbody);
+            }
+            tbody.insertBefore(newTr, tbody.firstChild);
+          } else {
+            tr.parentElement.insertBefore(newTr, tr.nextSibling);
+          }
+          showToast('已於下方新增一列');
         }
         syncToSource();
         rebuildDraftsAndPreview();
-        showToast('已新增一列');
       }
 
-      function tableAddCol() {
+      function tableInsertCol(position) {
         const cell = findActiveTableCell();
         if (!cell) return;
         const tr = cell.closest('tr');
@@ -2065,19 +2612,19 @@
           if (isHeaderRow) {
             newCell.setAttribute(
               'style',
-              'background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;'
+              'background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;'
             );
             newCell.textContent = '新標題';
           } else {
-            newCell.setAttribute('style', 'border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;');
+            newCell.setAttribute('style', 'border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;');
             newCell.innerHTML = '&nbsp;';
           }
-          const refCell = row.children[colIdx + 1] || null;
+          const refCell = position === 'left' ? (row.children[colIdx] || null) : (row.children[colIdx + 1] || null);
           row.insertBefore(newCell, refCell);
         });
         syncToSource();
         rebuildDraftsAndPreview();
-        showToast('已新增一欄');
+        showToast(position === 'left' ? '已於左側新增一欄' : '已於右側新增一欄');
       }
 
       function tableDeleteRow() {
@@ -2149,17 +2696,17 @@
         }
 
         let html =
-          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cbd5e1; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">' +
+          '<table style="border-collapse: collapse; width: 100%; border: 1px solid #cccccc; margin: 10px 0; font-family: \'Microsoft JhengHei\', \'微軟正黑體\', sans-serif; font-size: 14px;">' +
           '<thead><tr>';
 
         if (includeIdx) {
           html +=
-            '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; font-weight: bold; color: #0f172a; width: 64px;">項次</th>';
+            '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: center; font-weight: bold; color: #0f172a; width: 64px;">項次</th>';
         }
 
         cols.forEach((colName) => {
           html +=
-            '<th style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-weight: bold; color: #0f172a;">' +
+            '<th style="background-color: #f1f5f9; border: 1px solid #cccccc; padding: 6px 10px; text-align: left; font-weight: bold; color: #0f172a;">' +
             escapeHtml(colName) +
             '</th>';
         });
@@ -2170,14 +2717,14 @@
           html += '<tr>';
           if (includeIdx) {
             html +=
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; color: #334155;">' +
+              '<td style="border: 1px solid #cccccc; padding: 6px 10px; text-align: center; color: #334155;">' +
               (idx + 1) +
               '</td>';
           }
           cols.forEach((colName) => {
             const val = escapeHtml(rowObj[colName] || '').replace(/\r?\n/g, '<br>');
             html +=
-              '<td style="border: 1px solid #cbd5e1; padding: 8px 10px; color: #1e293b;">' +
+              '<td style="border: 1px solid #cccccc; padding: 6px 10px; color: #1e293b;">' +
               (val || '&nbsp;') +
               '</td>';
           });
@@ -2360,6 +2907,8 @@
           els.pvFilename.textContent = '—';
           els.pvBodyHtml.innerHTML =
             '<span style="color:var(--text-muted);">請先於步驟 1 貼上 Excel 名單資料，即可即時預覽每封草稿。</span>';
+          els.outputListBody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px;">尚未產生任何草稿</td></tr>';
           return;
         }
 
@@ -2391,6 +2940,49 @@
         els.pvSubject.textContent = draft.subject || '（無主旨）';
         els.pvFilename.textContent = draft.filename;
         els.pvBodyHtml.innerHTML = draft.htmlBody;
+
+        // 渲染產出清單表格
+        els.outputListBody.innerHTML = '';
+        state.drafts.forEach((d, i) => {
+          const tr = document.createElement('tr');
+          if (i === idx) tr.className = 'active-row';
+          tr.style.cursor = 'pointer';
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            state.currentDraftIndex = i;
+            renderStep4Preview();
+          });
+
+          const tdNum = document.createElement('td');
+          tdNum.textContent = String(i + 1);
+
+          const tdFile = document.createElement('td');
+          tdFile.className = 'mono-cell';
+          tdFile.textContent = d.filename;
+
+          const tdTo = document.createElement('td');
+          tdTo.textContent = d.to || '（未填寫收件者）';
+
+          const tdCnt = document.createElement('td');
+          tdCnt.style.textAlign = 'center';
+          tdCnt.innerHTML = '<span class="pill-badge pill-blue" style="padding:2px 8px;font-size:0.76rem;">' + d.itemCount + ' 件</span>';
+
+          const tdAct = document.createElement('td');
+          tdAct.style.textAlign = 'right';
+          const btnDl = document.createElement('button');
+          btnDl.type = 'button';
+          btnDl.className = 'btn btn-secondary btn-sm';
+          btnDl.textContent = '下載 .eml';
+          btnDl.addEventListener('click', () => downloadDraftByIndex(i));
+          tdAct.appendChild(btnDl);
+
+          tr.appendChild(tdNum);
+          tr.appendChild(tdFile);
+          tr.appendChild(tdTo);
+          tr.appendChild(tdCnt);
+          tr.appendChild(tdAct);
+          els.outputListBody.appendChild(tr);
+        });
       }
 
       /* =====================================================================
@@ -2408,7 +3000,7 @@
           headers.push('Bcc: ' + draft.bcc);
         }
         headers.push('Subject: ' + encodeRfc2047Subject(draft.subject || ''));
-        headers.push('Content-Type: text/html; charset="UTF-8"');
+        headers.push('Content-Type: text/html; charset="utf-8"');
         headers.push('Content-Transfer-Encoding: base64');
         headers.push('');
 
@@ -2543,13 +3135,17 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      function downloadCurrentDraft() {
-        const draft = state.drafts[state.currentDraftIndex];
+      function downloadDraftByIndex(index) {
+        const draft = state.drafts[index];
         if (!draft) return;
         const eml = buildEmlContent(draft);
         const blob = new Blob([eml], { type: 'message/rfc822;charset=utf-8' });
         triggerDownload(blob, draft.filename);
         showToast('已下載：' + draft.filename);
+      }
+
+      function downloadCurrentDraft() {
+        downloadDraftByIndex(state.currentDraftIndex);
       }
 
       function downloadAllZip() {
@@ -2612,20 +3208,17 @@
         state.headers = parsed.headers;
         state.rows = parsed.rows;
 
-        if (state.headers.length === 0) {
-          els.parseStatusText.textContent = '尚未輸入資料，請貼上 Excel 名單或點擊「載入範例資料」';
-          els.parseStatusText.style.color = 'var(--amber-800)';
-        } else if (state.rows.length === 0) {
-          els.parseStatusText.textContent = '已偵測到 ' + state.headers.length + ' 個欄位標題，請貼上資料列';
-          els.parseStatusText.style.color = 'var(--amber-800)';
-        } else {
+        if (state.rows.length === 0) {
           els.parseStatusText.textContent =
-            '解析成功：共 ' + state.headers.length + ' 個欄位、' + state.rows.length + ' 筆資料';
-          els.parseStatusText.style.color = 'var(--emerald-600)';
+            state.headers.length > 0 ? '已偵測標題列，請貼上至少一筆資料列' : '尚未解析資料';
+        } else {
+          const fmt = parsed.delimiter === '\t' ? 'TSV (Excel)' : 'CSV';
+          els.parseStatusText.textContent =
+            '已成功解析 ' + fmt + '：共 ' + state.rows.length + ' 筆資料、' + state.headers.length + ' 個欄位';
         }
 
         renderParsedPreviewTable();
-        autoDetectColumnMappings(state.headers);
+        populateColumnSelectors(state.headers);
         initOrRenderDetailColCheckboxes(state.headers);
         renderVariableChips(state.headers);
         rebuildDraftsAndPreview();
@@ -2638,33 +3231,41 @@
 
       els.btnLoadSample.addEventListener('click', () => {
         els.excelInput.value = SAMPLE_TSV;
-        state.detailColsInitializedForHeaders = '';
         handleExcelInput();
-        showToast('已載入 6 筆範例資料（含 4 位收件者與密件副本）');
+        showToast('已載入 6 筆範例資料');
       });
 
       els.btnClearData.addEventListener('click', () => {
         els.excelInput.value = '';
-        els.fixedCcInput.value = '';
-        els.fixedBccInput.value = '';
-        state.detailColsInitializedForHeaders = '';
         handleExcelInput();
-        showToast('已清空名單與固定副本設定');
+        showToast('已清空名單資料');
       });
 
-      [
-        els.mergeModeCheckbox,
-        els.toColSelect,
-        els.ccColSelect,
-        els.bccColSelect,
-        els.nameColSelect,
-        els.fixedCcInput,
-        els.fixedBccInput,
-        els.includeIndexColCheckbox,
-        els.subjectInput
-      ].forEach((el) => {
-        el.addEventListener('input', rebuildDraftsAndPreview);
-        el.addEventListener('change', rebuildDraftsAndPreview);
+      els.mergeModeCheckbox.addEventListener('change', rebuildDraftsAndPreview);
+      els.includeIndexColCheckbox.addEventListener('change', rebuildDraftsAndPreview);
+
+      [els.toColSelect, els.ccColSelect, els.bccColSelect, els.nameColSelect].forEach((sel) => {
+        sel.addEventListener('change', rebuildDraftsAndPreview);
+      });
+
+      [els.fixedCcInput, els.fixedBccInput, els.subjectInput].forEach((inp) => {
+        inp.addEventListener('input', rebuildDraftsAndPreview);
+      });
+
+      // 記錄最後聚焦的輸入目標（主旨 vs 內文）
+      els.subjectInput.addEventListener('focus', () => {
+        state.lastFocusedTarget = 'subject';
+        updateFocusTargetIndicator();
+      });
+
+      els.wysiwygEditor.addEventListener('focus', () => {
+        state.lastFocusedTarget = 'body';
+        updateFocusTargetIndicator();
+      });
+
+      els.htmlSourceEditor.addEventListener('focus', () => {
+        state.lastFocusedTarget = 'body';
+        updateFocusTargetIndicator();
       });
 
       // WYSIWYG 編輯器事件
@@ -2716,7 +3317,13 @@
         rebuildDraftsAndPreview();
       });
 
-      // 插入 {{明細表格}} 快捷鈕
+      // 插入範例表格 & 插入 {{明細表格}} 快捷鈕
+      els.btnInsertSampleTable.addEventListener('mousedown', (e) => e.preventDefault());
+      els.btnInsertSampleTable.addEventListener('click', () => {
+        insertHtmlIntoWysiwyg(buildSampleOutlookTableHtml());
+        showToast('已插入 Outlook 相容範例表格');
+      });
+
       els.btnQuickInsertDetailTable.addEventListener('mousedown', (e) => e.preventDefault());
       els.btnQuickInsertDetailTable.addEventListener('click', () => {
         insertTokenIntoBodyEditor('{{明細表格}}');
@@ -2746,12 +3353,48 @@
         showToast('已插入 Outlook 相容表格');
       });
 
+      // 5 組常用套稿 Modal 與 JSON 匯出／匯入事件
+      els.btnSlotSaveCancel.addEventListener('click', () => els.slotSaveModal.classList.remove('open'));
+      els.slotSaveModal.addEventListener('click', (e) => {
+        if (e.target === els.slotSaveModal) els.slotSaveModal.classList.remove('open');
+      });
+      els.btnSlotSaveConfirm.addEventListener('click', confirmSaveSlot);
+      els.slotNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmSaveSlot();
+      });
+
+      els.btnSlotClearCancel.addEventListener('click', () => els.slotClearModal.classList.remove('open'));
+      els.slotClearModal.addEventListener('click', (e) => {
+        if (e.target === els.slotClearModal) els.slotClearModal.classList.remove('open');
+      });
+      els.btnSlotClearConfirm.addEventListener('click', confirmClearSlot);
+
+      els.btnExportSlots.addEventListener('click', exportSlotsToJson);
+      els.btnImportSlots.addEventListener('click', () => {
+        els.importSlotsInput.value = '';
+        els.importSlotsInput.click();
+      });
+      els.importSlotsInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleImportSlotsFile(e.target.files[0]);
+        }
+      });
+
       // 表格快捷操作列
-      [els.btnAddRow, els.btnAddCol, els.btnDelRow, els.btnDelTable].forEach((b) => {
+      [
+        els.btnAddRowAbove,
+        els.btnAddRowBelow,
+        els.btnAddColLeft,
+        els.btnAddColRight,
+        els.btnDelRow,
+        els.btnDelTable
+      ].forEach((b) => {
         b.addEventListener('mousedown', (e) => e.preventDefault());
       });
-      els.btnAddRow.addEventListener('click', tableAddRow);
-      els.btnAddCol.addEventListener('click', tableAddCol);
+      els.btnAddRowAbove.addEventListener('click', () => tableInsertRow('above'));
+      els.btnAddRowBelow.addEventListener('click', () => tableInsertRow('below'));
+      els.btnAddColLeft.addEventListener('click', () => tableInsertCol('left'));
+      els.btnAddColRight.addEventListener('click', () => tableInsertCol('right'));
       els.btnDelRow.addEventListener('click', tableDeleteRow);
       els.btnDelTable.addEventListener('click', tableDeleteWhole);
 
@@ -2779,8 +3422,10 @@
       els.btnDownloadZipBottom.addEventListener('click', downloadAllZip);
 
       /* =====================================================================
-         11. 初始化：自動載入預設範本與 6 筆範例資料
+         11. 初始化：載入本機套稿、預設範本與 6 筆範例資料
          ===================================================================== */
+      loadSlotsFromStorage();
+      renderSlotsGrid();
       els.wysiwygEditor.innerHTML = DEFAULT_BODY_HTML;
       syncToSource();
       els.excelInput.value = SAMPLE_TSV;
